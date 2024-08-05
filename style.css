@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  background-color: black;
+}
+
+#rubiks-cube {
+}
+
+#header {
+  width: 100%;
+  display: flex;
+  flex-flow: row nowrap;
+  color: white;
+  background-color: grey;
+  position: absolute;
+}
