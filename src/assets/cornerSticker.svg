@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <path  d="M 25 0 H 500 V 500 H 0 V 25 A 25 25 0 0 1 25 0 Z" bx:shape="rect 0 0 500 500 25 0 0 0 1@a864c1ee"/>
+</svg>
