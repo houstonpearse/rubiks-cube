@@ -1,9 +1,13 @@
 body {
   margin: 0;
-  background-color: black;
+  background-color: #c099cf;
 }
 
 #rubiks-cube {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 #header {
@@ -13,4 +17,5 @@ body {
   color: white;
   background-color: grey;
   position: absolute;
+  z-index: 2;
 }
