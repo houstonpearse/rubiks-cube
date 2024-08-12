@@ -1,0 +1,115 @@
+import * as THREE from "three";
+import Cube from "./cube";
+export class AnimationQueue {
+  constructor() {
+    this.queue = [];
+    this.currentAnimation = undefined;
+  }
+
+  /**
+   * @param {Animation} animation
+   */
+  add(animation) {
+    this.queue.push(animation);
+  }
+
+  update() {
+    if (
+      this.currentAnimation === undefined ||
+      this.currentAnimation.finished()
+    ) {
+      this.currentAnimation = this.queue.shift();
+    }
+    if (this.currentAnimation === undefined) return;
+    this.currentAnimation.update();
+  }
+
+  /**
+   *
+   * @returns {THREE.Group | undefined}
+   */
+  getAnimationGroup() {
+    if (this.currentAnimation === undefined) return undefined;
+    return this.currentAnimation.getGroup();
+  }
+}
+
+export class Animation {
+  /**
+   *
+   * @param {Cube} cube
+   * @param {"x"|"y"|"z"} axis
+   * @param {(-1|0|1)[]} layers
+   * @param {1|-1|2|-2} direction
+   * @param {number} duration milliseconds
+   */
+  constructor(cube, axis, layers, direction, duration) {
+    this._cube = cube;
+    this._axis = axis;
+    this._layers = layers;
+    this._direction = direction;
+    this._duration = duration;
+    this._layerGroup = new THREE.Group();
+    this._finished = false;
+    this._lastUpdate = undefined;
+    this._totalRotation = 0;
+  }
+
+  init() {
+    this._lastUpdate = Date.now();
+    const layerObjects = this._cube.getRotationLayer(this._axis, this._layers);
+    this._layerGroup.add(...layerObjects);
+    this._cube.group.remove(...layerObjects);
+  }
+
+  teardown() {
+    this._finished = true;
+    this._layerGroup.children.forEach((piece) => {
+      piece.getWorldPosition(piece.position);
+      piece.getWorldQuaternion(piece.quaternion);
+      piece.userData.position.x = Math.round(piece.position.x);
+      piece.userData.position.y = Math.round(piece.position.y);
+      piece.userData.position.z = Math.round(piece.position.z);
+      piece.userData.rotation.x = piece.rotation.x;
+      piece.userData.rotation.y = piece.rotation.y;
+      piece.userData.rotation.z = piece.rotation.z;
+    });
+    this._cube.group.add(...this._layerGroup.children);
+    this._layerGroup.clear();
+  }
+
+  update() {
+    if (this._lastUpdate === undefined) {
+      this.init();
+    }
+
+    var interval = Date.now() - this._lastUpdate;
+    this._lastUpdate = Date.now();
+    if (interval + this._totalRotation > this._duration) {
+      interval = this._duration - this._totalRotation;
+    }
+    const rotationIncrement =
+      (Math.abs(this._direction) * ((interval / this._duration) * Math.PI)) / 2;
+    this._totalRotation += interval;
+    this._layerGroup.rotateOnWorldAxis(
+      new THREE.Vector3(
+        this._axis === "x" ? this._direction : 0,
+        this._axis === "y" ? this._direction : 0,
+        this._axis === "z" ? this._direction : 0
+      ).normalize(),
+      rotationIncrement
+    );
+
+    if (this._totalRotation >= this._duration) {
+      this.teardown();
+    }
+  }
+
+  getGroup() {
+    return this._layerGroup;
+  }
+
+  finished() {
+    return this._finished;
+  }
+}

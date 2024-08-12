@@ -126,33 +126,3 @@ export function newCubeState() {
   });
   return cubeState;
 }
-
-/**
- * @typedef {{x: number|null,y: number|null,z: number|null}} layer
- */
-
-export function isValidLayer(layer) {
-  let nullCount = 0;
-  if (layer.x === null) nullCount++;
-  if (layer.y === null) nullCount++;
-  if (layer.z === null) nullCount++;
-  return nullCount === 1;
-}
-
-/**
- *
- * @param {state[]} cubeState
- * @param {layer} layer
- * @returns {state[]}
- */
-export function getLayer(cubeState, layer) {
-  if (!isValidLayer(layer)) {
-    throw new Error("Invalid layer");
-  }
-  return cubeState.filter((state) => {
-    if (layer.x !== null && state.position.x !== layer.x) return false;
-    if (layer.y !== null && state.position.y !== layer.y) return false;
-    if (layer.z !== null && state.position.z !== layer.z) return false;
-    return true;
-  });
-}
