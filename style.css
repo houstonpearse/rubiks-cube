@@ -1,21 +1,78 @@
+:root {
+  --background-color: #ebebeb;
+  --shadow: 0 1px 3px 0 #00000026, 0 0 0.5px 0 #0000004d;
+  --nav-height: 100px;
+}
+
 body {
   margin: 0;
-  background-color: #c099cf;
+  background-color: var(--background-color);
+  height: 100vh;
 }
 
-#rubiks-cube {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-
-#header {
+#nav {
   width: 100%;
+  height: var(--nav-height);
   display: flex;
   flex-flow: row nowrap;
-  color: white;
-  background-color: grey;
-  position: absolute;
-  z-index: 2;
+  color: black;
+  background-color: var(--background-color);
+  justify-content: space-between;
+  font-family: monospace;
+}
+
+#app-name {
+  margin-left: 30px;
+  font-size: 2em;
+  align-self: center;
+  color: #426b1f;
+}
+
+#nav-links {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  margin-right: 30px;
+  align-self: center;
+}
+
+#nav-links li {
+  font-size: 1.2em;
+  margin-left: 20px;
+}
+
+#main {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+  margin-left: 15px;
+  margin-right: 15px;
+  height: calc(100% - var(--nav-height));
+}
+
+.container {
+  background-color: white;
+  margin-left: 15px;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  border-radius: 20px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+}
+
+#center {
+  flex: auto;
+  min-width: 500px;
+  max-width: 800px;
+}
+
+#left {
+  flex: 1;
+  min-width: 300px;
+}
+
+#right {
+  flex: 1;
+  min-width: 300px;
 }

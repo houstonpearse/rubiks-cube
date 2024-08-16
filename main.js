@@ -7,24 +7,25 @@ import * as TWEEN from "@tweenjs/tween.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("white");
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.z = 5;
-camera.position.y = 3;
-camera.position.x = 0;
 
 const canvas = document.getElementById("rubiks-cube");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 renderer.setAnimationLoop(animate);
 renderer.setPixelRatio(2);
 
+const camera = new THREE.PerspectiveCamera(
+  75,
+  canvas.clientWidth / canvas.clientHeight,
+  0.1,
+  1000
+);
+camera.position.z = 4;
+camera.position.y = 3;
+camera.position.x = 0;
+
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableZoom = true;
+controls.enableZoom = false;
 controls.enablePan = false;
 controls.enableDamping = true;
 controls.maxAzimuthAngle = Math.PI / 4;
@@ -52,7 +53,7 @@ const animationQueue = new AnimationQueue();
 
 /* initial camera animation */
 new TWEEN.Tween(camera.position)
-  .to({ x: 3, y: 3, z: 5 }, 1000)
+  .to({ x: 3, y: 3, z: 4 }, 1000)
   .easing(TWEEN.Easing.Cubic.InOut)
   .start();
 
@@ -100,9 +101,9 @@ window.addEventListener("keydown", (e) => {
     new TWEEN.Tween(camera.position)
       .to(
         {
-          x: camera.position.x > 0 ? -3 : 3,
-          y: camera.position.y > 0 ? 3 : -3,
-          z: 5,
+          x: camera.position.x > 0 ? -2.5 : 2.5,
+          y: camera.position.y > 0 ? 2.5 : -2.5,
+          z: 4,
         },
         200
       )
@@ -113,9 +114,9 @@ window.addEventListener("keydown", (e) => {
     new TWEEN.Tween(camera.position)
       .to(
         {
-          x: camera.position.x > 0 ? 3 : -3,
-          y: camera.position.y > 0 ? -3 : 3,
-          z: 5,
+          x: camera.position.x > 0 ? 2.5 : -2.5,
+          y: camera.position.y > 0 ? -2.5 : 2.5,
+          z: 4,
         },
         200
       )
@@ -138,8 +139,11 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+const canvasObserver = new ResizeObserver((entries) => {
+  console.log("resize");
+  const { width, height } = entries[0].contentRect;
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(width, height);
 });
+canvasObserver.observe(canvas.parentElement);

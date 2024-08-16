@@ -8,8 +8,23 @@
     <link rel="icon" type="image/svg+xml" href="/cube.svg" />
   </head>
   <body>
-    <div id="header"><div>Header</div></div>
-    <canvas id="rubiks-cube"></canvas>
+    <div id="nav">
+      <div id="app-name">CubePlus</div>
+      <ul id="nav-links">
+        <li>Home</li>
+        <li>Solve</li>
+        <li>Learn</li>
+        <li>Settings</li>
+        <li>hp</li>
+      </ul>
+    </div>
+    <div id="main">
+      <div class="container" id="left"></div>
+      <div class="container" id="center">
+        <canvas id="rubiks-cube"></canvas>
+      </div>
+      <div class="container" id="right"></div>
+    </div>
     <script type="module" src="/main.js"></script>
   </body>
 </html>
