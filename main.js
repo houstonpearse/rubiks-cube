@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import Cube from "./src/cube";
 import { AnimationQueue, Animation } from "./src/animation";
 import { Controls } from "./src/controls";
+import * as TWEEN from "@tweenjs/tween.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("white");
@@ -14,8 +15,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 camera.position.y = 3;
-camera.position.x = 3;
-camera.lookAt(0, 0, 0);
+camera.position.x = 0;
 
 const canvas = document.getElementById("rubiks-cube");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -27,6 +27,10 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableZoom = true;
 controls.enablePan = false;
 controls.enableDamping = true;
+controls.maxAzimuthAngle = Math.PI / 4;
+controls.minAzimuthAngle = -Math.PI / 4;
+controls.maxPolarAngle = (3 * Math.PI) / 4;
+controls.minPolarAngle = Math.PI / 4;
 
 const ambientLight = new THREE.AmbientLight("white", 0.5);
 const spotLight1 = new THREE.DirectionalLight("white", 2);
@@ -46,7 +50,14 @@ scene.add(cube.group);
 /* animation queue */
 const animationQueue = new AnimationQueue();
 
+/* initial camera animation */
+new TWEEN.Tween(camera.position)
+  .to({ x: 3, y: 3, z: 5 }, 1000)
+  .easing(TWEEN.Easing.Cubic.InOut)
+  .start();
+
 function animate() {
+  TWEEN.update();
   controls.update();
   animationQueue.update();
   const animationGroup = animationQueue.getAnimationGroup();
@@ -83,12 +94,33 @@ const keybinds = new Map([
   ["m", "E'"],
 ]);
 const keyControls = new Controls(keybinds);
+
 window.addEventListener("keydown", (e) => {
   if (e.key === " ") {
-    camera.position.x = camera.position.x > 0 ? -3 : 3;
-    camera.position.y = 3;
-    camera.position.z = 5;
-    camera.lookAt(0, 0, 0);
+    new TWEEN.Tween(camera.position)
+      .to(
+        {
+          x: camera.position.x > 0 ? -3 : 3,
+          y: camera.position.y > 0 ? 3 : -3,
+          z: 5,
+        },
+        200
+      )
+      .start();
+    return;
+  }
+  if (e.key === "Meta") {
+    new TWEEN.Tween(camera.position)
+      .to(
+        {
+          x: camera.position.x > 0 ? 3 : -3,
+          y: camera.position.y > 0 ? -3 : 3,
+          z: 5,
+        },
+        200
+      )
+      .start();
+    return;
   }
 
   const action = keyControls.getAction(e.key);
