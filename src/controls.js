@@ -1,87 +1,59 @@
-export class Controls {
-  /**
-   *
-   * @param {Map<string,string> | undefined} keyBinds
-   */
-  constructor(keyBinds) {
-    this.keyBinds = keyBinds;
-    if (keyBinds === undefined) {
-      this.keyBinds = new Map();
-    }
-  }
+export default class Controls {
+  movementControls = new Map([
+    ["t", "x"],
+    ["y", "x'"],
+    ["g", "y"],
+    ["h", "y'"],
+    ["b", "z"],
+    ["n", "z'"],
+    ["f", "U'"],
+    ["F", "u'"],
+    ["j", "U"],
+    ["J", "u"],
+    ["d", "L"],
+    ["s", "L'"],
+    ["k", "R"],
+    ["l", "R'"],
+    ["a", "D"],
+    [";", "D'"],
+    ["r", "F'"],
+    ["u", "F"],
+    ["i", "M"],
+    ["e", "M'"],
+    ["o", "S"],
+    ["w", "S'"],
+    ["q", "B"],
+    ["p", "B'"],
+    ["v", "E"],
+    ["m", "E'"],
+  ]);
 
-  /**
-   * @param {string} key
-   * @param {string} action
-   * @returns {Map<string,string>} keybind map
-   */
-  addKeyBind(key, action) {
-    this.keyBinds.set(key, action);
-  }
+  cameraControls = new Map([
+    [" ", "peek-toggle-horizontal"],
+    ["Meta", "peek-toggle-vertical"],
+    ["ArrowRight", "peek-right"],
+    ["ArrowLeft", "peek-left"],
+    ["ArrowUp", "peek-up"],
+    ["ArrowDown", "peek-down"],
+  ]);
 
-  /**
-   * @returns {string|undefined} keybind value
-   */
-  getKeyBind(key) {
-    return this.keyBinds.get(key);
-  }
-
-  /**
-   * @returns {{axis: "x"|"y"|"z", layers: (0|1|-1)[], direction: (1|-1|2|-2)}|undefined}
-   */
-  getAction(key) {
-    return this.getActionDetails(this.getKeyBind(key));
-  }
-
-  /**
-   * @param {string} action
-   * @returns {{axis: "x"|"y"|"z", layers: (0|1|-1)[], direction: (1|-1|2|-2)}}
-   */
-  getActionDetails(action) {
-    if (!action) return;
-    const reverse = action.includes("'") ? -1 : 1;
-    action = action.replace("'", "");
-    const multiplier = action.includes("2") ? 2 : 1;
-    action = action.replace("2", "");
-    if (!action) return;
-    const move = action[0];
-
-    if (move === "x") {
-      return { axis: "x", layers: [], direction: -reverse * multiplier };
-    } else if (move === "y") {
-      return { axis: "y", layers: [], direction: -reverse * multiplier };
-    } else if (move === "z") {
-      return { axis: "z", layers: [], direction: -reverse * multiplier };
-    } else if (move === "U") {
-      return { axis: "y", layers: [1], direction: -reverse * multiplier };
-    } else if (move === "u") {
-      return { axis: "y", layers: [1, 0], direction: -reverse * multiplier };
-    } else if (move === "R") {
-      return { axis: "x", layers: [1], direction: -reverse * multiplier };
-    } else if (move === "r") {
-      return { axis: "x", layers: [1, 0], direction: -reverse * multiplier };
-    } else if (move === "L") {
-      return { axis: "x", layers: [-1], direction: -reverse * multiplier };
-    } else if (move == "l") {
-      return { axis: "x", layers: [-1, 0], direction: -reverse * multiplier };
-    } else if (move === "D") {
-      return { axis: "y", layers: [-1], direction: -reverse * multiplier };
-    } else if (move === "d") {
-      return { axis: "y", layers: [-1, 0], direction: -reverse * multiplier };
-    } else if (move === "F") {
-      return { axis: "z", layers: [1], direction: -reverse * multiplier };
-    } else if (move === "f") {
-      return { axis: "z", layers: [1, 0], direction: -reverse * multiplier };
-    } else if (move === "B") {
-      return { axis: "z", layers: [-1], direction: -reverse * multiplier };
-    } else if (move === "b") {
-      return { axis: "z", layers: [-1, 0], direction: -reverse * multiplier };
-    } else if (move === "M") {
-      return { axis: "x", layers: [0], direction: -reverse * multiplier };
-    } else if (move === "E") {
-      return { axis: "y", layers: [0], direction: -reverse * multiplier };
-    } else if (move === "S") {
-      return { axis: "z", layers: [0], direction: -reverse * multiplier };
-    }
+  constructor() {
+    window.addEventListener("keydown", (e) => {
+      const cubes = document.querySelectorAll("rubiks-cube");
+      const action = this.movementControls.get(e.key);
+      if (action) {
+        const event = new CustomEvent("rotate", {
+          detail: { action },
+        });
+        cubes.forEach((cube) => cube.dispatchEvent(event));
+      }
+      const cameraAction = this.cameraControls.get(e.key);
+      if (cameraAction) {
+        const event = new CustomEvent("camera", {
+          detail: { action: cameraAction },
+        });
+        cubes.forEach((cube) => cube.dispatchEvent(event));
+      }
+    });
   }
 }

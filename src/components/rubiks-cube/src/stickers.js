@@ -1,13 +1,12 @@
 import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/Addons.js";
 const loader = new SVGLoader();
-export const cornerSVG = await loader.loadAsync(
-  "./src/assets/cornerSticker.svg"
-);
-export const edgeSVG = await loader.loadAsync("./src/assets/edgeSticker.svg");
-export const centerSVG = await loader.loadAsync(
-  "./src/assets/centerSticker.svg"
-);
+import cornerSVGUrl from "../assets/cornerSticker.svg";
+import edgeSVGUrl from "../assets/edgeSticker.svg";
+import centerSVGUrl from "../assets/centerSticker.svg";
+export const cornerSVG = await loader.loadAsync(cornerSVGUrl);
+export const edgeSVG = await loader.loadAsync(edgeSVGUrl);
+export const centerSVG = await loader.loadAsync(centerSVGUrl);
 
 /**
  *
