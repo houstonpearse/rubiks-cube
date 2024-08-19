@@ -2,12 +2,15 @@
   --background-color: #ebebeb;
   --shadow: 0 1px 3px 0 #00000026, 0 0 0.5px 0 #0000004d;
   --nav-height: 100px;
+  --page-height: calc(100vh - var(--nav-height));
+  --page-margin: 30px;
 }
 
 body {
   margin: 0;
   background-color: var(--background-color);
   height: 100vh;
+  width: 100vw;
 }
 
 #nav {
@@ -21,58 +24,66 @@ body {
   font-family: monospace;
 }
 
-#app-name {
-  margin-left: 30px;
+#nav #app-name {
+  margin-left: var(--page-margin);
   font-size: 2em;
   align-self: center;
   color: #426b1f;
 }
 
-#nav-links {
+#nav #nav-links {
   list-style-type: none;
   margin: 0;
   padding: 0;
   display: flex;
-  margin-right: 30px;
+  margin-right: var(--page-margin);
   align-self: center;
 }
 
-#nav-links li {
+#nav #nav-links li {
   font-size: 1.2em;
   margin-left: 20px;
 }
 
-#main {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: center;
-  margin-left: 15px;
-  margin-right: 15px;
-  height: calc(100% - var(--nav-height));
+#nav #nav-links a {
+  text-decoration: none;
+  color: black;
+}
+
+rubiks-cube {
+  height: var(--page-height);
+  width: 100%;
+  position: absolute;
+  z-index: 1;
 }
 
 .container {
+  height: 100%;
   background-color: white;
-  margin-left: 15px;
-  margin-right: 15px;
-  margin-bottom: 30px;
-  border-radius: 20px;
-  padding: 6px;
+  border-radius: 0.8125rem;
   box-shadow: var(--shadow);
 }
 
-#center {
-  flex: auto;
-  min-width: 500px;
-  max-width: 800px;
-}
-
 #left {
-  flex: 1;
-  min-width: 300px;
+  position: fixed;
+  z-index: 2;
+  top: var(--nav-height);
+  left: 0;
+  height: calc(var(--page-height) - var(--page-margin));
+  min-width: 200px;
+  max-width: 500px;
+  margin: var(--page-margin);
+  margin-top: 0px;
 }
 
 #right {
-  flex: 1;
-  min-width: 300px;
+  position: fixed;
+  z-index: 2;
+  top: var(--nav-height);
+  right: 0;
+  height: calc(var(--page-height) - var(--page-margin));
+  min-width: 200px;
+  max-width: 500px;
+  margin: var(--page-margin);
+  margin-top: 0px;
 }

@@ -11,21 +11,25 @@
     <div id="nav">
       <div id="app-name">CubePlus</div>
       <ul id="nav-links">
-        <li>Home</li>
-        <li>Solve</li>
-        <li>Learn</li>
-        <li>Settings</li>
-        <li>hp</li>
+        <li>
+          <a href="/" onclick="route(event)">Home</a>
+        </li>
+        <li><a href="/solve" onclick="route(event)">Solve</a></ac></li>
+        <li><a href="/learn" onclick="route(event)">Learn</a></li>
+        <li><a href="/settings" onclick="route(event)">Settings</a></li>
+        <li onclick="route(event)">hp</li>
       </ul>
     </div>
-    <div id="main">
-      <div class="container" id="left"></div>
-      <div class="container" id="center">
-        <rubiks-cube></rubiks-cube>
-      </div>
-      <div class="container" id="right"></div>
+    <rubiks-cube></rubiks-cube>
+    <div id="left">
+      <div class="container"></div>
     </div>
+    <div id="right">
+      <div class="container"></div>
+    </div>
+    
     <script type="module" src="/main.js"></script>
     <script type="module" src="src/components/rubiks-cube/index.js"></script>
+    <script type="module" src="src/router.js"></script>
   </body>
 </html>
