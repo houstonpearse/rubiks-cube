@@ -53,15 +53,38 @@ body {
 rubiks-cube {
   height: var(--page-height);
   width: 100%;
-  position: absolute;
+  position: fixed;
   z-index: 1;
 }
 
 .container {
-  height: 100%;
+  height: calc(100%-4px);
+  width: 100%;
+  margin: 2px;
   background-color: white;
   border-radius: 0.8125rem;
   box-shadow: var(--shadow);
+}
+
+.section {
+  display: flex;
+  flex-flow: row nowrap;
+  height: calc(var(--page-height) - var(--page-margin));
+  min-width: 200px;
+  width: 350px;
+  max-width: 500px;
+  margin: var(--page-margin);
+  margin-top: 0px;
+}
+
+.section .resizer {
+  margin: 0px;
+  border: 0px;
+  padding: 0px;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  background: inherit;
 }
 
 #left {
@@ -69,21 +92,12 @@ rubiks-cube {
   z-index: 2;
   top: var(--nav-height);
   left: 0;
-  height: calc(var(--page-height) - var(--page-margin));
-  min-width: 200px;
-  max-width: 500px;
-  margin: var(--page-margin);
-  margin-top: 0px;
 }
 
 #right {
+  overflow-x: auto;
   position: fixed;
   z-index: 2;
   top: var(--nav-height);
   right: 0;
-  height: calc(var(--page-height) - var(--page-margin));
-  min-width: 200px;
-  max-width: 500px;
-  margin: var(--page-margin);
-  margin-top: 0px;
 }

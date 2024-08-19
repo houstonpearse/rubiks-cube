@@ -21,13 +21,14 @@
       </ul>
     </div>
     <rubiks-cube></rubiks-cube>
-    <div id="left">
+    <div class="section" id="left">
+      <div class="container"></div>
+      <button class="resizer right"></button>
+    </div>
+    <div class="section" id="right">
+      <button class="resizer left"></button>
       <div class="container"></div>
     </div>
-    <div id="right">
-      <div class="container"></div>
-    </div>
-    
     <script type="module" src="/main.js"></script>
     <script type="module" src="src/components/rubiks-cube/index.js"></script>
     <script type="module" src="src/router.js"></script>
