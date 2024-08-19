@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { CubeMaterials } from "./materials";
-import { getStickerGeometry } from "./stickers";
+import Materials from "./materials";
+import Stickers from "./stickers";
 import newCorner from "./corner";
 import newEdge from "./edge";
 import newCenter from "./center";
@@ -81,67 +81,67 @@ export default class Cube {
   createCorner(position) {
     if (position.x == 1 && position.y == 1 && position.z == 1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.front,
-        CubeMaterials.right,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.front,
+        Materials.right,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == 1 && position.z == -1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.right,
-        CubeMaterials.back,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.right,
+        Materials.back,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == 1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.right,
-        CubeMaterials.front,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.right,
+        Materials.front,
+        Materials.bottom,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == -1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.back,
-        CubeMaterials.right,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.back,
+        Materials.right,
+        Materials.bottom,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == 1 && position.z == 1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.left,
-        CubeMaterials.front,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.left,
+        Materials.front,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == 1 && position.z == -1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.back,
-        CubeMaterials.left,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.back,
+        Materials.left,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == 1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.front,
-        CubeMaterials.left,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.front,
+        Materials.left,
+        Materials.bottom,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == -1) {
       return newCorner(
-        getStickerGeometry("corner"),
-        CubeMaterials.left,
-        CubeMaterials.back,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.corner,
+        Materials.left,
+        Materials.back,
+        Materials.bottom,
+        Materials.core
       );
     } else {
       throw new Error("Invalid corner position: " + position);
@@ -154,87 +154,87 @@ export default class Cube {
   createEdge(position) {
     if (position.x == 1 && position.y == 1 && position.z == 0) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.right,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.right,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == 0) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.right,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.right,
+        Materials.bottom,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == 0 && position.z == 1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.front,
-        CubeMaterials.right,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.front,
+        Materials.right,
+        Materials.core
       );
     } else if (position.x == 1 && position.y == 0 && position.z == -1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.right,
-        CubeMaterials.back,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.right,
+        Materials.back,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == 1 && position.z == 0) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.left,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.left,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == 0) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.left,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.left,
+        Materials.bottom,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == 0 && position.z == 1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.front,
-        CubeMaterials.left,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.front,
+        Materials.left,
+        Materials.core
       );
     } else if (position.x == -1 && position.y == 0 && position.z == -1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.left,
-        CubeMaterials.back,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.left,
+        Materials.back,
+        Materials.core
       );
     } else if (position.x == 0 && position.y == 1 && position.z == 1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.front,
-        CubeMaterials.top,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.front,
+        Materials.top,
+        Materials.core
       );
     } else if (position.x == 0 && position.y == 1 && position.z == -1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.top,
-        CubeMaterials.back,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.top,
+        Materials.back,
+        Materials.core
       );
     } else if (position.x == 0 && position.y == -1 && position.z == 1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.bottom,
-        CubeMaterials.front,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.bottom,
+        Materials.front,
+        Materials.core
       );
     } else if (position.x == 0 && position.y == -1 && position.z == -1) {
       return newEdge(
-        getStickerGeometry("edge"),
-        CubeMaterials.back,
-        CubeMaterials.bottom,
-        CubeMaterials.core
+        Stickers.edge,
+        Materials.back,
+        Materials.bottom,
+        Materials.core
       );
     } else {
       throw new Error("Invalid edge position: " + position);
@@ -245,24 +245,20 @@ export default class Cube {
    * @returns {THREE.Group}
    */
   createCenter(position) {
-    var centerColor = CubeMaterials.top;
+    var centerColor = Materials.top;
     if (position.x !== 0) {
-      centerColor = position.x > 0 ? CubeMaterials.right : CubeMaterials.left;
+      centerColor = position.x > 0 ? Materials.right : Materials.left;
     } else if (position.y !== 0) {
-      centerColor = position.y > 0 ? CubeMaterials.top : CubeMaterials.bottom;
+      centerColor = position.y > 0 ? Materials.top : Materials.bottom;
     } else if (position.z !== 0) {
-      centerColor = position.z > 0 ? CubeMaterials.front : CubeMaterials.back;
+      centerColor = position.z > 0 ? Materials.front : Materials.back;
     }
-    return newCenter(
-      getStickerGeometry("center"),
-      centerColor,
-      CubeMaterials.core
-    );
+    return newCenter(Stickers.center, centerColor, Materials.core);
   }
   /**
    * @returns {THREE.Group}
    */
   createCore() {
-    return new THREE.Mesh(new THREE.SphereGeometry(1.55), CubeMaterials.core);
+    return new THREE.Mesh(new THREE.SphereGeometry(1.55), Materials.core);
   }
 }

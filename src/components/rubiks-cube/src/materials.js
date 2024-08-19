@@ -1,5 +1,5 @@
 import * as THREE from "three";
-export class CubeMaterials {
+export default class Materials {
   static front = new THREE.MeshStandardMaterial({
     color: "#2cbf13",
     metalness: 0,

@@ -5,12 +5,12 @@ import Cube from "./src/cube";
 import getRotationDetails from "./src/rotation";
 import { AnimationQueue, Animation } from "./src/animation";
 
-export class RubiksCube extends HTMLElement {
+class RubiksCube extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.innerHTML = `<canvas id="rubiks-cube"></canvas>`;
-    this.canvas = this.shadowRoot.getElementById("rubiks-cube");
+    this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
+    this.canvas = this.shadowRoot.getElementById("cube-canvas");
   }
 
   connectedCallback() {
@@ -21,25 +21,37 @@ export class RubiksCube extends HTMLElement {
     // defined core threejs objects
     const canvas = this.canvas;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("white");
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      canvas,
+      antialias: true,
+    });
+    renderer.setSize(this.clientWidth, this.clientHeight);
     renderer.setAnimationLoop(animate);
     renderer.setPixelRatio(2);
 
-    // update rendered and camera when container resizes
-    const canvasObserver = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    });
-    canvasObserver.observe(this.parentElement);
+    //update renderer and camera when container resizes. debouncing events to reduce frequency
+    function debounce(f, delay) {
+      let timer = 0;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => f.apply(this, args), delay);
+      };
+    }
+    const resizeObserver = new ResizeObserver(
+      debounce((entries) => {
+        const { width, height } = entries[0].contentRect;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }, 30)
+    );
+    resizeObserver.observe(this);
 
     // add camera
     const camera = new THREE.PerspectiveCamera(
       75,
-      canvas.clientWidth / canvas.clientHeight,
+      this.clientWidth / this.clientHeight,
       0.1,
       1000
     );
