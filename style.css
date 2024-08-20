@@ -95,7 +95,6 @@ rubiks-cube {
 }
 
 #right {
-  overflow-x: auto;
   position: fixed;
   z-index: 2;
   top: var(--nav-height);

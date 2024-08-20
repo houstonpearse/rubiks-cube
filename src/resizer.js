@@ -1,3 +1,6 @@
+/** adds event listeners to elements with .resizer className
+ * default direction is right, desired direction is set in the class name (right or left)
+ */
 export default class Resizer {
   constructor() {
     this.x = 0;

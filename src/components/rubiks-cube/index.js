@@ -119,6 +119,7 @@ class RubiksCube extends HTMLElement {
       }
     });
     this.addEventListener("camera", (e) => {
+      console.log(cube.getStickerState());
       new TWEEN.Tween(camera.position);
       if (e.detail.action === "peek-toggle-horizontal") {
         new TWEEN.Tween(camera.position)
