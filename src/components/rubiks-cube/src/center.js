@@ -10,9 +10,11 @@ export default function newCenter(sticker, frontMaterial, coreMaterial) {
   const group = new THREE.Group();
   const boxGeom = new THREE.BoxGeometry(1, 1, 1);
   const boxMesh = new THREE.Mesh(boxGeom, coreMaterial);
+  boxMesh.userData = { type: "piece" };
   group.add(boxMesh);
 
   const frontSticker = new THREE.Mesh(sticker, frontMaterial);
+  frontSticker.userData = { type: "sticker" };
   frontSticker.position.set(0, 0, 0.5);
   frontSticker.rotation.set(0, 0, 0);
   group.add(frontSticker);

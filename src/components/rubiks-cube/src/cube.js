@@ -58,6 +58,60 @@ export default class Cube {
     });
   }
 
+  getStickerState() {
+    const state = {
+      up: [[], [], []],
+      down: [[], [], []],
+      front: [[], [], []],
+      back: [[], [], []],
+      left: [[], [], []],
+      right: [[], [], []],
+    };
+    this.group.children.forEach((piece) => {
+      if (piece.userData.type === "core") {
+        return;
+      }
+      piece.children.forEach((mesh) => {
+        if (mesh.userData.type === "sticker") {
+          const piecepos = new THREE.Vector3();
+          piecepos.copy(piece.position);
+          piecepos.round();
+          const stickerpos = new THREE.Vector3();
+          mesh.getWorldPosition(stickerpos);
+          stickerpos.sub(piecepos);
+          stickerpos.multiplyScalar(2);
+          stickerpos.round();
+          if (stickerpos.x === 1) {
+            state.right[1 + Math.round(piece.position.y)][
+              1 + Math.round(piece.position.z)
+            ] = mesh.material.userData.face;
+          } else if (stickerpos.x === -1) {
+            state.left[1 + Math.round(piece.position.y)][
+              1 + Math.round(piece.position.z)
+            ] = mesh.material.userData.face;
+          } else if (stickerpos.y === 1) {
+            state.up[1 + Math.round(piece.position.x)][
+              1 + Math.round(piece.position.z)
+            ] = mesh.material.userData.face;
+          } else if (stickerpos.y === -1) {
+            state.down[1 + Math.round(piece.position.x)][
+              1 + Math.round(piece.position.z)
+            ] = mesh.material.userData.face;
+          } else if (stickerpos.z === 1) {
+            state.front[1 + Math.round(piece.position.x)][
+              1 + Math.round(piece.position.y)
+            ] = mesh.material.userData.face;
+          } else if (stickerpos.z === -1) {
+            state.back[1 + Math.round(piece.position.x)][
+              1 + Math.round(piece.position.y)
+            ] = mesh.material.userData.face;
+          }
+        }
+      });
+    });
+    return state;
+  }
+
   /**
    * @param {{x:number,y:number,z:number}} position
    * @param {"corner | edge | center"} type
@@ -84,7 +138,7 @@ export default class Cube {
         Stickers.corner,
         Materials.front,
         Materials.right,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == 1 && position.y == 1 && position.z == -1) {
@@ -92,7 +146,7 @@ export default class Cube {
         Stickers.corner,
         Materials.right,
         Materials.back,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == 1) {
@@ -100,7 +154,7 @@ export default class Cube {
         Stickers.corner,
         Materials.right,
         Materials.front,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == -1) {
@@ -108,7 +162,7 @@ export default class Cube {
         Stickers.corner,
         Materials.back,
         Materials.right,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else if (position.x == -1 && position.y == 1 && position.z == 1) {
@@ -116,7 +170,7 @@ export default class Cube {
         Stickers.corner,
         Materials.left,
         Materials.front,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == -1 && position.y == 1 && position.z == -1) {
@@ -124,7 +178,7 @@ export default class Cube {
         Stickers.corner,
         Materials.back,
         Materials.left,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == 1) {
@@ -132,7 +186,7 @@ export default class Cube {
         Stickers.corner,
         Materials.front,
         Materials.left,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == -1) {
@@ -140,7 +194,7 @@ export default class Cube {
         Stickers.corner,
         Materials.left,
         Materials.back,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else {
@@ -156,14 +210,14 @@ export default class Cube {
       return newEdge(
         Stickers.edge,
         Materials.right,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == 1 && position.y == -1 && position.z == 0) {
       return newEdge(
         Stickers.edge,
         Materials.right,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else if (position.x == 1 && position.y == 0 && position.z == 1) {
@@ -184,14 +238,14 @@ export default class Cube {
       return newEdge(
         Stickers.edge,
         Materials.left,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == -1 && position.y == -1 && position.z == 0) {
       return newEdge(
         Stickers.edge,
         Materials.left,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else if (position.x == -1 && position.y == 0 && position.z == 1) {
@@ -212,20 +266,20 @@ export default class Cube {
       return newEdge(
         Stickers.edge,
         Materials.front,
-        Materials.top,
+        Materials.up,
         Materials.core
       );
     } else if (position.x == 0 && position.y == 1 && position.z == -1) {
       return newEdge(
         Stickers.edge,
-        Materials.top,
+        Materials.up,
         Materials.back,
         Materials.core
       );
     } else if (position.x == 0 && position.y == -1 && position.z == 1) {
       return newEdge(
         Stickers.edge,
-        Materials.bottom,
+        Materials.down,
         Materials.front,
         Materials.core
       );
@@ -233,7 +287,7 @@ export default class Cube {
       return newEdge(
         Stickers.edge,
         Materials.back,
-        Materials.bottom,
+        Materials.down,
         Materials.core
       );
     } else {
@@ -245,11 +299,11 @@ export default class Cube {
    * @returns {THREE.Group}
    */
   createCenter(position) {
-    var centerColor = Materials.top;
+    var centerColor = Materials.up;
     if (position.x !== 0) {
       centerColor = position.x > 0 ? Materials.right : Materials.left;
     } else if (position.y !== 0) {
-      centerColor = position.y > 0 ? Materials.top : Materials.bottom;
+      centerColor = position.y > 0 ? Materials.up : Materials.down;
     } else if (position.z !== 0) {
       centerColor = position.z > 0 ? Materials.front : Materials.back;
     }

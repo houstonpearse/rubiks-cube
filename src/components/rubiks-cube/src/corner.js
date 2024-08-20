@@ -17,22 +17,26 @@ export default function newCorner(
   const group = new THREE.Group();
   const boxGeom = new THREE.BoxGeometry(1, 1, 1);
   const boxMesh = new THREE.Mesh(boxGeom, coreMaterial);
+  boxMesh.userData = { type: "piece" };
   group.add(boxMesh);
 
   // front
   const frontSticker = new THREE.Mesh(sticker, frontMaterial);
+  frontSticker.userData = { type: "sticker" };
   frontSticker.position.set(0, 0, 0.5);
   frontSticker.rotation.set(0, 0, 0);
   group.add(frontSticker);
 
   //right
   const rightSticker = new THREE.Mesh(sticker, rightMaterial);
+  rightSticker.userData = { type: "sticker" };
   rightSticker.position.set(0.5, 0, 0);
   rightSticker.rotation.set(Math.PI / 2, Math.PI / 2, 0);
   group.add(rightSticker);
 
   //white/yellow
   const topSticker = new THREE.Mesh(sticker, topMaterial);
+  topSticker.userData = { type: "sticker" };
   topSticker.position.set(0, 0.5, 0);
   topSticker.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
   group.add(topSticker);
