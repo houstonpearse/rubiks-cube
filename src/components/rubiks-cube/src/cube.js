@@ -82,28 +82,28 @@ export default class Cube {
           stickerpos.multiplyScalar(2);
           stickerpos.round();
           if (stickerpos.x === 1) {
-            state.right[1 + Math.round(piece.position.y)][
-              1 + Math.round(piece.position.z)
+            state.right[1 - Math.round(piece.position.y)][
+              1 - Math.round(piece.position.z)
             ] = mesh.material.userData.face;
           } else if (stickerpos.x === -1) {
-            state.left[1 + Math.round(piece.position.y)][
+            state.left[1 - Math.round(piece.position.y)][
               1 + Math.round(piece.position.z)
             ] = mesh.material.userData.face;
           } else if (stickerpos.y === 1) {
-            state.up[1 + Math.round(piece.position.x)][
-              1 + Math.round(piece.position.z)
+            state.up[1 + Math.round(piece.position.z)][
+              1 + Math.round(piece.position.x)
             ] = mesh.material.userData.face;
           } else if (stickerpos.y === -1) {
-            state.down[1 + Math.round(piece.position.x)][
-              1 + Math.round(piece.position.z)
+            state.down[1 - Math.round(piece.position.z)][
+              1 + Math.round(piece.position.x)
             ] = mesh.material.userData.face;
           } else if (stickerpos.z === 1) {
-            state.front[1 + Math.round(piece.position.x)][
-              1 + Math.round(piece.position.y)
+            state.front[1 - Math.round(piece.position.y)][
+              1 + Math.round(piece.position.x)
             ] = mesh.material.userData.face;
           } else if (stickerpos.z === -1) {
-            state.back[1 + Math.round(piece.position.x)][
-              1 + Math.round(piece.position.y)
+            state.back[1 - Math.round(piece.position.y)][
+              1 - Math.round(piece.position.x)
             ] = mesh.material.userData.face;
           }
         }
