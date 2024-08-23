@@ -1,16 +1,49 @@
 import * as THREE from "three";
 import Cube from "./cube";
+
 export class AnimationQueue {
-  constructor() {
+  constructor(type = "exponential", factor = 1.3) {
+    /** @type {Animation[]} */
     this.queue = [];
+    /** @type {Animation | undefined} */
     this.currentAnimation = undefined;
+    /** @type {{type: "fast-forward" | "exponential", factor: number}} */
+    this.type = type;
+    this.factor = factor;
   }
 
   /**
    * @param {Animation} animation
    */
   add(animation) {
+    if (this.type === "fast-forward") {
+      this.fastForward();
+    } else if (this.type === "exponential") {
+      this.exponential();
+    }
     this.queue.push(animation);
+  }
+
+  /* exponentially increases the animation speed with the depth of the queue */
+  exponential() {
+    let animations = [];
+    if (this.currentAnimation) animations.push(this.currentAnimation);
+    animations = animations.concat(this.queue);
+    for (let i = 0; i < animations.length; i++) {
+      animations[i].setSpeed(this.factor ** (animations.length - i - 1));
+    }
+  }
+
+  /* instantly completes any queued animations */
+  fastForward() {
+    if (this.currentAnimation) {
+      this.currentAnimation.setFastForward();
+    }
+    if (this.queue.length) {
+      for (const a of this.queue) {
+        a.setFastForward();
+      }
+    }
   }
 
   update() {
@@ -53,6 +86,16 @@ export class Animation {
     this._finished = false;
     this._lastUpdate = undefined;
     this._totalRotation = 0;
+    this.fastforward = false;
+    this.speed = 1;
+  }
+
+  setFastForward(value = true) {
+    this.fastforward = value;
+  }
+
+  setSpeed(value = 1) {
+    this.speed = value;
   }
 
   init() {
@@ -83,9 +126,9 @@ export class Animation {
       this.init();
     }
 
-    var interval = Date.now() - this._lastUpdate;
+    var interval = (Date.now() - this._lastUpdate) * this.speed;
     this._lastUpdate = Date.now();
-    if (interval + this._totalRotation > this._duration) {
+    if (this.fastforward || interval + this._totalRotation > this._duration) {
       interval = this._duration - this._totalRotation;
     }
     const rotationIncrement =
