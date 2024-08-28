@@ -1,5 +1,5 @@
 {
-  "name": "rubiks-cube",
+  "name": "@houstonp/rubiks-cube",
   "version": "1.0.0",
   "description": "Rubiks Cube Web Component built with threejs",
   "main": "index.js",
@@ -8,5 +8,14 @@
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",
     "three": "^0.167.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/houstonpearse/rubiks-cube.git"
+  },
+  "bugs": {
+    "url": "https://github.com/houstonpearse/rubiks-cube/issues"
+  },
+  "homepage": "https://github.com/houstonpearse/rubiks-cube#readme"
 }
