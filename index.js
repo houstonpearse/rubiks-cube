@@ -89,14 +89,17 @@ class RubiksCube extends HTMLElement {
     const animationQueue = new AnimationQueue();
 
     // initial camera animation
-    new TWEEN.Tween(camera.position)
-      .to({ x: 3, y: 3, z: 4 }, 1000)
-      .easing(TWEEN.Easing.Cubic.InOut)
-      .start();
+    const cameraAnimationGroup = new TWEEN.Group();
+    cameraAnimationGroup.add(
+      new TWEEN.Tween(camera.position)
+        .to({ x: 3, y: 3, z: 4 }, 1000)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+    );
 
     // animation loop
     function animate() {
-      TWEEN.update();
+      cameraAnimationGroup.update();
       controls.update();
       animationQueue.update();
       const animationGroup = animationQueue.getAnimationGroup();
@@ -120,73 +123,85 @@ class RubiksCube extends HTMLElement {
     });
     this.addEventListener("camera", (e) => {
       console.log(cube.getStickerState());
-      new TWEEN.Tween(camera.position);
+
       if (e.detail.action === "peek-toggle-horizontal") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: camera.position.x > 0 ? -2.5 : 2.5,
-              y: camera.position.y > 0 ? 2.5 : -2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: camera.position.x > 0 ? -2.5 : 2.5,
+                y: camera.position.y > 0 ? 2.5 : -2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
       } else if (e.detail.action === "peek-toggle-vertical") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: camera.position.x > 0 ? 2.5 : -2.5,
-              y: camera.position.y > 0 ? -2.5 : 2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
-      } else if (e.detail.action === "peek-right") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: 2.5,
-              y: camera.position.y > 0 ? 2.5 : -2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: camera.position.x > 0 ? 2.5 : -2.5,
+                y: camera.position.y > 0 ? -2.5 : 2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
+      } else if (e.etail.action === "peek-right") {
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: 2.5,
+                y: camera.position.y > 0 ? 2.5 : -2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
       } else if (e.detail.action === "peek-left") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: -2.5,
-              y: camera.position.y > 0 ? 2.5 : -2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: -2.5,
+                y: camera.position.y > 0 ? 2.5 : -2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
       } else if (e.detail.action === "peek-up") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: camera.position.x > 0 ? 2.5 : -2.5,
-              y: 2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: camera.position.x > 0 ? 2.5 : -2.5,
+                y: 2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
       } else if (e.detail.action === "peek-down") {
-        new TWEEN.Tween(camera.position)
-          .to(
-            {
-              x: camera.position.x > 0 ? 2.5 : -2.5,
-              y: -2.5,
-              z: 4,
-            },
-            200
-          )
-          .start();
+        cameraAnimationGroup.add(
+          new TWEEN.Tween(camera.position)
+            .to(
+              {
+                x: camera.position.x > 0 ? 2.5 : -2.5,
+                y: -2.5,
+                z: 4,
+              },
+              200
+            )
+            .start()
+        );
       }
     });
   }
