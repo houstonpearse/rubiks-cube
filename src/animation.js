@@ -57,6 +57,10 @@ export class AnimationQueue {
     this.currentAnimation.update();
   }
 
+  finished() {
+    return this.currentAnimation?.finished();
+  }
+
   /**
    *
    * @returns {THREE.Group | undefined}
@@ -119,6 +123,7 @@ export class Animation {
     });
     this._cube.group.add(...this._layerGroup.children);
     this._layerGroup.clear();
+    this._cube.stickerState = this._cube.getStickerState();
   }
 
   update() {

@@ -2,10 +2,15 @@
 
 This package is a rubiks cube web component built with threejs. Camera animation smoothing is done with the tweenjs package.
 
-## adding the component
+## Adding the component
 
-You can dd the component to a webpage by adding a module script tag with the index.js file. And then
+You can add the component to a webpage by adding an import statement in the index.js file. And then
 by adding the webcomponent tag.
+
+```js
+//index.js
+import "@houstonp/rubiks-cube";
+```
 
 ```html
 <!DOCTYPE html>
@@ -20,7 +25,54 @@ by adding the webcomponent tag.
 </html>
 ```
 
-## updating the component
+## state of the component
+
+A state event occurs when a movement animation is completed. The event details contains the current state of the cube. The state is an object containing the stickers of each face. A sticker is either "up", "down", "left", "right", "front" or "back".
+
+To listen for the state event, add an event listener to the rubiks-cube element.
+
+```js
+const cube = document.querySelector("rubiks-cube");
+cube.addEventListener("state", (e) => {
+  console.log(e.detail.state);
+});
+/*
+{
+    up: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+    down: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+    left: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+    right: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+    front: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+    back: [
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+        [sticker, sticker, sticker],
+    ],
+}
+*/
+```
+
+## Updating the component
 
 The Rubiks cube web component listens for custom events to perform twists, rotations and camera changes. As per convention, the starting rotation has green facing forward, white facing up and red facing to the right.
 
@@ -36,6 +88,8 @@ The camera position specified in the event details must be one of the following:
 - `peek-bottom` - Camera is moved below the cube so that the bottom face is visible
 - `peek-toggle-horizontal` - Camera is moved to the opposite side of the cube in the horizontal plane
 - `peek-toggle-vertical` - Camera is moved to the opposite side of the cube in the vertical plane
+
+Note: The camera position cannot change to perform an equivalent cube rotation.
 
 #### Example
 

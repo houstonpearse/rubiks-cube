@@ -97,6 +97,12 @@ class RubiksCube extends HTMLElement {
         .start()
     );
 
+    const sendState = () => {
+      const state = cube.getStickerState();
+      const event = new CustomEvent("state", { detail: { state } });
+      this.dispatchEvent(event);
+    };
+
     // animation loop
     function animate() {
       cameraAnimationGroup.update();
@@ -104,6 +110,7 @@ class RubiksCube extends HTMLElement {
       animationQueue.update();
       const animationGroup = animationQueue.getAnimationGroup();
       if (animationGroup !== undefined) scene.add(animationGroup);
+      if (animationQueue.finished()) sendState();
       renderer.render(scene, camera);
     }
 
@@ -122,8 +129,6 @@ class RubiksCube extends HTMLElement {
       }
     });
     this.addEventListener("camera", (e) => {
-      console.log(cube.getStickerState());
-
       if (e.detail.action === "peek-toggle-horizontal") {
         cameraAnimationGroup.add(
           new TWEEN.Tween(camera.position)
@@ -150,7 +155,7 @@ class RubiksCube extends HTMLElement {
             )
             .start()
         );
-      } else if (e.etail.action === "peek-right") {
+      } else if (e.detail.action === "peek-right") {
         cameraAnimationGroup.add(
           new TWEEN.Tween(camera.position)
             .to(

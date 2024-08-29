@@ -36,6 +36,7 @@ export default class Cube {
       };
       this.group.add(piece);
     }
+    this.stickerState = this.getStickerState();
   }
   /**
    * @param {"x"|"y"|"z"} axis
