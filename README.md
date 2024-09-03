@@ -76,6 +76,17 @@ cube.addEventListener("state", (e) => {
 
 The Rubiks cube web component listens for custom events to perform twists, rotations and camera changes. As per convention, the starting rotation has green facing forward, white facing up and red facing to the right.
 
+### Reset event
+
+The rubiks-cube element listens for the `reset` custom event and resets the cube to its initial state.
+
+#### Example
+
+```js
+const cube = document.querySelector("rubiks-cube");
+cube.dispatchEvent(new CustomEvent("reset"));
+```
+
 ### Camera events
 
 The rubiks-cube element listens for the `camera` custom event and moves the camera to the specified position.

@@ -28,15 +28,29 @@ export default class Cube {
       );
       piece.rotation.set(state.rotation.x, state.rotation.y, state.rotation.z);
       piece.userData = {
-        position: state.position,
-        rotation: state.rotation,
-        initialPosition: state.position,
-        initialRotation: state.rotation,
+        position: Object.assign({}, state.position),
+        rotation: Object.assign({}, state.rotation),
+        initialPosition: Object.assign({}, state.position),
+        initialRotation: Object.assign({}, state.rotation),
         type: state.type,
       };
       this.group.add(piece);
     }
-    this.stickerState = this.getStickerState();
+  }
+
+  reset() {
+    this.group.children.forEach((piece) => {
+      const { x, y, z } = piece.userData.initialPosition;
+      const { x: u, y: v, z: w } = piece.userData.initialRotation;
+      piece.position.set(x * 1.04, y * 1.04, z * 1.04);
+      piece.rotation.set(u, v, w);
+      piece.userData.position.x = x
+      piece.userData.position.y = y
+      piece.userData.position.z = z
+      piece.userData.rotation.x = u
+      piece.userData.rotation.y = v
+      piece.userData.rotation.z = w
+    });
   }
   /**
    * @param {"x"|"y"|"z"} axis

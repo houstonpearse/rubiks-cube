@@ -108,11 +108,20 @@ class RubiksCube extends HTMLElement {
       cameraAnimationGroup.update();
       controls.update();
       animationQueue.update();
-      const animationGroup = animationQueue.getAnimationGroup();
-      if (animationGroup !== undefined) scene.add(animationGroup);
-      if (animationQueue.finished()) sendState();
+      if (animationQueue.currentAnimation) {
+        scene.add(animationQueue.getAnimationGroup());
+      }
+      if (animationQueue.finished()) {
+        sendState();
+        scene.remove(animationQueue.getAnimationGroup());
+      }
       renderer.render(scene, camera);
     }
+
+    this.addEventListener("reset", () => {
+      animationQueue.clear();
+      cube.reset();
+    });
 
     // add event listeners for rotation and camera controls
     this.addEventListener("rotate", (e) => {

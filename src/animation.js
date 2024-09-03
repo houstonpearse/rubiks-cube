@@ -12,6 +12,15 @@ export class AnimationQueue {
     this.factor = factor;
   }
 
+  clear() {
+    this.queue = [];
+    if (this.currentAnimation) {
+      this.currentAnimation.fastforward = true;
+      this.currentAnimation.update();
+      this.currentAnimation = undefined;
+    }
+  }
+
   /**
    * @param {Animation} animation
    */
@@ -66,8 +75,7 @@ export class AnimationQueue {
    * @returns {THREE.Group | undefined}
    */
   getAnimationGroup() {
-    if (this.currentAnimation === undefined) return undefined;
-    return this.currentAnimation.getGroup();
+    return this.currentAnimation?.getGroup();
   }
 }
 
@@ -106,7 +114,6 @@ export class Animation {
     this._lastUpdate = Date.now();
     const layerObjects = this._cube.getRotationLayer(this._axis, this._layers);
     this._layerGroup.add(...layerObjects);
-    this._cube.group.remove(...layerObjects);
   }
 
   teardown() {
@@ -122,8 +129,6 @@ export class Animation {
       piece.userData.rotation.z = piece.rotation.z;
     });
     this._cube.group.add(...this._layerGroup.children);
-    this._layerGroup.clear();
-    this._cube.stickerState = this._cube.getStickerState();
   }
 
   update() {
