@@ -121,6 +121,7 @@ class RubiksCube extends HTMLElement {
     this.addEventListener("reset", () => {
       animationQueue.clear();
       cube.reset();
+      sendState();
     });
 
     // add event listeners for rotation and camera controls
