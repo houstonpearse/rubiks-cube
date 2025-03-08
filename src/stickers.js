@@ -1,5 +1,5 @@
-import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/Addons.js";
+import { ExtrudeGeometry } from "three";
 
 const loader = new SVGLoader();
 const cornerSVG = loader.parse(`
@@ -19,7 +19,7 @@ const centerSVG = loader.parse(`
 `);
 
 export default class Stickers {
-  static center = new THREE.ExtrudeGeometry(
+  static center = new ExtrudeGeometry(
     SVGLoader.createShapes(centerSVG.paths[0])[0],
     {
       depth: 15,
@@ -28,7 +28,7 @@ export default class Stickers {
     .scale(0.002, 0.002, 0.002)
     .translate(-0.5, -0.5, 0);
 
-  static edge = new THREE.ExtrudeGeometry(
+  static edge = new ExtrudeGeometry(
     SVGLoader.createShapes(edgeSVG.paths[0])[0],
     {
       depth: 15,
@@ -37,7 +37,7 @@ export default class Stickers {
     .scale(0.002, 0.002, 0.002)
     .translate(-0.5, -0.5, 0);
 
-  static corner = new THREE.ExtrudeGeometry(
+  static corner = new ExtrudeGeometry(
     SVGLoader.createShapes(cornerSVG.paths[0])[0],
     {
       depth: 15,

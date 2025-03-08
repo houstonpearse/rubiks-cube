@@ -1,5 +1,5 @@
-import * as THREE from "three";
-import * as TWEEN from "@tweenjs/tween.js";
+import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight } from "three";
+import { Tween, Group, Easing } from "@tweenjs/tween.js";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import Cube from "./src/cube";
 import getRotationDetails from "./src/rotation";
@@ -20,8 +20,8 @@ class RubiksCube extends HTMLElement {
   init() {
     // defined core threejs objects
     const canvas = this.canvas;
-    const scene = new THREE.Scene();
-    const renderer = new THREE.WebGLRenderer({
+    const scene = new Scene();
+    const renderer = new WebGLRenderer({
       alpha: true,
       canvas,
       antialias: true,
@@ -33,7 +33,7 @@ class RubiksCube extends HTMLElement {
     //update renderer and camera when container resizes. debouncing events to reduce frequency
     function debounce(f, delay) {
       let timer = 0;
-      return function (...args) {
+      return function(...args) {
         clearTimeout(timer);
         timer = setTimeout(() => f.apply(this, args), delay);
       };
@@ -49,7 +49,7 @@ class RubiksCube extends HTMLElement {
     resizeObserver.observe(this);
 
     // add camera
-    const camera = new THREE.PerspectiveCamera(
+    const camera = new PerspectiveCamera(
       75,
       this.clientWidth / this.clientHeight,
       0.1,
@@ -70,11 +70,11 @@ class RubiksCube extends HTMLElement {
     controls.minPolarAngle = Math.PI / 4;
 
     // add lighting to scene
-    const ambientLight = new THREE.AmbientLight("white", 0.5);
-    const spotLight1 = new THREE.DirectionalLight("white", 2);
-    const spotLight2 = new THREE.DirectionalLight("white", 2);
-    const spotLight3 = new THREE.DirectionalLight("white", 2);
-    const spotLight4 = new THREE.DirectionalLight("white", 2);
+    const ambientLight = new AmbientLight("white", 0.5);
+    const spotLight1 = new DirectionalLight("white", 2);
+    const spotLight2 = new DirectionalLight("white", 2);
+    const spotLight3 = new DirectionalLight("white", 2);
+    const spotLight4 = new DirectionalLight("white", 2);
     spotLight1.position.set(5, 5, 5);
     spotLight2.position.set(-5, 5, 5);
     spotLight3.position.set(5, -5, 0);
@@ -89,11 +89,11 @@ class RubiksCube extends HTMLElement {
     const animationQueue = new AnimationQueue();
 
     // initial camera animation
-    const cameraAnimationGroup = new TWEEN.Group();
+    const cameraAnimationGroup = new Group();
     cameraAnimationGroup.add(
-      new TWEEN.Tween(camera.position)
+      new Tween(camera.position)
         .to({ x: 3, y: 3, z: 4 }, 1000)
-        .easing(TWEEN.Easing.Cubic.InOut)
+        .easing(Easing.Cubic.InOut)
         .start()
     );
 
@@ -141,7 +141,7 @@ class RubiksCube extends HTMLElement {
     this.addEventListener("camera", (e) => {
       if (e.detail.action === "peek-toggle-horizontal") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: camera.position.x > 0 ? -2.5 : 2.5,
@@ -154,7 +154,7 @@ class RubiksCube extends HTMLElement {
         );
       } else if (e.detail.action === "peek-toggle-vertical") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: camera.position.x > 0 ? 2.5 : -2.5,
@@ -167,7 +167,7 @@ class RubiksCube extends HTMLElement {
         );
       } else if (e.detail.action === "peek-right") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: 2.5,
@@ -180,7 +180,7 @@ class RubiksCube extends HTMLElement {
         );
       } else if (e.detail.action === "peek-left") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: -2.5,
@@ -193,7 +193,7 @@ class RubiksCube extends HTMLElement {
         );
       } else if (e.detail.action === "peek-up") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: camera.position.x > 0 ? 2.5 : -2.5,
@@ -206,7 +206,7 @@ class RubiksCube extends HTMLElement {
         );
       } else if (e.detail.action === "peek-down") {
         cameraAnimationGroup.add(
-          new TWEEN.Tween(camera.position)
+          new Tween(camera.position)
             .to(
               {
                 x: camera.position.x > 0 ? 2.5 : -2.5,

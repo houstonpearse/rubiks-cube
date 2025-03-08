@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { Vector3, Group } from "three";
 import Cube from "./cube";
 
 export class AnimationQueue {
@@ -72,7 +72,7 @@ export class AnimationQueue {
 
   /**
    *
-   * @returns {THREE.Group | undefined}
+   * @returns {Group | undefined}
    */
   getAnimationGroup() {
     return this.currentAnimation?.getGroup();
@@ -94,7 +94,7 @@ export class Animation {
     this._layers = layers;
     this._direction = direction;
     this._duration = duration;
-    this._layerGroup = new THREE.Group();
+    this._layerGroup = new Group();
     this._finished = false;
     this._lastUpdate = undefined;
     this._totalRotation = 0;
@@ -145,7 +145,7 @@ export class Animation {
       (Math.abs(this._direction) * ((interval / this._duration) * Math.PI)) / 2;
     this._totalRotation += interval;
     this._layerGroup.rotateOnWorldAxis(
-      new THREE.Vector3(
+      new Vector3(
         this._axis === "x" ? this._direction : 0,
         this._axis === "y" ? this._direction : 0,
         this._axis === "z" ? this._direction : 0

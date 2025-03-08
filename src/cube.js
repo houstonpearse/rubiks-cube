@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { Group, Vector3, Mesh, SphereGeometry } from "three";
 import Materials from "./materials";
 import Stickers from "./stickers";
 import newCorner from "./corner";
@@ -8,7 +8,7 @@ import { newCubeState } from "./cubeState";
 
 export default class Cube {
   constructor() {
-    this.group = new THREE.Group();
+    this.group = new Group();
     const core = this.createCore();
     core.userData = {
       position: { x: 0, y: 0, z: 0 },
@@ -55,7 +55,7 @@ export default class Cube {
   /**
    * @param {"x"|"y"|"z"} axis
    * @param {{-1|0|1}[]} layers
-   * @returns {THREE.Object3D[]}
+   * @returns {Object3D[]}
    */
   getRotationLayer(axis, layers) {
     if (layers.length === 0) {
@@ -88,10 +88,10 @@ export default class Cube {
       }
       piece.children.forEach((mesh) => {
         if (mesh.userData.type === "sticker") {
-          const piecepos = new THREE.Vector3();
+          const piecepos = new Vector3();
           piecepos.copy(piece.position);
           piecepos.round();
-          const stickerpos = new THREE.Vector3();
+          const stickerpos = new Vector3();
           mesh.getWorldPosition(stickerpos);
           stickerpos.sub(piecepos);
           stickerpos.multiplyScalar(2);
@@ -130,7 +130,7 @@ export default class Cube {
   /**
    * @param {{x:number,y:number,z:number}} position
    * @param {"corner | edge | center"} type
-   * @returns {THREE.Group}
+   * @returns {Group}
    */
   createPiece(position, type) {
     if (type === "corner") {
@@ -145,7 +145,7 @@ export default class Cube {
   }
   /**
    * @param {{x:number,y:number,z:number}} position
-   * @returns {THREE.Group}
+   * @returns {Group}
    */
   createCorner(position) {
     if (position.x == 1 && position.y == 1 && position.z == 1) {
@@ -218,7 +218,7 @@ export default class Cube {
   }
   /**
    * @param {{x:number,y:number,z:number}} position
-   * @returns {THREE.Group}
+   * @returns {Group}
    */
   createEdge(position) {
     if (position.x == 1 && position.y == 1 && position.z == 0) {
@@ -311,7 +311,7 @@ export default class Cube {
   }
   /**
    * @param {{x:number,y:number,z:number}} position
-   * @returns {THREE.Group}
+   * @returns {Group}
    */
   createCenter(position) {
     var centerColor = Materials.up;
@@ -325,9 +325,9 @@ export default class Cube {
     return newCenter(Stickers.center, centerColor, Materials.core);
   }
   /**
-   * @returns {THREE.Group}
+   * @returns {Group}
    */
   createCore() {
-    return new THREE.Mesh(new THREE.SphereGeometry(1.55), Materials.core);
+    return new Mesh(new SphereGeometry(1.55), Materials.core);
   }
 }
