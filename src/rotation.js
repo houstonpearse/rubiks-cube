@@ -48,5 +48,6 @@ export default function getRotationDetails(action) {
   } else if (move === "S") {
     return { axis: "z", layers: [0], direction: -reverse * multiplier };
   }
+  console.log(`rubiks-cube invalid Action: ${action}`)
   return undefined;
 }
