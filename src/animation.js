@@ -117,8 +117,29 @@ export class Animation {
 
     init() {
         this._lastUpdate = Date.now();
-        const layerObjects = this._cube.getRotationLayer(this._axis, this._layers);
+        const layerObjects = this.getRotationLayer(this._axis, this._layers);
         this._layerGroup.add(...layerObjects);
+    }
+
+    /**
+     * @param {"x"|"y"|"z"} axis
+     * @param {{-1|0|1}[]} layers
+     * @returns {Object3D[]}
+     */
+    getRotationLayer(axis, layers) {
+        if (layers.length === 0) {
+            return [...this._cube.group.children];
+        }
+        return this._cube.group.children.filter((piece) => {
+            if (axis === 'x') {
+                return layers.includes(Math.round(piece.userData.position.x));
+            } else if (axis === 'y') {
+                return layers.includes(Math.round(piece.userData.position.y));
+            } else if (axis === 'z') {
+                return layers.includes(Math.round(piece.userData.position.z));
+            }
+            return false;
+        });
     }
 
     dispose() {
@@ -126,9 +147,12 @@ export class Animation {
         this._layerGroup.children.forEach((piece) => {
             piece.getWorldPosition(piece.position);
             piece.getWorldQuaternion(piece.quaternion);
-            piece.userData.position.x = Math.round(piece.position.x);
-            piece.userData.position.y = Math.round(piece.position.y);
-            piece.userData.position.z = Math.round(piece.position.z);
+            var x = Math.round(piece.position.x);
+            var y = Math.round(piece.position.y);
+            var z = Math.round(piece.position.z);
+            piece.userData.position.x = Math.abs(x) > 1 ? Math.sign(x) : x;
+            piece.userData.position.y = Math.abs(y) > 1 ? Math.sign(y) : y;
+            piece.userData.position.z = Math.abs(z) > 1 ? Math.sign(z) : z;
             piece.userData.rotation.x = piece.rotation.x;
             piece.userData.rotation.y = piece.rotation.y;
             piece.userData.rotation.z = piece.rotation.z;

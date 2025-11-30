@@ -11,7 +11,7 @@ import { createCornerGroup, createEdgeGroup, createCenterGroup } from '../threej
  */
 
 /**
- * @type {state[]}
+ * @return {state[]}
  */
 const corners = () => [
     {
@@ -65,7 +65,7 @@ const corners = () => [
 ];
 
 /**
- * @type {state[]}
+ * @return {state[]}
  */
 const edges = () => [
     {
@@ -143,7 +143,7 @@ const edges = () => [
 ];
 
 /**
- * @type {state[]}
+ * @return {state[]}
  */
 const centers = () => [
     {
@@ -185,7 +185,7 @@ const centers = () => [
 ];
 
 /**
- * @type {state[]}
+ * @return {state[]}
  */
 const createCubeState = () => [...corners(), ...edges(), ...centers()];
 export { createCubeState };

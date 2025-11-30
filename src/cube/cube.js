@@ -1,9 +1,12 @@
 import { Group, Vector3 } from 'three';
 import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
+
+const minimumGap = 1;
+
 export default class Cube {
-    constructor(gap) {
-        this.gap = gap;
+    constructor({ gap }) {
+        this.gap = gap < minimumGap ? minimumGap : gap;
         this.group = new Group();
         const core = createCoreMesh();
         core.userData = {
@@ -16,17 +19,17 @@ export default class Cube {
         this.group.add(core);
 
         for (const piece of createCubeState()) {
-            var group = piece.group;
-            group.position.set(piece.position.x * gap, piece.position.y * gap, piece.position.z * gap);
-            group.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
-            group.userData = {
+            var pieceGroup = piece.group;
+            pieceGroup.position.set(piece.position.x * gap, piece.position.y * gap, piece.position.z * gap);
+            pieceGroup.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
+            pieceGroup.userData = {
                 position: Object.assign({}, piece.position),
                 rotation: Object.assign({}, piece.rotation),
                 initialPosition: Object.assign({}, piece.position),
                 initialRotation: Object.assign({}, piece.rotation),
                 type: piece.type,
             };
-            this.group.add(group);
+            this.group.add(pieceGroup);
         }
     }
 
@@ -42,27 +45,6 @@ export default class Cube {
             piece.userData.rotation.x = u;
             piece.userData.rotation.y = v;
             piece.userData.rotation.z = w;
-        });
-    }
-
-    /**
-     * @param {"x"|"y"|"z"} axis
-     * @param {{-1|0|1}[]} layers
-     * @returns {Object3D[]}
-     */
-    getRotationLayer(axis, layers) {
-        if (layers.length === 0) {
-            return [...this.group.children];
-        }
-        return this.group.children.filter((piece) => {
-            if (axis === 'x') {
-                return layers.includes(Math.round(piece.userData.position.x));
-            } else if (axis === 'y') {
-                return layers.includes(Math.round(piece.userData.position.y));
-            } else if (axis === 'z') {
-                return layers.includes(Math.round(piece.userData.position.z));
-            }
-            return false;
         });
     }
 

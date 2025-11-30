@@ -2,7 +2,7 @@ import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight
 import { Tween, Group, Easing } from '@tweenjs/tween.js';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './src/cube/cube';
-import getRotationDetails from './src/rotation';
+import getRotationDetailsFromNotation from './src/utils/rotation';
 import { AnimationQueue, Animation } from './src/animation';
 import { debounce } from './src/utils/debouncer';
 
@@ -70,7 +70,7 @@ class RubiksCube extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        const cube = new Cube(1.04);
+        const cube = new Cube({ gap: 1.04 });
         scene.add(cube.group);
 
         // animation queue
@@ -109,7 +109,7 @@ class RubiksCube extends HTMLElement {
 
         // add event listeners for rotation and camera controls
         this.addEventListener('rotate', (e) => {
-            const action = getRotationDetails(e.detail.action);
+            const action = getRotationDetailsFromNotation(e.detail.action);
             if (action !== undefined) {
                 const animation = new Animation(cube, action.axis, action.layers, action.direction, 200);
                 animationQueue.add(animation);
