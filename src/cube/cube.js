@@ -20,7 +20,7 @@ export default class Cube {
 
         for (const piece of createCubeState()) {
             var pieceGroup = piece.group;
-            pieceGroup.position.set(piece.position.x * gap, piece.position.y * gap, piece.position.z * gap);
+            pieceGroup.position.set(piece.position.x * this.gap, piece.position.y * this.gap, piece.position.z * this.gap);
             pieceGroup.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
             pieceGroup.userData = {
                 position: Object.assign({}, piece.position),
@@ -37,7 +37,7 @@ export default class Cube {
         this.group.children.forEach((piece) => {
             const { x, y, z } = piece.userData.initialPosition;
             const { x: u, y: v, z: w } = piece.userData.initialRotation;
-            piece.position.set(x * gap, y * gap, z * gap);
+            piece.position.set(x * this.gap, y * this.gap, z * this.gap);
             piece.rotation.set(u, v, w);
             piece.userData.position.x = x;
             piece.userData.position.y = y;
