@@ -3,17 +3,45 @@ import { Tween, Group, Easing } from '@tweenjs/tween.js';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './src/cube/cube';
 import getRotationDetailsFromNotation from './src/utils/rotation';
-import { AnimationQueue, Animation } from './src/animation';
 import { debounce } from './src/utils/debouncer';
+
+const defaultAnimationSpeed = 100;
+const defaultAnimationStyle = 'exponential';
+const defaultGap = 1.04;
 
 class RubiksCube extends HTMLElement {
     constructor() {
         super();
+        /** @type {number} */
+        this.animationSpeed = defaultAnimationSpeed;
+        /** @type {"exponential" | "instant"} */
+        this.animationStyle = this.getAttribute('animation-style') || defaultAnimationStyle;
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
+        /** @type {{style: "exponential" | "next" | "fixed", speed: number, gap: number}} */
+        this.settings = {
+            speed: this.getAttribute('animation-speed') || defaultAnimationSpeed,
+            style: this.getAttribute('animation-style') || defaultAnimationStyle,
+            gap: this.getAttribute('gap') || defaultGap,
+        };
     }
 
+    static get observedAttributes() {
+        return ['animation-style', 'animation-speed'];
+    }
+
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === 'animation-style') {
+            this.settings.style = newVal;
+        }
+        if (name === 'animation-speed') {
+            this.settings.speed = Number(newVal);
+        }
+        if (name === 'gap') {
+            this.settings.gap = Number(newVal);
+        }
+    }
     connectedCallback() {
         this.init();
     }
@@ -70,11 +98,8 @@ class RubiksCube extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        const cube = new Cube({ gap: 1.04 });
-        scene.add(cube.group);
-
-        // animation queue
-        const animationQueue = new AnimationQueue();
+        const cube = new Cube(this.settings);
+        scene.add(cube.group, cube.rotationGroup);
 
         // initial camera animation
         const cameraAnimationGroup = new Group();
@@ -90,19 +115,11 @@ class RubiksCube extends HTMLElement {
         function animate() {
             cameraAnimationGroup.update();
             controls.update();
-            animationQueue.update();
-            if (animationQueue.currentAnimation) {
-                scene.add(animationQueue.getAnimationGroup());
-            }
-            if (animationQueue.finished()) {
-                sendState();
-                scene.remove(animationQueue.getAnimationGroup());
-            }
+            cube.update();
             renderer.render(scene, camera);
         }
 
         this.addEventListener('reset', () => {
-            animationQueue.clear();
             cube.reset();
             sendState();
         });
@@ -111,8 +128,7 @@ class RubiksCube extends HTMLElement {
         this.addEventListener('rotate', (e) => {
             const action = getRotationDetailsFromNotation(e.detail.action);
             if (action !== undefined) {
-                const animation = new Animation(cube, action.axis, action.layers, action.direction, 200);
-                animationQueue.add(animation);
+                cube.rotate(action);
             }
         });
         this.addEventListener('camera', (e) => {

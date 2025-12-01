@@ -1,21 +1,21 @@
 {
-  "name": "@houstonp/rubiks-cube",
-  "version": "1.1.1",
-  "description": "Rubiks Cube Web Component built with threejs",
-  "main": "index.js",
-  "author": "Houston Pearse",
-  "license": "MIT",
-  "dependencies": {
-    "@tweenjs/tween.js": "^25.0.0",
-    "three": "^0.167.1"
-  },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/houstonpearse/rubiks-cube.git"
-  },
-  "bugs": {
-    "url": "https://github.com/houstonpearse/rubiks-cube/issues"
-  },
-  "homepage": "https://github.com/houstonpearse/rubiks-cube#readme"
+    "name": "@houstonp/rubiks-cube",
+    "version": "1.2.0",
+    "description": "Rubiks Cube Web Component built with threejs",
+    "main": "index.js",
+    "author": "Houston Pearse",
+    "license": "MIT",
+    "dependencies": {
+        "@tweenjs/tween.js": "^25.0.0",
+        "three": "^0.167.1"
+    },
+    "devDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/houstonpearse/rubiks-cube.git"
+    },
+    "bugs": {
+        "url": "https://github.com/houstonpearse/rubiks-cube/issues"
+    },
+    "homepage": "https://github.com/houstonpearse/rubiks-cube#readme"
 }

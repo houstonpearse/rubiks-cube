@@ -9,21 +9,29 @@ by adding the webcomponent tag.
 
 ```js
 //index.js
-import "@houstonp/rubiks-cube";
+import '@houstonp/rubiks-cube';
 ```
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <rubiks-cube></rubiks-cube>
-    <script type="module" src="index.js"></script>
-  </body>
+    <head>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <rubiks-cube animation-speed="1000" animation-style="exponential" gap="1.04"> </rubiks-cube>
+        <script type="module" src="index.js"></script>
+    </body>
 </html>
 ```
+
+## component attributes
+
+| attribute       | accepted values               | Description                                                                                                 |
+| --------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| animation-speed | integer greater than 0        | sets the speed of the animations in milliseconds                                                            |
+| animation-style | "exponetial", "next", "fixed" | fixed: fixed animation lengths, next: skips to next animation, exponential: speeds up successive animations |
+| gap             | greater than 1                | sets the gap between rubiks cube pieces                                                                     |
 
 ## state of the component
 
@@ -32,9 +40,9 @@ A state event occurs when a movement animation is completed. The event details c
 To listen for the state event, add an event listener to the rubiks-cube element.
 
 ```js
-const cube = document.querySelector("rubiks-cube");
-cube.addEventListener("state", (e) => {
-  console.log(e.detail.state);
+const cube = document.querySelector('rubiks-cube');
+cube.addEventListener('state', (e) => {
+    console.log(e.detail.state);
 });
 /*
 {
@@ -83,8 +91,8 @@ The rubiks-cube element listens for the `reset` custom event and resets the cube
 #### Example
 
 ```js
-const cube = document.querySelector("rubiks-cube");
-cube.dispatchEvent(new CustomEvent("reset"));
+const cube = document.querySelector('rubiks-cube');
+cube.dispatchEvent(new CustomEvent('reset'));
 ```
 
 ### Camera events
@@ -93,23 +101,23 @@ The rubiks-cube element listens for the `camera` custom event and moves the came
 
 The camera position specified in the event details must be one of the following:
 
-- `peek-right` - Camera is moved to the right of the cube so that the right face is visible
-- `peek-left` - Camera is moved to the left of the cube so that the left face is visible
-- `peek-top` - Camera is moved above the cube so that the top face is visible
-- `peek-bottom` - Camera is moved below the cube so that the bottom face is visible
-- `peek-toggle-horizontal` - Camera is moved to the opposite side of the cube in the horizontal plane
-- `peek-toggle-vertical` - Camera is moved to the opposite side of the cube in the vertical plane
+-   `peek-right` - Camera is moved to the right of the cube so that the right face is visible
+-   `peek-left` - Camera is moved to the left of the cube so that the left face is visible
+-   `peek-top` - Camera is moved above the cube so that the top face is visible
+-   `peek-bottom` - Camera is moved below the cube so that the bottom face is visible
+-   `peek-toggle-horizontal` - Camera is moved to the opposite side of the cube in the horizontal plane
+-   `peek-toggle-vertical` - Camera is moved to the opposite side of the cube in the vertical plane
 
 Note: The camera position cannot change to perform an equivalent cube rotation.
 
 #### Example
 
 ```js
-const cube = document.querySelector("rubiks-cube");
+const cube = document.querySelector('rubiks-cube');
 cube.dispatchEvent(
-  new CustomEvent("camera", {
-    detail: { action: "peek-right" },
-  })
+    new CustomEvent('camera', {
+        detail: { action: 'peek-right' },
+    }),
 );
 ```
 
@@ -151,10 +159,10 @@ When both a number and a prime symbol are included the number is stated before t
 #### Example
 
 ```js
-const cube = document.querySelector("rubiks-cube");
+const cube = document.querySelector('rubiks-cube');
 cube.dispatchEvent(
-  new CustomEvent("rotate", {
-    detail: { action: "u2'" },
-  })
+    new CustomEvent('rotate', {
+        detail: { action: "u2'" },
+    }),
 );
 ```
