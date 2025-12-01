@@ -2,6 +2,8 @@
 
 This package is a rubiks cube web component built with threejs. Camera animation smoothing is done with the tweenjs package.
 
+![cube](cube.png)
+
 ## Adding the component
 
 You can add the component to a webpage by adding an import statement in the index.js file. And then
