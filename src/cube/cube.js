@@ -91,7 +91,7 @@ export default class Cube {
         this.group.children.forEach((piece) => {
             const { x, y, z } = piece.userData.initialPosition;
             const { x: u, y: v, z: w } = piece.userData.initialRotation;
-            piece.position.set(x * gap, y * gap, z * gap);
+            piece.position.set(x * this.gap, y * this.gap, z * this.gap);
             piece.rotation.set(u, v, w);
             piece.userData.position.x = x;
             piece.userData.position.y = y;

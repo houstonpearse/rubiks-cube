@@ -1,6 +1,6 @@
 {
     "name": "@houstonp/rubiks-cube",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Rubiks Cube Web Component built with threejs",
     "main": "index.js",
     "author": "Houston Pearse",
