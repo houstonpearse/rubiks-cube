@@ -10,20 +10,16 @@ export class CubeRotation {
         /** @type {"pending" | "initialised" | "complete" | "disposed"} */
         this.status = 'pending';
         /** @type {number} */
+        this.timestampMs = performance.now();
+        /** @type {number} */
         this._lastUpdatedTimeMs = undefined;
-        this._startTimeMs = undefined;
         /** @type {number} */
         this._rotationPercentage = 0;
     }
 
     initialise() {
         this._lastUpdatedTimeMs = performance.now();
-        this._startTimeMs = this._lastUpdatedTimeMs;
         this.status = 'initialised';
-    }
-
-    dispose() {
-        this.status = 'disposed';
     }
 
     /**
@@ -53,8 +49,12 @@ export class CubeRotation {
             rotationIncrement,
         );
 
-        if (this._rotationPercentage >= 100) {
+        if (this._rotationPercentage === 100) {
             this.status = 'complete';
+        }
+
+        if (this._rotationPercentage > 100) {
+            throw new Error('rotation percentage > 100');
         }
     }
 }

@@ -6,8 +6,9 @@ import getRotationDetailsFromNotation from './src/utils/rotation';
 import { debounce } from './src/utils/debouncer';
 
 const defaultAnimationSpeed = 100;
-const defaultAnimationStyle = 'exponential';
+const defaultAnimationStyle = 'fixed';
 const defaultGap = 1.04;
+const minimumGap = 1;
 
 class RubiksCube extends HTMLElement {
     constructor() {
@@ -19,27 +20,29 @@ class RubiksCube extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
-        /** @type {{style: "exponential" | "next" | "fixed", speed: number, gap: number}} */
+        /** @type {{animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeed: number, gap: number}} */
         this.settings = {
-            speed: this.getAttribute('animation-speed') || defaultAnimationSpeed,
-            style: this.getAttribute('animation-style') || defaultAnimationStyle,
-            gap: this.getAttribute('gap') || defaultGap,
+            animationSpeed: this.getAttribute('animation-speed') || defaultAnimationSpeed,
+            animationStyle: this.getAttribute('animation-style') || defaultAnimationStyle,
+            gap: this.getAttribute('piece-gap') || defaultGap,
         };
     }
 
     static get observedAttributes() {
-        return ['animation-style', 'animation-speed'];
+        return ['animation-style', 'animation-speed', 'piece-gap'];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
         if (name === 'animation-style') {
-            this.settings.style = newVal;
+            this.settings.animationStyle = newVal;
         }
         if (name === 'animation-speed') {
-            this.settings.speed = Number(newVal);
+            var speed = Number(newVal);
+            this.settings.animationSpeed = speed > 0 ? speed : 0;
         }
-        if (name === 'gap') {
-            this.settings.gap = Number(newVal);
+        if (name === 'piece-gap') {
+            var gap = Number(newVal);
+            this.settings.gap = gap < minimumGap ? minimumGap : gap;
         }
     }
     connectedCallback() {

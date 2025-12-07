@@ -3,15 +3,11 @@ import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
 
-const minimumGap = 1;
-
 export default class Cube {
     /**
-     *   @param {{style: "exponential" | "next" | "fixed", speed: number, gap: number}} params
+     *   @param {{style: "exponential" | "next" | "fixed", speed: number, gap: number}} settings
      */
-    constructor({ gap, speed, style }) {
-        /** @type {number} */
-        this.gap = gap < minimumGap ? minimumGap : gap;
+    constructor(settings) {
         /** @type {Group} */
         this.group = new Group();
         /** @type {Group} */
@@ -20,10 +16,12 @@ export default class Cube {
         this.rotationQueue = [];
         /** @type {CubeRotation | undefined} */
         this.currentRotation = undefined;
+        /** @type {{animationStyle: "match" | "exponential" | "next" | "fixed", animationSpeed: number, gap: number}} */
+        this.settings = settings;
+        /** @type {number | undefined} */
+        this._matchSpeed = undefined;
         /** @type {number} */
-        this.animationSpeed = speed;
-        /** @type {"exponential" | "next" | "fixed"} */
-        this.animationStyle = style;
+        this._lastGap = settings.gap;
 
         const core = createCoreMesh();
         core.userData = {
@@ -37,7 +35,7 @@ export default class Cube {
 
         for (const piece of createCubeState()) {
             var pieceGroup = piece.group;
-            pieceGroup.position.set(piece.position.x * this.gap, piece.position.y * this.gap, piece.position.z * this.gap);
+            pieceGroup.position.set(piece.position.x * this.settings.gap, piece.position.y * this.settings.gap, piece.position.z * this.settings.gap);
             pieceGroup.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
             pieceGroup.userData = {
                 position: Object.assign({}, piece.position),
@@ -50,34 +48,71 @@ export default class Cube {
         }
     }
 
+    updateGap() {
+        this.group.children.forEach((piece) => {
+            var { x, y, z } = piece.userData.position;
+            piece.position.set(x * this.settings.gap, y * this.settings.gap, z * this.settings.gap);
+        });
+        this._lastGap = this.settings.gap;
+    }
+
     update() {
+        if (this._lastGap !== this.settings.gap) {
+            this.updateGap();
+        }
+
         if (this.currentRotation === undefined) {
             this.currentRotation = this.rotationQueue.shift();
-            if (this.currentRotation === undefined) return;
+            if (this.currentRotation === undefined) {
+                this._matchSpeed = undefined; //reset speed
+                return;
+            }
+        }
+
+        if (this.currentRotation.status === 'pending') {
             this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
             this.currentRotation.initialise();
+        }
+
+        if (this.currentRotation.status === 'initialised') {
+            var speed = this.getRotationSpeed();
+            this.currentRotation.update(this.rotationGroup, speed);
         }
 
         if (this.currentRotation.status === 'complete') {
             this.clearRotationGroup();
-            this.currentRotation.dispose();
-            this.currentRotation = this.rotationQueue.shift();
-            if (this.currentRotation === undefined) return;
-            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
-            this.currentRotation.initialise();
+            this.currentRotation = undefined;
         }
-
-        this.currentRotation.update(this.rotationGroup, this.getRotationSpeed());
     }
 
     getRotationSpeed() {
-        if (this.animationStyle == 'exponential') {
-            return this.animationSpeed / 2 ** this.rotationQueue.length;
+        if (this.settings.animationStyle === 'exponential') {
+            return this.settings.animationSpeed / 2 ** this.rotationQueue.length;
         }
-        if (this.animationStyle == 'next') {
-            return this.rotationQueue.length > 0 ? 0 : this.animationSpeed;
+        if (this.settings.animationStyle === 'next') {
+            return this.rotationQueue.length > 0 ? 0 : this.settings.animationSpeed;
         }
-        return this.animationSpeed;
+        if (this.settings.animationStyle === 'match') {
+            if (this.rotationQueue.length > 0) {
+                var lastTimeStamp = this.currentRotation.timestampMs;
+                var minGap = this._matchSpeed ?? this.settings.animationSpeed;
+                for (var i = 0; i < this.rotationQueue.length; i++) {
+                    var gap = this.rotationQueue[i].timestampMs - lastTimeStamp;
+                    if (gap < minGap) {
+                        minGap = gap;
+                    }
+                }
+                this._matchSpeed = minGap;
+            }
+            if (this._matchSpeed !== undefined) {
+                return this._matchSpeed;
+            }
+            return this.settings.animationSpeed;
+        }
+        if (this.settings.animationStyle === 'fixed') {
+            return this.settings.animationSpeed;
+        }
+        return this.settings.animationSpeed;
     }
 
     reset() {
@@ -85,13 +120,12 @@ export default class Cube {
         if (this.currentRotation) {
             this.currentRotation.update(this.rotationGroup, 0);
             this.clearRotationGroup();
-            this.currentRotation.dispose();
             this.currentRotation = undefined;
         }
         this.group.children.forEach((piece) => {
             const { x, y, z } = piece.userData.initialPosition;
             const { x: u, y: v, z: w } = piece.userData.initialRotation;
-            piece.position.set(x * this.gap, y * this.gap, z * this.gap);
+            piece.position.set(x * this.settings.gap, y * this.settings.gap, z * this.settings.gap);
             piece.rotation.set(u, v, w);
             piece.userData.position.x = x;
             piece.userData.position.y = y;
@@ -121,12 +155,16 @@ export default class Cube {
         });
         this.group.add(...this.rotationGroup.children);
         this.rotationGroup.rotation.set(0, 0, 0);
+        this.currentRotation.status = 'disposed';
     }
 
     /**
      * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
      */
     rotate(input) {
+        var queueLength = this.rotationQueue.length;
+        if (queueLength > 0 && this.rotationQueue[queueLength - 1].rotation.axis === input.axis) {
+        }
         this.rotationQueue.push(new CubeRotation(input));
     }
 
