@@ -8,21 +8,29 @@ export default class Cube {
      *   @param {{style: "exponential" | "next" | "fixed", speed: number, gap: number}} settings
      */
     constructor(settings) {
+        /** @type {{animationStyle: "match" | "exponential" | "next" | "fixed", animationSpeed: number, gap: number}} */
+        this.settings = settings;
         /** @type {Group} */
-        this.group = new Group();
+        this.group = this.createCubeGroup();
         /** @type {Group} */
         this.rotationGroup = new Group();
         /** @type {CubeRotation[]} */
         this.rotationQueue = [];
         /** @type {CubeRotation | undefined} */
         this.currentRotation = undefined;
-        /** @type {{animationStyle: "match" | "exponential" | "next" | "fixed", animationSpeed: number, gap: number}} */
-        this.settings = settings;
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
         /** @type {number} */
         this._lastGap = settings.gap;
+    }
 
+    /**
+     * creates a ThreeJS group with all the required pieces for a cube
+     * @param {Group} group
+     * @returns {Group}
+     */
+    createCubeGroup(group) {
+        var group = new Group();
         const core = createCoreMesh();
         core.userData = {
             position: { x: 0, y: 0, z: 0 },
@@ -31,7 +39,7 @@ export default class Cube {
             initialRotation: { x: 0, y: 0, z: 0 },
             type: 'core',
         };
-        this.group.add(core);
+        group.add(core);
 
         for (const piece of createCubeState()) {
             var pieceGroup = piece.group;
@@ -44,21 +52,14 @@ export default class Cube {
                 initialRotation: Object.assign({}, piece.rotation),
                 type: piece.type,
             };
-            this.group.add(pieceGroup);
+            group.add(pieceGroup);
         }
-    }
-
-    /**
-     * @param {Group} group
-     * @returns {Group}
-     */
-    createCubeGroup(group) {
-        var group = new Group();
+        return group;
     }
 
     /**
      * update the cube and continue any rotations
-     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }}
+     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] } | undefined }
      */
     update() {
         if (this.currentRotation === undefined) {
@@ -101,6 +102,16 @@ export default class Cube {
         }
     }
 
+    /**
+     *
+     * calculates the current speed of the current rotation in ms.
+     * calculation is dependent on animation style and animation speed settings
+     * - exponential: speeds up rotations depending on the queue length
+     * - next: an animation speed of 0 when there is another animation in the queue
+     * - match: will match the speed of rotations to the frequency of key presses.
+     * - fixed: will return a constant value
+     * @returns {number}
+     */
     getRotationSpeed() {
         if (this.settings.animationStyle === 'exponential') {
             return this.settings.animationSpeed / 2 ** this.rotationQueue.length;
@@ -131,6 +142,10 @@ export default class Cube {
         return this.settings.animationSpeed;
     }
 
+    /**
+     * Complete the current rotation and reset the cube
+     * @returns {void}
+     */
     reset() {
         this.rotationQueue = [];
         if (this.currentRotation) {
@@ -152,6 +167,10 @@ export default class Cube {
         });
     }
 
+    /**
+     * Adds pieces in the rotationGroup back into the main group.
+     * @returns {void}
+     */
     clearRotationGroup() {
         if (this.currentRotation.status != 'complete') {
             throw Error('cannot clear rotation group while rotating');
