@@ -74,6 +74,8 @@ class RubiksCube extends HTMLElement {
 
         // add camera
         const camera = new PerspectiveCamera(75, this.clientWidth / this.clientHeight, 0.1, 1000);
+        /** @type {{Up: boolean, Right: boolean, UpDistance: number, RightDistance: number}} */
+        const cameraState = { Up: true, Right: true, UpDistance: 2.5, RightDistance: 2.5 };
         camera.position.z = 4;
         camera.position.y = 3;
         camera.position.x = 0;
@@ -122,98 +124,45 @@ class RubiksCube extends HTMLElement {
             renderer.render(scene, camera);
         }
 
+        // add event listeners for rotation and camera controls
         this.addEventListener('reset', () => {
             cube.reset();
             sendState();
         });
 
-        // add event listeners for rotation and camera controls
         this.addEventListener('rotate', (e) => {
             const action = getRotationDetailsFromNotation(e.detail.action);
             if (action !== undefined) {
                 cube.rotate(action);
             }
         });
+
         this.addEventListener('camera', (e) => {
             if (e.detail.action === 'peek-toggle-horizontal') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: camera.position.x > 0 ? -2.5 : 2.5,
-                                y: camera.position.y > 0 ? 2.5 : -2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Right = !cameraState.Right;
             } else if (e.detail.action === 'peek-toggle-vertical') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: camera.position.x > 0 ? 2.5 : -2.5,
-                                y: camera.position.y > 0 ? -2.5 : 2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Up = !cameraState.Up;
             } else if (e.detail.action === 'peek-right') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: 2.5,
-                                y: camera.position.y > 0 ? 2.5 : -2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Right = true;
             } else if (e.detail.action === 'peek-left') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: -2.5,
-                                y: camera.position.y > 0 ? 2.5 : -2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Right = false;
             } else if (e.detail.action === 'peek-up') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: camera.position.x > 0 ? 2.5 : -2.5,
-                                y: 2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Up = true;
             } else if (e.detail.action === 'peek-down') {
-                cameraAnimationGroup.add(
-                    new Tween(camera.position)
-                        .to(
-                            {
-                                x: camera.position.x > 0 ? 2.5 : -2.5,
-                                y: -2.5,
-                                z: 4,
-                            },
-                            200,
-                        )
-                        .start(),
-                );
+                cameraState.Up = false;
             }
+            cameraAnimationGroup.add(
+                new Tween(camera.position)
+                    .to(
+                        {
+                            x: cameraState.Right ? cameraState.RightDistance : -cameraState.RightDistance,
+                            y: cameraState.Up ? cameraState.UpDistance : -cameraState.UpDistance,
+                            z: 4,
+                        },
+                        200,
+                    )
+                    .start(),
+            );
         });
     }
 }
