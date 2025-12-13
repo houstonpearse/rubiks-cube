@@ -120,7 +120,11 @@ class RubiksCube extends HTMLElement {
         function animate() {
             cameraAnimationGroup.update();
             controls.update();
-            cube.update();
+
+            var cubeState = cube.update();
+            if (cubeState) {
+                sendState();
+            }
             renderer.render(scene, camera);
         }
 

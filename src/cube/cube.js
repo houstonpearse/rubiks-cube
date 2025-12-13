@@ -48,40 +48,56 @@ export default class Cube {
         }
     }
 
-    updateGap() {
-        this.group.children.forEach((piece) => {
-            var { x, y, z } = piece.userData.position;
-            piece.position.set(x * this.settings.gap, y * this.settings.gap, z * this.settings.gap);
-        });
-        this._lastGap = this.settings.gap;
+    /**
+     * @param {Group} group
+     * @returns {Group}
+     */
+    createCubeGroup(group) {
+        var group = new Group();
     }
 
+    /**
+     * update the cube and continue any rotations
+     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }}
+     */
     update() {
-        if (this._lastGap !== this.settings.gap) {
-            this.updateGap();
-        }
-
         if (this.currentRotation === undefined) {
+            if (this._lastGap !== this.settings.gap) {
+                this.updateGap();
+            }
             this.currentRotation = this.rotationQueue.shift();
             if (this.currentRotation === undefined) {
-                this._matchSpeed = undefined; //reset speed
-                return;
+                this._matchSpeed = undefined; // reset speed for the match animation options
+                return undefined;
             }
         }
-
         if (this.currentRotation.status === 'pending') {
             this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
             this.currentRotation.initialise();
         }
-
         if (this.currentRotation.status === 'initialised') {
             var speed = this.getRotationSpeed();
             this.currentRotation.update(this.rotationGroup, speed);
         }
-
         if (this.currentRotation.status === 'complete') {
             this.clearRotationGroup();
             this.currentRotation = undefined;
+            return this.getStickerState();
+        }
+        return undefined;
+    }
+
+    /**
+     * Updates the gap of the pieces. To be used when the cube is not rotating
+     * @returns {void}
+     */
+    updateGap() {
+        if (this.currentRotation === undefined) {
+            this.group.children.forEach((piece) => {
+                var { x, y, z } = piece.userData.position;
+                piece.position.set(x * this.settings.gap, y * this.settings.gap, z * this.settings.gap);
+            });
+            this._lastGap = this.settings.gap;
         }
     }
 
@@ -188,6 +204,9 @@ export default class Cube {
         });
     }
 
+    /**
+     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }}
+     */
     getStickerState() {
         const state = {
             up: [[], [], []],
