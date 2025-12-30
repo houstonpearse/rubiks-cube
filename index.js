@@ -6,6 +6,7 @@ import getRotationDetailsFromNotation from './src/utils/rotation';
 import { debounce } from './src/utils/debouncer';
 
 const defaultAnimationSpeed = 100;
+const defaultCameraSpeed = 100;
 const defaultAnimationStyle = 'fixed';
 const defaultGap = 1.04;
 const minimumGap = 1;
@@ -20,16 +21,17 @@ class RubiksCube extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
-        /** @type {{animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeed: number, gap: number}} */
+        /** @type {{animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeed: number, gap: number, cameraSpeed: number}} */
         this.settings = {
             animationSpeed: this.getAttribute('animation-speed') || defaultAnimationSpeed,
             animationStyle: this.getAttribute('animation-style') || defaultAnimationStyle,
             gap: this.getAttribute('piece-gap') || defaultGap,
+            cameraSpeed: this.getAttribute('camera-speed') || defaultCameraSpeed,
         };
     }
 
     static get observedAttributes() {
-        return ['animation-style', 'animation-speed', 'piece-gap'];
+        return ['animation-style', 'animation-speed', 'piece-gap', 'camera-speed'];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -43,6 +45,10 @@ class RubiksCube extends HTMLElement {
         if (name === 'piece-gap') {
             var gap = Number(newVal);
             this.settings.gap = gap < minimumGap ? minimumGap : gap;
+        }
+        if (name === 'camera-speed') {
+            var speed = Number(newVal);
+            this.settings.cameraSpeed = speed > 0 ? speed : 0;
         }
     }
     connectedCallback() {
@@ -163,7 +169,7 @@ class RubiksCube extends HTMLElement {
                             y: cameraState.Up ? cameraState.UpDistance : -cameraState.UpDistance,
                             z: 4,
                         },
-                        200,
+                        this.settings.cameraSpeed,
                     )
                     .start(),
             );

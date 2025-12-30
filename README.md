@@ -21,7 +21,7 @@ import '@houstonp/rubiks-cube';
         <meta charset="utf-8" />
     </head>
     <body>
-        <rubiks-cube animation-speed="1000" animation-style="exponential" piece-gap="1.04"> </rubiks-cube>
+        <rubiks-cube animation-speed="1000" animation-style="exponential" piece-gap="1.04" camera-speed="100"> </rubiks-cube>
         <script type="module" src="index.js"></script>
     </body>
 </html>
@@ -31,9 +31,10 @@ import '@houstonp/rubiks-cube';
 
 | attribute       | accepted values                        | Description                                                                                                                                                   |
 | --------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| animation-speed | integer greater than 0                 | sets the speed of the animations in milliseconds                                                                                                              |
+| animation-speed | integer greater than or equal to 0     | sets the speed of the animations in milliseconds                                                                                                              |
 | animation-style | "exponetial", "next", "fixed", "match" | fixed: fixed animation lengths, next: skips to next animation, exponential: speeds up successive animations, match: matches the speed the frequency of events |
 | piece-gap       | greater than 1                         | sets the gap between rubiks cube pieces                                                                                                                       |
+| camera-speed    | greater than or equal to 0             | sets the speed of camera animations in milliseconds                                                                                                           |
 
 ## state of the component
 
