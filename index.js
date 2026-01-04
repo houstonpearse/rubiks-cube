@@ -16,8 +16,6 @@ class RubiksCube extends HTMLElement {
         super();
         /** @type {number} */
         this.animationSpeed = defaultAnimationSpeed;
-        /** @type {"exponential" | "instant"} */
-        this.animationStyle = this.getAttribute('animation-style') || defaultAnimationStyle;
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
@@ -116,9 +114,8 @@ class RubiksCube extends HTMLElement {
         const cameraAnimationGroup = new Group();
         cameraAnimationGroup.add(new Tween(camera.position).to({ x: 2.5, y: 2.5, z: 4 }, 1000).easing(Easing.Cubic.InOut).start());
 
-        const sendState = () => {
-            const state = cube.getStickerState();
-            const event = new CustomEvent('state', { detail: { state } });
+        const sendState = (eventId) => {
+            const event = new CustomEvent('state', { detail: { eventId, state: cube.currentState } });
             this.dispatchEvent(event);
         };
 
@@ -127,9 +124,9 @@ class RubiksCube extends HTMLElement {
             cameraAnimationGroup.update();
             controls.update();
 
-            var cubeState = cube.update();
-            if (cubeState) {
-                sendState();
+            var eventId = cube.update();
+            if (eventId) {
+                sendState(eventId);
             }
             renderer.render(scene, camera);
         }
@@ -137,28 +134,49 @@ class RubiksCube extends HTMLElement {
         // add event listeners for rotation and camera controls
         this.addEventListener('reset', () => {
             cube.reset();
-            sendState();
+            sendState('reset');
         });
 
-        this.addEventListener('rotate', (e) => {
-            const action = getRotationDetailsFromNotation(e.detail.action);
-            if (action !== undefined) {
-                cube.rotate(action);
+        this.addEventListener('action', (e) => {
+            /**  @type {{eventId: string, action: {type: "movement" | "camera" | "rotation", actionId: string }}} move */
+            var move = e.detail.move;
+            console.log(move);
+            if (move.action.type === 'camera') {
+                handleCameraAction(move.action.actionId);
+                return;
+            }
+            if (move.action.type === 'movement' || move.action.type === 'rotation') {
+                handleRotationAction(move.eventId, move.action.actionId);
+                return;
             }
         });
 
-        this.addEventListener('camera', (e) => {
-            if (e.detail.action === 'peek-toggle-horizontal') {
+        /**
+         * @param {string} eventId
+         * @param {string} actionId
+         */
+        const handleRotationAction = (eventId, actionId) => {
+            const rotationDetails = getRotationDetailsFromNotation(actionId);
+            if (rotationDetails !== undefined) {
+                cube.rotate(eventId, rotationDetails);
+            }
+        };
+
+        /**
+         * @param {'peek-toggle-horizontal' | 'peek-toggle-vertical' | 'peek-right' | 'peek-left' | 'peek-up' | 'peek-down'} actionId
+         */
+        const handleCameraAction = (actionId) => {
+            if (actionId === 'peek-toggle-horizontal') {
                 cameraState.Right = !cameraState.Right;
-            } else if (e.detail.action === 'peek-toggle-vertical') {
+            } else if (actionId === 'peek-toggle-vertical') {
                 cameraState.Up = !cameraState.Up;
-            } else if (e.detail.action === 'peek-right') {
+            } else if (actionId === 'peek-right') {
                 cameraState.Right = true;
-            } else if (e.detail.action === 'peek-left') {
+            } else if (actionId === 'peek-left') {
                 cameraState.Right = false;
-            } else if (e.detail.action === 'peek-up') {
+            } else if (actionId === 'peek-up') {
                 cameraState.Up = true;
-            } else if (e.detail.action === 'peek-down') {
+            } else if (actionId === 'peek-down') {
                 cameraState.Up = false;
             }
             cameraAnimationGroup.add(
@@ -173,7 +191,7 @@ class RubiksCube extends HTMLElement {
                     )
                     .start(),
             );
-        });
+        };
     }
 }
 customElements.define('rubiks-cube', RubiksCube);

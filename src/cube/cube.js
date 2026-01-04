@@ -18,6 +18,8 @@ export default class Cube {
         this.rotationQueue = [];
         /** @type {CubeRotation | undefined} */
         this.currentRotation = undefined;
+        /** @type {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} */
+        this.currentState = this.getStickerState();
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
         /** @type {number} */
@@ -82,8 +84,10 @@ export default class Cube {
         }
         if (this.currentRotation.status === 'complete') {
             this.clearRotationGroup();
+            var eventId = this.currentRotation.eventId;
             this.currentRotation = undefined;
-            return this.getStickerState();
+            this.currentState = this.getStickerState();
+            return eventId;
         }
         return undefined;
     }
@@ -194,13 +198,11 @@ export default class Cube {
     }
 
     /**
+     * @param {string} eventId
      * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
      */
-    rotate(input) {
-        var queueLength = this.rotationQueue.length;
-        if (queueLength > 0 && this.rotationQueue[queueLength - 1].rotation.axis === input.axis) {
-        }
-        this.rotationQueue.push(new CubeRotation(input));
+    rotate(eventId, input) {
+        this.rotationQueue.push(new CubeRotation(eventId, input));
     }
 
     /**

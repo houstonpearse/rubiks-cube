@@ -2,11 +2,14 @@ import { Vector3, Group } from 'three';
 
 export class CubeRotation {
     /**
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
+     * @param {string} eventId
+     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} rotationDetails
      */
-    constructor(rotation) {
+    constructor(eventId, rotationDetails) {
+        /** @type {string} */
+        this.eventId = eventId;
         /** @type {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} */
-        this.rotation = rotation;
+        this.rotation = rotationDetails;
         /** @type {"pending" | "initialised" | "complete" | "disposed"} */
         this.status = 'pending';
         /** @type {number} */
