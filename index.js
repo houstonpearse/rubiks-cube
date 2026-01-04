@@ -140,7 +140,6 @@ class RubiksCube extends HTMLElement {
         this.addEventListener('action', (e) => {
             /**  @type {{eventId: string, action: {type: "movement" | "camera" | "rotation", actionId: string }}} move */
             var move = e.detail.move;
-            console.log(move);
             if (move.action.type === 'camera') {
                 handleCameraAction(move.action.actionId);
                 return;
