@@ -1,54 +1,105 @@
-import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight } from 'three';
-import { Tween, Group, Easing } from '@tweenjs/tween.js';
+import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './src/cube/cube';
 import getRotationDetailsFromNotation from './src/utils/rotation';
 import { debounce } from './src/utils/debouncer';
+import gsap from 'gsap';
 
-const defaultAnimationSpeed = 100;
-const defaultCameraSpeed = 100;
-const defaultAnimationStyle = 'fixed';
-const defaultGap = 1.04;
-const minimumGap = 1;
+/** @typedef {{ animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeedMs: number, pieceGap: number, cameraSpeedMs: number, cameraRadius: number, cameraPeekAngleHorizontal: number, cameraPeekAngleVertical: number, cameraFieldOfView: number }} Settings */
+/** @type {Settings} */
+const defaultSettings = {
+    animationSpeedMs: 100,
+    animationStyle: 'fixed',
+    pieceGap: 1.04,
+    cameraSpeedMs: 100,
+    cameraRadius: 5,
+    cameraPeekAngleHorizontal: 0.6,
+    cameraPeekAngleVertical: 0.6,
+    cameraFieldOfView: 75,
+};
+const minGap = 1;
+const minRadius = 4;
+const minFieldOfView = 40;
+const maxFieldOfView = 100;
+const maxAzimuthAngle = (5 * Math.PI) / 16;
+const polarAngleOffset = Math.PI / 2;
+const maxPolarAngle = (5 * Math.PI) / 16;
 
 class RubiksCube extends HTMLElement {
     constructor() {
         super();
-        /** @type {number} */
-        this.animationSpeed = defaultAnimationSpeed;
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
-        /** @type {{animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeed: number, gap: number, cameraSpeed: number}} */
+        /** @type {Settings} */
         this.settings = {
-            animationSpeed: this.getAttribute('animation-speed') || defaultAnimationSpeed,
-            animationStyle: this.getAttribute('animation-style') || defaultAnimationStyle,
-            gap: this.getAttribute('piece-gap') || defaultGap,
-            cameraSpeed: this.getAttribute('camera-speed') || defaultCameraSpeed,
+            animationSpeedMs: this.getAttribute('animation-speed-ms') || defaultSettings.animationSpeedMs,
+            animationStyle: this.getAttribute('animation-style') || defaultSettings.animationStyle,
+            pieceGap: this.getAttribute('piece-gap') || defaultSettings.pieceGap,
+            cameraSpeedMs: this.getAttribute('camera-speed-ms') || defaultSettings.cameraSpeedMs,
+            cameraRadius: this.getAttribute('camera-radius') || defaultSettings.cameraRadius,
+            cameraPeekAngleHorizontal: this.getAttribute('camera-peek-angle-horizontal') || defaultSettings.cameraPeekAngleHorizontal,
+            cameraPeekAngleVertical: this.getAttribute('camera-peek-angle-vertical') || defaultSettings.cameraPeekAngleVertical,
+            cameraFieldOfView: this.getAttribute('camera-field-of-view') || defaultSettings.cameraFieldOfView,
         };
     }
 
     static get observedAttributes() {
-        return ['animation-style', 'animation-speed', 'piece-gap', 'camera-speed'];
+        return [
+            'animation-style',
+            'animation-speed-ms',
+            'piece-gap',
+            'camera-speed-ms',
+            'camera-radius',
+            'camera-peek-angle-horizontal',
+            'camera-peek-angle-vertical',
+            'camera-field-of-view',
+        ];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
         if (name === 'animation-style') {
             this.settings.animationStyle = newVal;
         }
-        if (name === 'animation-speed') {
+        if (name === 'animation-speed-ms') {
             var speed = Number(newVal);
-            this.settings.animationSpeed = speed > 0 ? speed : 0;
+            this.settings.animationSpeedMs = speed > 0 ? speed : 0;
         }
         if (name === 'piece-gap') {
             var gap = Number(newVal);
-            this.settings.gap = gap < minimumGap ? minimumGap : gap;
+            this.settings.pieceGap = gap < minGap ? minGap : gap;
         }
-        if (name === 'camera-speed') {
+        if (name === 'camera-speed-ms') {
             var speed = Number(newVal);
-            this.settings.cameraSpeed = speed > 0 ? speed : 0;
+            this.settings.cameraSpeedMs = speed > 0 ? speed : 0;
+        }
+        if (name === 'camera-radius') {
+            var radius = Number(newVal);
+            this.settings.cameraRadius = radius < minRadius ? minRadius : radius;
+            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+        }
+        if (name === 'camera-peek-angle-horizontal') {
+            var angle = Number(newVal);
+            angle = angle > 0 ? angle : 0;
+            angle = angle < 1 ? angle : 1;
+            this.settings.cameraPeekAngleHorizontal = angle > 0 ? angle : 0;
+            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+        }
+        if (name === 'camera-peek-angle-vertical') {
+            var angle = Number(newVal);
+            angle = angle > 0 ? angle : 0;
+            angle = angle < 1 ? angle : 1;
+            this.settings.cameraPeekAngleVertical = angle;
+            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+        }
+        if (name == 'camera-field-of-view') {
+            var fov = Number(newVal);
+            fov = fov > minFieldOfView ? fov : minFieldOfView;
+            fov = fov < maxFieldOfView ? fov : maxFieldOfView;
+            this.settings.cameraFieldOfView = fov;
         }
     }
+
     connectedCallback() {
         this.init();
     }
@@ -77,22 +128,21 @@ class RubiksCube extends HTMLElement {
         ).observe(this);
 
         // add camera
-        const camera = new PerspectiveCamera(75, this.clientWidth / this.clientHeight, 0.1, 1000);
-        /** @type {{Up: boolean, Right: boolean, UpDistance: number, RightDistance: number}} */
-        const cameraState = { Up: true, Right: true, UpDistance: 2.5, RightDistance: 2.5 };
-        camera.position.z = 4;
-        camera.position.y = 3;
-        camera.position.x = 0;
+        const camera = new PerspectiveCamera(this.settings.cameraFieldOfView, this.clientWidth / this.clientHeight, 0.1, 2000);
+        const cameraSpherical = new Spherical(15, (3 * Math.PI) / 8, -Math.PI / 4);
+        camera.position.setFromSpherical(cameraSpherical);
+        /** @type {{ Up: boolean, Right: boolean }} */
+        const cameraState = { Up: true, Right: true };
 
         // add orbit controls for camera
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableZoom = false;
         controls.enablePan = false;
         controls.enableDamping = true;
-        controls.maxAzimuthAngle = Math.PI / 4;
-        controls.minAzimuthAngle = -Math.PI / 4;
-        controls.maxPolarAngle = (3 * Math.PI) / 4;
-        controls.minPolarAngle = Math.PI / 4;
+        controls.maxAzimuthAngle = maxAzimuthAngle;
+        controls.minAzimuthAngle = -maxAzimuthAngle;
+        controls.maxPolarAngle = polarAngleOffset + maxPolarAngle;
+        controls.minPolarAngle = polarAngleOffset - maxPolarAngle;
 
         // add lighting to scene
         const ambientLight = new AmbientLight('white', 0.5);
@@ -110,10 +160,6 @@ class RubiksCube extends HTMLElement {
         const cube = new Cube(this.settings);
         scene.add(cube.group, cube.rotationGroup);
 
-        // initial camera animation
-        const cameraAnimationGroup = new Group();
-        cameraAnimationGroup.add(new Tween(camera.position).to({ x: 2.5, y: 2.5, z: 4 }, 1000).easing(Easing.Cubic.InOut).start());
-
         const sendState = (eventId) => {
             const event = new CustomEvent('state', { detail: { eventId, state: cube.currentState } });
             this.dispatchEvent(event);
@@ -121,7 +167,6 @@ class RubiksCube extends HTMLElement {
 
         // animation loop
         function animate() {
-            cameraAnimationGroup.update();
             controls.update();
 
             var eventId = cube.update();
@@ -141,7 +186,8 @@ class RubiksCube extends HTMLElement {
             /**  @type {{eventId: string, action: {type: "movement" | "camera" | "rotation", actionId: string }}} move */
             var move = e.detail.move;
             if (move.action.type === 'camera') {
-                handleCameraAction(move.action.actionId);
+                updateCameraState(move.action.actionId);
+                updateCameraPosition();
                 return;
             }
             if (move.action.type === 'movement' || move.action.type === 'rotation') {
@@ -162,9 +208,9 @@ class RubiksCube extends HTMLElement {
         };
 
         /**
-         * @param {'peek-toggle-horizontal' | 'peek-toggle-vertical' | 'peek-right' | 'peek-left' | 'peek-up' | 'peek-down'} actionId
+         * @param {'peek-toggle-horizontal' | 'peek-toggle-vertical' | 'peek-right' | 'peek-left' | 'peek-up' | 'peek-down' } actionId
          */
-        const handleCameraAction = (actionId) => {
+        const updateCameraState = (actionId) => {
             if (actionId === 'peek-toggle-horizontal') {
                 cameraState.Right = !cameraState.Right;
             } else if (actionId === 'peek-toggle-vertical') {
@@ -178,19 +224,37 @@ class RubiksCube extends HTMLElement {
             } else if (actionId === 'peek-down') {
                 cameraState.Up = false;
             }
-            cameraAnimationGroup.add(
-                new Tween(camera.position)
-                    .to(
-                        {
-                            x: cameraState.Right ? cameraState.RightDistance : -cameraState.RightDistance,
-                            y: cameraState.Up ? cameraState.UpDistance : -cameraState.UpDistance,
-                            z: 4,
-                        },
-                        this.settings.cameraSpeed,
-                    )
-                    .start(),
-            );
         };
+
+        /**
+         * @param {number | null} cameraSpeedMs
+         * @param {gsap.EaseString | gsap.EaseFunction | undefined} ease
+         */
+        const updateCameraPosition = (cameraSpeedMs = this.settings.cameraSpeedMs, ease = 'none') => {
+            cameraSpeedMs = cameraSpeedMs ? cameraSpeedMs : this.settings.cameraSpeedMs;
+            var phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
+            var theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
+            const startSpherical = new Spherical().setFromVector3(camera.position);
+            const targetSpherical = new Spherical(this.settings.cameraRadius, phi, theta);
+            gsap.to(startSpherical, {
+                radius: targetSpherical.radius,
+                theta: targetSpherical.theta,
+                phi: targetSpherical.phi,
+                duration: cameraSpeedMs / 1000,
+                ease: ease,
+                onUpdate: function () {
+                    camera.position.setFromSpherical(startSpherical);
+                    camera.lookAt(cube.group.position);
+                    controls.update();
+                },
+            });
+        };
+
+        this.addEventListener('cameraSettingsChanged', () => {
+            updateCameraPosition(); // animate settings changes
+        });
+
+        updateCameraPosition(1000, 'sine.out'); // initial animation
     }
 }
 customElements.define('rubiks-cube', RubiksCube);

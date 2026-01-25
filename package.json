@@ -1,15 +1,14 @@
 {
     "name": "@houstonp/rubiks-cube",
-    "version": "1.4.1",
+    "version": "1.5.0",
     "description": "Rubiks Cube Web Component built with threejs",
     "main": "index.js",
     "author": "Houston Pearse",
     "license": "MIT",
     "dependencies": {
-        "@tweenjs/tween.js": "^25.0.0",
+        "gsap": "^3.14.2",
         "three": "^0.167.1"
     },
-    "devDependencies": {},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/houstonpearse/rubiks-cube.git"

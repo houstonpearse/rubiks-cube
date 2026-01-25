@@ -1,6 +1,6 @@
 # Rubiks Cube Web Component
 
-This package is a rubiks cube web component built with threejs. Camera animation smoothing is done with the tweenjs package.
+This package is a rubiks cube web component built with threejs. Camera animation smoothing is done with the gsap package.
 
 ![cube](cube.png)
 
@@ -21,7 +21,7 @@ import '@houstonp/rubiks-cube';
         <meta charset="utf-8" />
     </head>
     <body>
-        <rubiks-cube animation-speed="1000" animation-style="exponential" piece-gap="1.04" camera-speed="100"> </rubiks-cube>
+        <rubiks-cube animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04" camera-speed="100"> </rubiks-cube>
         <script type="module" src="index.js"></script>
     </body>
 </html>
@@ -29,12 +29,16 @@ import '@houstonp/rubiks-cube';
 
 ## component attributes
 
-| attribute       | accepted values                        | Description                                                                                                                                                   |
-| --------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| animation-speed | integer greater than or equal to 0     | sets the speed of the animations in milliseconds                                                                                                              |
-| animation-style | "exponetial", "next", "fixed", "match" | fixed: fixed animation lengths, next: skips to next animation, exponential: speeds up successive animations, match: matches the speed the frequency of events |
-| piece-gap       | greater than 1                         | sets the gap between rubiks cube pieces                                                                                                                       |
-| camera-speed    | greater than or equal to 0             | sets the speed of camera animations in milliseconds                                                                                                           |
+| attribute                    | accepted values                        | Description                                                                                                                                                   |
+| ---------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| animation-speed-ms           | integer greater than or equal to 0     | sets the duration of the animations in milliseconds                                                                                                           |
+| animation-style              | "exponetial", "next", "fixed", "match" | fixed: fixed animation lengths, next: skips to next animation, exponential: speeds up successive animations, match: matches the speed the frequency of events |
+| piece-gap                    | greater than 1                         | sets the gap between rubiks cube pieces                                                                                                                       |
+| camera-speed-ms              | greater than or equal to 0             | sets the duration of camera animations in milliseconds                                                                                                        |
+| camera-radius                | greater than or equal to 4             | sets the camera radius                                                                                                                                        |
+| camera-peek-angle-horizontal | decimal between 0 and 1                | sets the horizontal peek angle                                                                                                                                |
+| camera-peek-angle-vertical   | decimal between 0 and 1                | sets the vertical peek angle                                                                                                                                  |
+| camera-field-of-view         | integer between 40 and 100             | sets the fielf of view of the camera                                                                                                                          |
 
 ## state of the component
 
@@ -156,12 +160,12 @@ var event = new CustomEvent('action', {
 
 action IDs for camera actions are as follows
 
--   `peek-right` - Camera is moved to the right of the cube so that the right face is visible
--   `peek-left` - Camera is moved to the left of the cube so that the left face is visible
--   `peek-top` - Camera is moved above the cube so that the top face is visible
--   `peek-bottom` - Camera is moved below the cube so that the bottom face is visible
--   `peek-toggle-horizontal` - Camera is moved to the opposite side of the cube in the horizontal plane
--   `peek-toggle-vertical` - Camera is moved to the opposite side of the cube in the vertical plane
+- `peek-right` - Camera is moved to the right of the cube so that the right face is visible
+- `peek-left` - Camera is moved to the left of the cube so that the left face is visible
+- `peek-top` - Camera is moved above the cube so that the top face is visible
+- `peek-bottom` - Camera is moved below the cube so that the bottom face is visible
+- `peek-toggle-horizontal` - Camera is moved to the opposite side of the cube in the horizontal plane
+- `peek-toggle-vertical` - Camera is moved to the opposite side of the cube in the vertical plane
 
 #### Example
 
@@ -183,15 +187,15 @@ cube.dispatchEvent(event);
 
 actionIDs for action type "rotation" are as follows
 
--   'x',
--   'x2',
--   "x'",
--   'y',
--   'y2',
--   "y'",
--   'z',
--   'z2',
--   "z'",
+- 'x',
+- 'x2',
+- "x'",
+- 'y',
+- 'y2',
+- "y'",
+- 'z',
+- 'z2',
+- "z'",
 
 #### Example
 
@@ -225,25 +229,25 @@ cube.dispatchEvent(event);
 
 actionIDs for action type "movement" are as follows
 
--   'R',
--   'R2',
--   "R'",
--   'L',
--   'L2',
--   "L'",
--   'U',
--   'U2',
--   "U'",
--   'D',
--   'D2',
--   "D'",
--   'F',
--   'F2',
--   "F'",
--   'B',
--   'B2',
--   "B'",
--   etc...
+- 'R',
+- 'R2',
+- "R'",
+- 'L',
+- 'L2',
+- "L'",
+- 'U',
+- 'U2',
+- "U'",
+- 'D',
+- 'D2',
+- "D'",
+- 'F',
+- 'F2',
+- "F'",
+- 'B',
+- 'B2',
+- "B'",
+- etc...
 
 #### Example
 
