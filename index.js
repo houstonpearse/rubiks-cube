@@ -19,7 +19,7 @@ const defaultSettings = {
 };
 const minGap = 1;
 const minRadius = 4;
-const minFieldOfView = 40;
+const minFieldOfView = 30;
 const maxFieldOfView = 100;
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
@@ -76,27 +76,36 @@ class RubiksCube extends HTMLElement {
         if (name === 'camera-radius') {
             var radius = Number(newVal);
             this.settings.cameraRadius = radius < minRadius ? minRadius : radius;
-            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            if (oldVal !== newVal && oldVal !== null) {
+                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            }
         }
         if (name === 'camera-peek-angle-horizontal') {
             var angle = Number(newVal);
             angle = angle > 0 ? angle : 0;
             angle = angle < 1 ? angle : 1;
             this.settings.cameraPeekAngleHorizontal = angle > 0 ? angle : 0;
-            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            if (oldVal !== newVal && oldVal !== null) {
+                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            }
         }
         if (name === 'camera-peek-angle-vertical') {
             var angle = Number(newVal);
             angle = angle > 0 ? angle : 0;
             angle = angle < 1 ? angle : 1;
             this.settings.cameraPeekAngleVertical = angle;
-            this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            if (oldVal !== newVal && oldVal !== null) {
+                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+            }
         }
         if (name == 'camera-field-of-view') {
             var fov = Number(newVal);
             fov = fov > minFieldOfView ? fov : minFieldOfView;
             fov = fov < maxFieldOfView ? fov : maxFieldOfView;
             this.settings.cameraFieldOfView = fov;
+            if (oldVal !== newVal && oldVal !== null) {
+                this.dispatchEvent(new CustomEvent('cameraFieldOfViewChanged'));
+            }
         }
     }
 
@@ -128,8 +137,8 @@ class RubiksCube extends HTMLElement {
         ).observe(this);
 
         // add camera
-        const camera = new PerspectiveCamera(this.settings.cameraFieldOfView, this.clientWidth / this.clientHeight, 0.1, 2000);
-        const cameraSpherical = new Spherical(15, (3 * Math.PI) / 8, -Math.PI / 4);
+        const camera = new PerspectiveCamera(this.settings.cameraFieldOfView, this.clientWidth / this.clientHeight, 1, 2000);
+        const cameraSpherical = new Spherical(50, (3 * Math.PI) / 8, -Math.PI / 4);
         camera.position.setFromSpherical(cameraSpherical);
         /** @type {{ Up: boolean, Right: boolean }} */
         const cameraState = { Up: true, Right: true };
@@ -254,7 +263,12 @@ class RubiksCube extends HTMLElement {
             updateCameraPosition(); // animate settings changes
         });
 
-        updateCameraPosition(1000, 'sine.out'); // initial animation
+        this.addEventListener('cameraFieldOfViewChanged', () => {
+            camera.fov = this.settings.cameraFieldOfView;
+            camera.updateProjectionMatrix();
+        });
+
+        updateCameraPosition(1000, 'none'); // initial animation
     }
 }
 customElements.define('rubiks-cube', RubiksCube);
