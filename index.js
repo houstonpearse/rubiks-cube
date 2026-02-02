@@ -268,7 +268,7 @@ class RubiksCube extends HTMLElement {
             camera.updateProjectionMatrix();
         });
 
-        updateCameraPosition(1000, 'none'); // initial animation
+        updateCameraPosition(1000, 'power4.inOut'); // initial animation
     }
 }
 customElements.define('rubiks-cube', RubiksCube);

@@ -1,13 +1,13 @@
 {
     "name": "@houstonp/rubiks-cube",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "description": "Rubiks Cube Web Component built with threejs",
     "main": "index.js",
     "author": "Houston Pearse",
     "license": "MIT",
     "dependencies": {
         "gsap": "^3.14.2",
-        "three": "^0.167.1"
+        "three": "^0.182.0"
     },
     "repository": {
         "type": "git",
