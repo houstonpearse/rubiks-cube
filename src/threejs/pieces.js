@@ -3,7 +3,6 @@ import Stickers from './stickers';
 import Materials from './materials';
 
 /**
- * @param {Geometry} sticker
  * @param {Material} frontMaterial
  * @param {Material} rightMaterial
  * @param {Material} topMaterial
@@ -42,7 +41,6 @@ export function createCornerGroup(frontMaterial, rightMaterial, topMaterial, cor
 }
 
 /**
- * @param {Geometry} sticker
  * @param {Material} frontMaterial
  * @param {Material} topMaterial
  * @param {Material} coreMaterial
@@ -73,9 +71,7 @@ export function createEdgeGroup(frontMaterial, topMaterial, coreMaterial) {
 }
 
 /**
- * @param {Geometry} sticker
  * @param {Material} frontMaterial
- * @param {Material} topMaterial
  * @param {Material} coreMaterial
  * @returns {Group}
  */

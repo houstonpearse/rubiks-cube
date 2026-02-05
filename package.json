@@ -1,11 +1,23 @@
 {
     "name": "@houstonp/rubiks-cube",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "description": "Rubiks Cube Web Component built with threejs",
-    "main": "index.js",
     "author": "Houston Pearse",
     "license": "MIT",
+    "keywords": [
+        "rubik's cube",
+        "twisty puzzle",
+        "3x3",
+        "renderer",
+        "threejs"
+    ],
+    "main": "index.js",
+    "types": "types/index.d.ts",
+    "scripts": {
+        "build:types": "tsc"
+    },
     "dependencies": {
+        "@types/three": "^0.182.0",
         "gsap": "^3.14.2",
         "three": "^0.182.0"
     },
@@ -16,5 +28,8 @@
     "bugs": {
         "url": "https://github.com/houstonpearse/rubiks-cube/issues"
     },
-    "homepage": "https://github.com/houstonpearse/rubiks-cube#readme"
+    "homepage": "https://github.com/houstonpearse/rubiks-cube#readme",
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    }
 }

@@ -1,38 +1,41 @@
-import { Group, Vector3 } from 'three';
+import { Group, Object3D, Vector3 } from 'three';
 import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
+import CubeSettings from './cubeSettings';
 
 export default class Cube {
     /**
-     *   @param {import('../..').Settings} settings
+     *   @param {CubeSettings} cubeSettings
      */
-    constructor(settings) {
-        /** @type {import('../..').Settings} */
-        this.settings = settings;
+    constructor(cubeSettings) {
+        /** @type {CubeSettings} */
+        this.cubeSettings = cubeSettings;
         /** @type {Group} */
-        this.group = this.createCubeGroup();
+        this.group = new Group();
         /** @type {Group} */
         this.rotationGroup = new Group();
         /** @type {CubeRotation[]} */
         this.rotationQueue = [];
         /** @type {CubeRotation | undefined} */
         this.currentRotation = undefined;
-        /** @type {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} */
-        this.currentState = this.getStickerState();
+
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
         /** @type {number} */
-        this._lastGap = settings.gap;
+        this._lastGap = cubeSettings.pieceGap;
+
+        // initialise threejs Objects
+        this.init();
+
+        /** @type {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} */
+        this.currentState = this.getStickerState();
     }
 
     /**
-     * creates a ThreeJS group with all the required pieces for a cube
-     * @param {Group} group
-     * @returns {Group}
+     * adds threejs objects to group
      */
-    createCubeGroup(group) {
-        var group = new Group();
+    init() {
         const core = createCoreMesh();
         core.userData = {
             position: { x: 0, y: 0, z: 0 },
@@ -41,14 +44,14 @@ export default class Cube {
             initialRotation: { x: 0, y: 0, z: 0 },
             type: 'core',
         };
-        group.add(core);
+        this.group.add(core);
 
         for (const piece of createCubeState()) {
             var pieceGroup = piece.group;
             pieceGroup.position.set(
-                piece.position.x * this.settings.pieceGap,
-                piece.position.y * this.settings.pieceGap,
-                piece.position.z * this.settings.pieceGap,
+                piece.position.x * this.cubeSettings.pieceGap,
+                piece.position.y * this.cubeSettings.pieceGap,
+                piece.position.z * this.cubeSettings.pieceGap,
             );
             pieceGroup.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
             pieceGroup.userData = {
@@ -58,9 +61,9 @@ export default class Cube {
                 initialRotation: Object.assign({}, piece.rotation),
                 type: piece.type,
             };
-            group.add(pieceGroup);
+            this.group.add(pieceGroup);
         }
-        return group;
+        return this.group;
     }
 
     /**
@@ -69,7 +72,7 @@ export default class Cube {
      */
     update() {
         if (this.currentRotation === undefined) {
-            if (this._lastGap !== this.settings.pieceGap) {
+            if (this._lastGap !== this.cubeSettings.pieceGap) {
                 this.updateGap();
             }
             this.currentRotation = this.rotationQueue.shift();
@@ -104,9 +107,9 @@ export default class Cube {
         if (this.currentRotation === undefined) {
             this.group.children.forEach((piece) => {
                 var { x, y, z } = piece.userData.position;
-                piece.position.set(x * this.settings.pieceGap, y * this.settings.pieceGap, z * this.settings.pieceGap);
+                piece.position.set(x * this.cubeSettings.pieceGap, y * this.cubeSettings.pieceGap, z * this.cubeSettings.pieceGap);
             });
-            this._lastGap = this.settings.pieceGap;
+            this._lastGap = this.cubeSettings.pieceGap;
         }
     }
 
@@ -121,16 +124,16 @@ export default class Cube {
      * @returns {number}
      */
     getRotationSpeed() {
-        if (this.settings.animationStyle === 'exponential') {
-            return this.settings.animationSpeedMs / 2 ** this.rotationQueue.length;
+        if (this.cubeSettings.animationStyle === 'exponential') {
+            return this.cubeSettings.animationSpeedMs / 2 ** this.rotationQueue.length;
         }
-        if (this.settings.animationStyle === 'next') {
-            return this.rotationQueue.length > 0 ? 0 : this.settings.animationSpeedMs;
+        if (this.cubeSettings.animationStyle === 'next') {
+            return this.rotationQueue.length > 0 ? 0 : this.cubeSettings.animationSpeedMs;
         }
-        if (this.settings.animationStyle === 'match') {
+        if (this.cubeSettings.animationStyle === 'match') {
             if (this.rotationQueue.length > 0) {
                 var lastTimeStamp = this.currentRotation.timestampMs;
-                var minGap = this._matchSpeed ?? this.settings.animationSpeedMs;
+                var minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
                 for (var i = 0; i < this.rotationQueue.length; i++) {
                     var gap = this.rotationQueue[i].timestampMs - lastTimeStamp;
                     if (gap < minGap) {
@@ -142,12 +145,12 @@ export default class Cube {
             if (this._matchSpeed !== undefined) {
                 return this._matchSpeed;
             }
-            return this.settings.animationSpeedMs;
+            return this.cubeSettings.animationSpeedMs;
         }
-        if (this.settings.animationStyle === 'fixed') {
-            return this.settings.animationSpeedMs;
+        if (this.cubeSettings.animationStyle === 'fixed') {
+            return this.cubeSettings.animationSpeedMs;
         }
-        return this.settings.animationSpeedMs;
+        return this.cubeSettings.animationSpeedMs;
     }
 
     /**
@@ -164,7 +167,7 @@ export default class Cube {
         this.group.children.forEach((piece) => {
             const { x, y, z } = piece.userData.initialPosition;
             const { x: u, y: v, z: w } = piece.userData.initialRotation;
-            piece.position.set(x * this.settings.pieceGap, y * this.settings.pieceGap, z * this.settings.pieceGap);
+            piece.position.set(x * this.cubeSettings.pieceGap, y * this.cubeSettings.pieceGap, z * this.cubeSettings.pieceGap);
             piece.rotation.set(u, v, w);
             piece.userData.position.x = x;
             piece.userData.position.y = y;
@@ -210,7 +213,7 @@ export default class Cube {
     }
 
     /**
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}}
+     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
      * @returns {Object3D[]}
      */
     getRotationLayer({ axis, layers, direction }) {
@@ -227,6 +230,21 @@ export default class Cube {
             }
             return false;
         });
+    }
+
+    /**
+     * @returns {string}
+     */
+    get kociembaState() {
+        return this.toKociemba(this.currentState);
+    }
+
+    /**
+     * @param {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} stickerState
+     * @returns {string}
+     */
+    toKociemba(stickerState) {
+        return `${stickerState.up.flat().join('')}${stickerState.right.flat().join('')}${stickerState.front.flat().join('')}${stickerState.down.flat().join('')}${stickerState.left.flat().join('')}${stickerState.back.flat().join('')}`;
     }
 
     /**
@@ -256,17 +274,17 @@ export default class Cube {
                     stickerpos.multiplyScalar(2);
                     stickerpos.round();
                     if (stickerpos.x === 1) {
-                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = mesh.material.userData.face;
+                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = mesh.material.userData.face.id;
                     } else if (stickerpos.x === -1) {
-                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = mesh.material.userData.face;
+                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = mesh.material.userData.face.id;
                     } else if (stickerpos.y === 1) {
-                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face;
+                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
                     } else if (stickerpos.y === -1) {
-                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face;
+                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
                     } else if (stickerpos.z === 1) {
-                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = mesh.material.userData.face;
+                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
                     } else if (stickerpos.z === -1) {
-                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = mesh.material.userData.face;
+                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = mesh.material.userData.face.id;
                     }
                 }
             });

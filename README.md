@@ -42,7 +42,7 @@ import '@houstonp/rubiks-cube';
 
 ## state of the component
 
-A state event occurs when a movement animation is completed. The event details contains the current state of the cube along with the eventId of the animation. The state is an object containing the stickers of each face. A sticker is either "up", "down", "left", "right", "front" or "back".
+A state event occurs when a movement animation is completed. The event details contains the current state of the cube along with the eventId of the animation. The state is an object containing the stickers of each face. A sticker is either U(up), D(down), L(left), R(right), F(front) or B(back).
 
 To listen for the state event, add an event listener to the rubiks-cube element.
 
@@ -54,37 +54,7 @@ cube.addEventListener('state', (e) => {
 /*
 {
     eventId: "guid-guid-guid-guid-guid",
-    state: {
-        up: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
-        down: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
-        left: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
-        right: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
-        front: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
-        back: [
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-            [sticker, sticker, sticker],
-        ],
+    state: "UUUUUUUUUFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
     }
 }
 */

@@ -1,29 +1,33 @@
 import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './src/cube/cube';
-import getRotationDetailsFromNotation from './src/utils/rotation';
-import { debounce } from './src/utils/debouncer';
+import getRotationDetailsFromNotation from './src/cube/rotation';
+import { debounce } from './src/debouncer';
 import gsap from 'gsap';
+import Settings from './src/settings';
+import CubeSettings from './src/cube/cubeSettings';
 
-/** @typedef {{ animationStyle: "exponential" | "next" | "fixed" | "match", animationSpeedMs: number, pieceGap: number, cameraSpeedMs: number, cameraRadius: number, cameraPeekAngleHorizontal: number, cameraPeekAngleVertical: number, cameraFieldOfView: number }} Settings */
-/** @type {Settings} */
-const defaultSettings = {
-    animationSpeedMs: 100,
-    animationStyle: 'fixed',
-    pieceGap: 1.04,
-    cameraSpeedMs: 100,
-    cameraRadius: 5,
-    cameraPeekAngleHorizontal: 0.6,
-    cameraPeekAngleVertical: 0.6,
-    cameraFieldOfView: 75,
-};
-const minGap = 1;
-const minRadius = 4;
-const minFieldOfView = 30;
-const maxFieldOfView = 100;
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
+const AttributeNames = {
+    /** @type {"piece-gap"} */
+    pieceGap: 'piece-gap',
+    /** @type {"animation-speed-ms"} */
+    animationSpeed: 'animation-speed-ms',
+    /** @type {"animation-style"} */
+    animationStyle: 'animation-style',
+    /** @type {"camera-speed-ms"} */
+    cameraSpeed: 'camera-speed-ms',
+    /** @type {"camera-radius"} */
+    cameraRadius: 'camera-radius',
+    /** @type {"camera-field-of-view"} */
+    cameraFieldOfView: 'camera-field-of-view',
+    /** @type {"camera-peek-angle-horizontal"} */
+    cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
+    /** @type {"camera-peek-angle-vertical"} */
+    cameraPeekAngleVertical: 'camera-peek-angle-vertical',
+};
 
 class RubiksCube extends HTMLElement {
     constructor() {
@@ -32,85 +36,90 @@ class RubiksCube extends HTMLElement {
         this.shadowRoot.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
         this.canvas = this.shadowRoot.getElementById('cube-canvas');
         /** @type {Settings} */
-        this.settings = {
-            animationSpeedMs: this.getAttribute('animation-speed-ms') || defaultSettings.animationSpeedMs,
-            animationStyle: this.getAttribute('animation-style') || defaultSettings.animationStyle,
-            pieceGap: this.getAttribute('piece-gap') || defaultSettings.pieceGap,
-            cameraSpeedMs: this.getAttribute('camera-speed-ms') || defaultSettings.cameraSpeedMs,
-            cameraRadius: this.getAttribute('camera-radius') || defaultSettings.cameraRadius,
-            cameraPeekAngleHorizontal: this.getAttribute('camera-peek-angle-horizontal') || defaultSettings.cameraPeekAngleHorizontal,
-            cameraPeekAngleVertical: this.getAttribute('camera-peek-angle-vertical') || defaultSettings.cameraPeekAngleVertical,
-            cameraFieldOfView: this.getAttribute('camera-field-of-view') || defaultSettings.cameraFieldOfView,
-        };
+        this.settings = new Settings();
+        this.settings.setPieceGap(this.getAttribute(AttributeNames.pieceGap));
+        this.settings.setAnimationSpeed(this.getAttribute(AttributeNames.animationSpeed));
+        this.settings.setAnimationStyle(this.getAttribute(AttributeNames.animationStyle));
+        this.settings.setCameraSpeed(this.getAttribute(AttributeNames.cameraSpeed));
+        this.settings.setCameraRadius(this.getAttribute(AttributeNames.cameraRadius));
+        this.settings.setCameraFieldOfView(this.getAttribute(AttributeNames.cameraFieldOfView));
+        this.settings.setCameraPeekAngleHorizontal(this.getAttribute(AttributeNames.cameraPeekAngleHorizontal));
+        this.settings.setCameraPeekAngleVertical(this.getAttribute(AttributeNames.cameraPeekAngleVertical));
+        this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle);
     }
 
     static get observedAttributes() {
         return [
-            'animation-style',
-            'animation-speed-ms',
-            'piece-gap',
-            'camera-speed-ms',
-            'camera-radius',
-            'camera-peek-angle-horizontal',
-            'camera-peek-angle-vertical',
-            'camera-field-of-view',
+            AttributeNames.pieceGap,
+            AttributeNames.animationSpeed,
+            AttributeNames.animationStyle,
+            AttributeNames.cameraSpeed,
+            AttributeNames.cameraRadius,
+            AttributeNames.cameraFieldOfView,
+            AttributeNames.cameraPeekAngleHorizontal,
+            AttributeNames.cameraPeekAngleVertical,
         ];
     }
 
+    /**
+     * @param {string} name
+     * @param {string} oldVal
+     * @param {string} newVal
+     *  */
     attributeChangedCallback(name, oldVal, newVal) {
-        if (name === 'animation-style') {
-            this.settings.animationStyle = newVal;
-        }
-        if (name === 'animation-speed-ms') {
-            var speed = Number(newVal);
-            this.settings.animationSpeedMs = speed > 0 ? speed : 0;
-        }
-        if (name === 'piece-gap') {
-            var gap = Number(newVal);
-            this.settings.pieceGap = gap < minGap ? minGap : gap;
-        }
-        if (name === 'camera-speed-ms') {
-            var speed = Number(newVal);
-            this.settings.cameraSpeedMs = speed > 0 ? speed : 0;
-        }
-        if (name === 'camera-radius') {
-            var radius = Number(newVal);
-            this.settings.cameraRadius = radius < minRadius ? minRadius : radius;
-            if (oldVal !== newVal && oldVal !== null) {
-                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
-            }
-        }
-        if (name === 'camera-peek-angle-horizontal') {
-            var angle = Number(newVal);
-            angle = angle > 0 ? angle : 0;
-            angle = angle < 1 ? angle : 1;
-            this.settings.cameraPeekAngleHorizontal = angle > 0 ? angle : 0;
-            if (oldVal !== newVal && oldVal !== null) {
-                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
-            }
-        }
-        if (name === 'camera-peek-angle-vertical') {
-            var angle = Number(newVal);
-            angle = angle > 0 ? angle : 0;
-            angle = angle < 1 ? angle : 1;
-            this.settings.cameraPeekAngleVertical = angle;
-            if (oldVal !== newVal && oldVal !== null) {
-                this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
-            }
-        }
-        if (name == 'camera-field-of-view') {
-            var fov = Number(newVal);
-            fov = fov > minFieldOfView ? fov : minFieldOfView;
-            fov = fov < maxFieldOfView ? fov : maxFieldOfView;
-            this.settings.cameraFieldOfView = fov;
-            if (oldVal !== newVal && oldVal !== null) {
-                this.dispatchEvent(new CustomEvent('cameraFieldOfViewChanged'));
-            }
+        switch (name) {
+            case AttributeNames.pieceGap:
+                this.settings.setPieceGap(newVal);
+                this.cubeSettings.pieceGap = this.settings.pieceGap;
+                break;
+            case AttributeNames.animationSpeed:
+                this.settings.setAnimationSpeed(newVal);
+                this.cubeSettings.animationSpeedMs = this.settings.animationSpeedMs;
+                break;
+            case AttributeNames.animationStyle:
+                this.settings.setAnimationStyle(newVal);
+                this.cubeSettings.animationStyle = this.settings.animationStyle;
+                break;
+            case AttributeNames.cameraSpeed:
+                this.settings.setCameraSpeed(newVal);
+                break;
+            case AttributeNames.cameraRadius:
+                this.settings.setCameraRadius(newVal);
+                if (oldVal !== newVal && oldVal !== null) {
+                    this.animateCameraSetting();
+                }
+                break;
+            case AttributeNames.cameraFieldOfView:
+                this.settings.setCameraFieldOfView(newVal);
+                if (oldVal !== newVal && oldVal !== null) {
+                    this.updateCameraFOV();
+                }
+                break;
+            case AttributeNames.cameraPeekAngleHorizontal:
+                this.settings.setCameraPeekAngleHorizontal(newVal);
+                if (oldVal !== newVal && oldVal !== null) {
+                    this.animateCameraSetting();
+                }
+                break;
+            case AttributeNames.cameraPeekAngleVertical:
+                this.settings.setCameraPeekAngleVertical(newVal);
+                if (oldVal !== newVal && oldVal !== null) {
+                    this.animateCameraSetting();
+                }
+                break;
         }
     }
 
     connectedCallback() {
         this.init();
+    }
+
+    animateCameraSetting() {
+        this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+    }
+
+    updateCameraFOV() {
+        this.dispatchEvent(new CustomEvent('cameraFieldOfViewChanged'));
     }
 
     init() {
@@ -124,7 +133,7 @@ class RubiksCube extends HTMLElement {
         });
         renderer.setSize(this.clientWidth, this.clientHeight);
         renderer.setAnimationLoop(animate);
-        renderer.setPixelRatio(2);
+        renderer.setPixelRatio(window.devicePixelRatio);
 
         //update renderer and camera when container resizes. debouncing events to reduce frequency
         new ResizeObserver(
@@ -166,11 +175,12 @@ class RubiksCube extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        const cube = new Cube(this.settings);
+        const cube = new Cube(this.cubeSettings);
         scene.add(cube.group, cube.rotationGroup);
 
+        /** @param {string} eventId  */
         const sendState = (eventId) => {
-            const event = new CustomEvent('state', { detail: { eventId, state: cube.currentState } });
+            const event = new CustomEvent('state', { detail: { eventId, state: cube.kociembaState } });
             this.dispatchEvent(event);
         };
 
@@ -192,15 +202,16 @@ class RubiksCube extends HTMLElement {
         });
 
         this.addEventListener('action', (e) => {
-            /**  @type {{eventId: string, action: {type: "movement" | "camera" | "rotation", actionId: string }}} move */
-            var move = e.detail.move;
-            if (move.action.type === 'camera') {
-                updateCameraState(move.action.actionId);
+            /**  @type {CustomEvent<{ move: {eventId: string, action: {type: "movement" | "camera" | "rotation", actionId: string }}}>} event */
+            const event = /** @type {any} */ (e);
+            const actionEvent = event.detail.move;
+            if (actionEvent.action.type === 'camera') {
+                updateCameraState(actionEvent.action.actionId);
                 updateCameraPosition();
                 return;
             }
-            if (move.action.type === 'movement' || move.action.type === 'rotation') {
-                handleRotationAction(move.eventId, move.action.actionId);
+            if (actionEvent.action.type === 'movement' || actionEvent.action.type === 'rotation') {
+                handleRotationAction(actionEvent.eventId, actionEvent.action.actionId);
                 return;
             }
         });
