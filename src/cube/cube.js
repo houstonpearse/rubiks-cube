@@ -1,4 +1,4 @@
-import { Group, Object3D, Vector3 } from 'three';
+import { Group, Material, Mesh, Object3D, Vector3 } from 'three';
 import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
@@ -132,8 +132,9 @@ export default class Cube {
         }
         if (this.cubeSettings.animationStyle === 'match') {
             if (this.rotationQueue.length > 0) {
-                var lastTimeStamp = this.currentRotation.timestampMs;
-                var minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
+                const rotation = /** @type {CubeRotation} */ (this.currentRotation);
+                const lastTimeStamp = rotation.timestampMs;
+                let minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
                 for (var i = 0; i < this.rotationQueue.length; i++) {
                     var gap = this.rotationQueue[i].timestampMs - lastTimeStamp;
                     if (gap < minGap) {
@@ -183,8 +184,13 @@ export default class Cube {
      * @returns {void}
      */
     clearRotationGroup() {
+        if (this.currentRotation == null) {
+            console.error('cannot clear rotation when rotation is null');
+            return;
+        }
         if (this.currentRotation.status != 'complete') {
-            throw Error('cannot clear rotation group while rotating');
+            console.error('cannot clear rotation group while rotating');
+            return;
         }
         this.rotationGroup.children.forEach((piece) => {
             piece.getWorldPosition(piece.position);
@@ -222,11 +228,14 @@ export default class Cube {
         }
         return this.group.children.filter((piece) => {
             if (axis === 'x') {
-                return layers.includes(Math.round(piece.userData.position.x));
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.x));
+                return layers.includes(roundedPos);
             } else if (axis === 'y') {
-                return layers.includes(Math.round(piece.userData.position.y));
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.y));
+                return layers.includes(roundedPos);
             } else if (axis === 'z') {
-                return layers.includes(Math.round(piece.userData.position.z));
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.z));
+                return layers.includes(roundedPos);
             }
             return false;
         });
@@ -247,11 +256,13 @@ export default class Cube {
         return `${stickerState.up.flat().join('')}${stickerState.right.flat().join('')}${stickerState.front.flat().join('')}${stickerState.down.flat().join('')}${stickerState.left.flat().join('')}${stickerState.back.flat().join('')}`;
     }
 
+    /** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
     /**
-     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }}
+     * @returns {StickerState}
      */
     getStickerState() {
-        const state = {
+        /** @type {StickerState} */
+        let state = {
             up: [[], [], []],
             down: [[], [], []],
             front: [[], [], []],
@@ -263,8 +274,9 @@ export default class Cube {
             if (piece.userData.type === 'core') {
                 return;
             }
-            piece.children.forEach((mesh) => {
-                if (mesh.userData.type === 'sticker') {
+            piece.children.forEach((object3D) => {
+                if (object3D.userData.type === 'sticker') {
+                    const mesh = /** @type {Mesh} */ (object3D);
                     const piecepos = new Vector3();
                     piecepos.copy(piece.userData.position);
                     piecepos.round();
@@ -273,18 +285,20 @@ export default class Cube {
                     stickerpos.sub(piecepos);
                     stickerpos.multiplyScalar(2);
                     stickerpos.round();
+                    const material = /** @type {Material} */ (mesh.material);
+                    const userData = /** @type {import('../threejs/materials').StickerUserData} */ (material.userData);
                     if (stickerpos.x === 1) {
-                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = mesh.material.userData.face.id;
+                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = userData.face;
                     } else if (stickerpos.x === -1) {
-                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = mesh.material.userData.face.id;
+                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = userData.face;
                     } else if (stickerpos.y === 1) {
-                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = userData.face;
                     } else if (stickerpos.y === -1) {
-                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = userData.face;
                     } else if (stickerpos.z === 1) {
-                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = userData.face;
                     } else if (stickerpos.z === -1) {
-                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = userData.face;
                     }
                 }
             });

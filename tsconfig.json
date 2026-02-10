@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
+        "module": "es2015",
+        "skipLibCheck": true,
         "allowJs": true,
         "checkJs": true,
         "declaration": true,
         "emitDeclarationOnly": true,
-        "outDir": "types",
+        "moduleResolution": "bundler",
+        "outDir": "./types",
+        "rootDir": "./src",
         "lib": ["DOM", "es2019"]
     },
-    "include": ["**/*"]
+    "include": ["./src/**/*"]
 }

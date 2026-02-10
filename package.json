@@ -11,13 +11,27 @@
         "renderer",
         "threejs"
     ],
-    "main": "index.js",
-    "types": "types/index.d.ts",
+    "main": "./src/index.js",
+    "types": "./types/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./types/index.d.ts",
+            "default": "./src/index.js"
+        },
+        "./schema": {
+            "types": "./types/schema.d.ts",
+            "default": "./src/schema.js"
+        },
+        "./core": {
+            "types": "./types/core.d.ts",
+            "default": "./src/core.js"
+        }
+    },
     "scripts": {
-        "build:types": "tsc"
+        "build:types": "tsc",
+        "watch:types": "tsc --watch"
     },
     "dependencies": {
-        "@types/three": "^0.182.0",
         "gsap": "^3.14.2",
         "three": "^0.182.0"
     },
@@ -30,6 +44,7 @@
     },
     "homepage": "https://github.com/houstonpearse/rubiks-cube#readme",
     "devDependencies": {
+        "@types/three": "^0.182.0",
         "typescript": "^5.9.3"
     }
 }
