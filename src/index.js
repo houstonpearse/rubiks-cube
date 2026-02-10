@@ -1,5 +1,6 @@
 // @ts-check
-import { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
+import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
+import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './cube/cube';
 import getRotationDetailsFromNotation from './cube/rotation';
@@ -232,7 +233,7 @@ class RubiksCube extends HTMLElement {
         // defined core threejs objects
         const canvas = this.canvas;
         const scene = new Scene();
-        const renderer = new WebGLRenderer({
+        const renderer = new WebGPURenderer({
             alpha: true,
             canvas,
             antialias: true,

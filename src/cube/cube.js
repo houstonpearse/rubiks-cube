@@ -4,6 +4,7 @@ import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
 import CubeSettings from './cubeSettings';
 
+/** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
 export default class Cube {
     /**
      *   @param {CubeSettings} cubeSettings
@@ -28,7 +29,7 @@ export default class Cube {
         // initialise threejs Objects
         this.init();
 
-        /** @type {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} */
+        /** @type {StickerState} */
         this.currentState = this.getStickerState();
     }
 
@@ -68,7 +69,7 @@ export default class Cube {
 
     /**
      * update the cube and continue any rotations
-     * @returns {string}
+     * @returns {string | undefined }
      */
     update() {
         if (this.currentRotation === undefined) {
@@ -85,7 +86,7 @@ export default class Cube {
             this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
             this.currentRotation.initialise();
         }
-        if (this.currentRotation.status === 'initialised') {
+        if (this.currentRotation.status === 'initialised' || this.currentRotation.status === 'inProgress') {
             var speed = this.getRotationSpeed();
             this.currentRotation.update(this.rotationGroup, speed);
         }
@@ -256,7 +257,6 @@ export default class Cube {
         return `${stickerState.up.flat().join('')}${stickerState.right.flat().join('')}${stickerState.front.flat().join('')}${stickerState.down.flat().join('')}${stickerState.left.flat().join('')}${stickerState.back.flat().join('')}`;
     }
 
-    /** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
     /**
      * @returns {StickerState}
      */
@@ -286,19 +286,19 @@ export default class Cube {
                     stickerpos.multiplyScalar(2);
                     stickerpos.round();
                     const material = /** @type {Material} */ (mesh.material);
-                    const userData = /** @type {import('../threejs/materials').StickerUserData} */ (material.userData);
+                    const materialUserData = /** @type {import('../threejs/materials').StickerUserData} */ (material.userData);
                     if (stickerpos.x === 1) {
-                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = userData.face;
+                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = materialUserData.face;
                     } else if (stickerpos.x === -1) {
-                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = userData.face;
+                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = materialUserData.face;
                     } else if (stickerpos.y === 1) {
-                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = userData.face;
+                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.y === -1) {
-                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = userData.face;
+                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.z === 1) {
-                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = userData.face;
+                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.z === -1) {
-                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = userData.face;
+                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = materialUserData.face;
                     }
                 }
             });

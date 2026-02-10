@@ -10,11 +10,11 @@ export class CubeRotation {
         this.eventId = eventId;
         /** @type {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} */
         this.rotation = rotationDetails;
-        /** @type {"pending" | "initialised" | "complete" | "disposed"} */
+        /** @type {"pending" | "initialised" | "inProgress" | "complete" | "disposed"} */
         this.status = 'pending';
         /** @type {number} */
         this.timestampMs = performance.now();
-        /** @type {number} */
+        /** @type {number | undefined} */
         this._lastUpdatedTimeMs = undefined;
         /** @type {number} */
         this._rotationPercentage = 0;
@@ -31,6 +31,15 @@ export class CubeRotation {
      * @param {number} speedMs
      */
     update(rotationGroup, speedMs) {
+        if (this.status === 'initialised') {
+            this.status = 'inProgress';
+        }
+
+        if (this.status !== 'inProgress' || this._lastUpdatedTimeMs == null) {
+            console.error(`Cannot update cubeRotation. Status - [${this.status}]. LastUpdated - [${this._lastUpdatedTimeMs}].`);
+            return;
+        }
+
         var intervalMs = performance.now() - this._lastUpdatedTimeMs;
         this._lastUpdatedTimeMs = performance.now();
 
