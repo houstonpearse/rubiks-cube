@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {"exponential" | "next" | "fixed" | "match"} AnimationStyle */
 export default class CubeSettings {
     /**

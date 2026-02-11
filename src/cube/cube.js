@@ -1,9 +1,13 @@
-import { Group, Object3D, Vector3 } from 'three';
+// @ts-check
+import { Group, Material, Mesh, Object3D, Vector3 } from 'three';
 import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
 import CubeSettings from './cubeSettings';
+import GetMovementSlice, { GetRotationSlice } from './slice';
+import { Axi } from '../core';
 
+/** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
 export default class Cube {
     /**
      *   @param {CubeSettings} cubeSettings
@@ -28,7 +32,7 @@ export default class Cube {
         // initialise threejs Objects
         this.init();
 
-        /** @type {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} */
+        /** @type {StickerState} */
         this.currentState = this.getStickerState();
     }
 
@@ -68,7 +72,6 @@ export default class Cube {
 
     /**
      * update the cube and continue any rotations
-     * @returns {string}
      */
     update() {
         if (this.currentRotation === undefined) {
@@ -78,25 +81,24 @@ export default class Cube {
             this.currentRotation = this.rotationQueue.shift();
             if (this.currentRotation === undefined) {
                 this._matchSpeed = undefined; // reset speed for the match animation options
-                return undefined;
+                return;
             }
         }
         if (this.currentRotation.status === 'pending') {
-            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
+            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.slice));
             this.currentRotation.initialise();
         }
-        if (this.currentRotation.status === 'initialised') {
+        if (this.currentRotation.status === 'initialised' || this.currentRotation.status === 'inProgress') {
             var speed = this.getRotationSpeed();
             this.currentRotation.update(this.rotationGroup, speed);
         }
         if (this.currentRotation.status === 'complete') {
             this.clearRotationGroup();
-            var eventId = this.currentRotation.eventId;
-            this.currentRotation = undefined;
             this.currentState = this.getStickerState();
-            return eventId;
+            this.currentRotation.completedCallback(this.kociembaState);
+            this.currentRotation = undefined;
         }
-        return undefined;
+        return;
     }
 
     /**
@@ -132,8 +134,9 @@ export default class Cube {
         }
         if (this.cubeSettings.animationStyle === 'match') {
             if (this.rotationQueue.length > 0) {
-                var lastTimeStamp = this.currentRotation.timestampMs;
-                var minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
+                const rotation = /** @type {CubeRotation} */ (this.currentRotation);
+                const lastTimeStamp = rotation.timestampMs;
+                let minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
                 for (var i = 0; i < this.rotationQueue.length; i++) {
                     var gap = this.rotationQueue[i].timestampMs - lastTimeStamp;
                     if (gap < minGap) {
@@ -155,13 +158,16 @@ export default class Cube {
 
     /**
      * Complete the current rotation and reset the cube
+     * @param {(state:string) => boolean} completedCallback
      * @returns {void}
      */
-    reset() {
+    reset(completedCallback) {
+        this.rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('State reset during action'));
         this.rotationQueue = [];
         if (this.currentRotation) {
             this.currentRotation.update(this.rotationGroup, 0);
             this.clearRotationGroup();
+            this.currentRotation.failedCallback('State reset during action');
             this.currentRotation = undefined;
         }
         this.group.children.forEach((piece) => {
@@ -176,6 +182,11 @@ export default class Cube {
             piece.userData.rotation.y = v;
             piece.userData.rotation.z = w;
         });
+
+        this.currentState = this.getStickerState();
+        if (!completedCallback(this.kociembaState)) {
+            console.error('Failed to invoke reset completedCallback');
+        }
     }
 
     /**
@@ -183,8 +194,13 @@ export default class Cube {
      * @returns {void}
      */
     clearRotationGroup() {
+        if (this.currentRotation == null) {
+            console.error('cannot clear rotation when rotation is null');
+            return;
+        }
         if (this.currentRotation.status != 'complete') {
-            throw Error('cannot clear rotation group while rotating');
+            console.error('cannot clear rotation group while rotating');
+            return;
         }
         this.rotationGroup.children.forEach((piece) => {
             piece.getWorldPosition(piece.position);
@@ -205,28 +221,45 @@ export default class Cube {
     }
 
     /**
-     * @param {string} eventId
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
+     *  @param {string} eventId
+     *  @param {import('../core').Rotation} rotation
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
      */
-    rotate(eventId, input) {
-        this.rotationQueue.push(new CubeRotation(eventId, input));
+    rotation(eventId, rotation, completedCallback, failedCallback) {
+        const slice = GetRotationSlice(rotation);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
     }
 
     /**
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
+     *  @param {string} eventId
+     *  @param {import('../core').Movement} movement
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
+     */
+    movement(eventId, movement, completedCallback, failedCallback) {
+        const slice = GetMovementSlice(movement);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
+    }
+
+    /**
+     * @param {import('./slice').Slice} slice
      * @returns {Object3D[]}
      */
-    getRotationLayer({ axis, layers, direction }) {
-        if (layers.length === 0) {
+    getRotationLayer(slice) {
+        if (slice.layers.length === 0) {
             return [...this.group.children];
         }
         return this.group.children.filter((piece) => {
-            if (axis === 'x') {
-                return layers.includes(Math.round(piece.userData.position.x));
-            } else if (axis === 'y') {
-                return layers.includes(Math.round(piece.userData.position.y));
-            } else if (axis === 'z') {
-                return layers.includes(Math.round(piece.userData.position.z));
+            if (slice.axis === Axi.x) {
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.x));
+                return slice.layers.includes(roundedPos);
+            } else if (slice.axis === Axi.y) {
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.y));
+                return slice.layers.includes(roundedPos);
+            } else if (slice.axis === Axi.z) {
+                const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.z));
+                return slice.layers.includes(roundedPos);
             }
             return false;
         });
@@ -240,7 +273,7 @@ export default class Cube {
     }
 
     /**
-     * @param {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} stickerState
+     * @param {StickerState} stickerState
      * @returns {string}
      */
     toKociemba(stickerState) {
@@ -248,23 +281,18 @@ export default class Cube {
     }
 
     /**
-     * @returns {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }}
+     * @returns {StickerState}
      */
     getStickerState() {
-        const state = {
-            up: [[], [], []],
-            down: [[], [], []],
-            front: [[], [], []],
-            back: [[], [], []],
-            left: [[], [], []],
-            right: [[], [], []],
-        };
+        /** @type {StickerState} */
+        let state = { up: [[], [], []], down: [[], [], []], front: [[], [], []], back: [[], [], []], left: [[], [], []], right: [[], [], []] };
         this.group.children.forEach((piece) => {
             if (piece.userData.type === 'core') {
                 return;
             }
-            piece.children.forEach((mesh) => {
-                if (mesh.userData.type === 'sticker') {
+            piece.children.forEach((object3D) => {
+                if (object3D.userData.type === 'sticker') {
+                    const mesh = /** @type {Mesh} */ (object3D);
                     const piecepos = new Vector3();
                     piecepos.copy(piece.userData.position);
                     piecepos.round();
@@ -273,18 +301,20 @@ export default class Cube {
                     stickerpos.sub(piecepos);
                     stickerpos.multiplyScalar(2);
                     stickerpos.round();
+                    const material = /** @type {Material} */ (mesh.material);
+                    const materialUserData = /** @type {import('../threejs/materials').StickerUserData} */ (material.userData);
                     if (stickerpos.x === 1) {
-                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = mesh.material.userData.face.id;
+                        state.right[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.z)] = materialUserData.face;
                     } else if (stickerpos.x === -1) {
-                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = mesh.material.userData.face.id;
+                        state.left[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.z)] = materialUserData.face;
                     } else if (stickerpos.y === 1) {
-                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.up[1 + Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.y === -1) {
-                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.down[1 - Math.round(piecepos.z)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.z === 1) {
-                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.front[1 - Math.round(piecepos.y)][1 + Math.round(piecepos.x)] = materialUserData.face;
                     } else if (stickerpos.z === -1) {
-                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = mesh.material.userData.face.id;
+                        state.back[1 - Math.round(piecepos.y)][1 - Math.round(piecepos.x)] = materialUserData.face;
                     }
                 }
             });

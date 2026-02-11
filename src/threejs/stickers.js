@@ -1,5 +1,6 @@
-import { SVGLoader } from "three/examples/jsm/Addons.js";
-import { ExtrudeGeometry } from "three";
+// @ts-check
+import { SVGLoader } from 'three/examples/jsm/Addons.js';
+import { ExtrudeGeometry } from 'three';
 
 const loader = new SVGLoader();
 const cornerSVG = loader.parse(`
@@ -19,30 +20,21 @@ const centerSVG = loader.parse(`
 `);
 
 export default class Stickers {
-  static center = new ExtrudeGeometry(
-    SVGLoader.createShapes(centerSVG.paths[0])[0],
-    {
-      depth: 15,
-    }
-  )
-    .scale(0.002, 0.002, 0.002)
-    .translate(-0.5, -0.5, 0);
+    static center = new ExtrudeGeometry(SVGLoader.createShapes(centerSVG.paths[0])[0], {
+        depth: 15,
+    })
+        .scale(0.002, 0.002, 0.002)
+        .translate(-0.5, -0.5, 0);
 
-  static edge = new ExtrudeGeometry(
-    SVGLoader.createShapes(edgeSVG.paths[0])[0],
-    {
-      depth: 15,
-    }
-  )
-    .scale(0.002, 0.002, 0.002)
-    .translate(-0.5, -0.5, 0);
+    static edge = new ExtrudeGeometry(SVGLoader.createShapes(edgeSVG.paths[0])[0], {
+        depth: 15,
+    })
+        .scale(0.002, 0.002, 0.002)
+        .translate(-0.5, -0.5, 0);
 
-  static corner = new ExtrudeGeometry(
-    SVGLoader.createShapes(cornerSVG.paths[0])[0],
-    {
-      depth: 15,
-    }
-  )
-    .scale(0.002, 0.002, 0.002)
-    .translate(-0.5, -0.5, 0);
+    static corner = new ExtrudeGeometry(SVGLoader.createShapes(cornerSVG.paths[0])[0], {
+        depth: 15,
+    })
+        .scale(0.002, 0.002, 0.002)
+        .translate(-0.5, -0.5, 0);
 }

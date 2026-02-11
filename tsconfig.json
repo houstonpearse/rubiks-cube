@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
+        "module": "esnext",
+        "skipLibCheck": true,
         "allowJs": true,
-        "checkJs": true,
+        "checkJs": false,
         "declaration": true,
         "emitDeclarationOnly": true,
-        "outDir": "types",
-        "lib": ["DOM", "es2019"]
-    },
-    "include": ["**/*"]
+        "stripInternal": true,
+        "moduleResolution": "bundler",
+        "outDir": "./types",
+        "rootDir": "./src",
+        "lib": ["DOM", "ESNext"]
+    }
 }

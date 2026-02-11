@@ -5,11 +5,11 @@
     "": {
       "name": "@houstonp/rubiks-cube",
       "dependencies": {
-        "@types/three": "^0.182.0",
         "gsap": "^3.14.2",
         "three": "^0.182.0",
       },
       "devDependencies": {
+        "@types/three": "^0.182.0",
         "typescript": "^5.9.3",
       },
     },

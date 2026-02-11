@@ -1,20 +1,27 @@
+// @ts-check
 import { Vector3, Group } from 'three';
 
 export class CubeRotation {
     /**
      * @param {string} eventId
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} rotationDetails
+     * @param {import('./slice').Slice} slice
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
      */
-    constructor(eventId, rotationDetails) {
+    constructor(eventId, slice, completedCallback, failedCallback) {
+        /** @type {((state: string) => void )} */
+        this.completedCallback = completedCallback;
+        /** @type {((reason: string) => void )} */
+        this.failedCallback = failedCallback;
         /** @type {string} */
         this.eventId = eventId;
-        /** @type {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} */
-        this.rotation = rotationDetails;
-        /** @type {"pending" | "initialised" | "complete" | "disposed"} */
+        /** @type {import('./slice').Slice} */
+        this.slice = slice;
+        /** @type {"pending" | "initialised" | "inProgress" | "complete" | "disposed"} */
         this.status = 'pending';
         /** @type {number} */
         this.timestampMs = performance.now();
-        /** @type {number} */
+        /** @type {number | undefined} */
         this._lastUpdatedTimeMs = undefined;
         /** @type {number} */
         this._rotationPercentage = 0;
@@ -31,6 +38,15 @@ export class CubeRotation {
      * @param {number} speedMs
      */
     update(rotationGroup, speedMs) {
+        if (this.status === 'initialised') {
+            this.status = 'inProgress';
+        }
+
+        if (this.status !== 'inProgress' || this._lastUpdatedTimeMs == null) {
+            console.error(`Cannot update cubeRotation. Status - [${this.status}]. LastUpdated - [${this._lastUpdatedTimeMs}].`);
+            return;
+        }
+
         var intervalMs = performance.now() - this._lastUpdatedTimeMs;
         this._lastUpdatedTimeMs = performance.now();
 
@@ -41,13 +57,13 @@ export class CubeRotation {
                 increment = potentialIncrement;
             }
         }
-        const rotationIncrement = (Math.abs(this.rotation.direction) * ((increment / 100) * Math.PI)) / 2;
+        const rotationIncrement = (Math.abs(this.slice.direction) * ((increment / 100) * Math.PI)) / 2;
         this._rotationPercentage += increment;
         rotationGroup.rotateOnWorldAxis(
             new Vector3(
-                this.rotation.axis === 'x' ? this.rotation.direction : 0,
-                this.rotation.axis === 'y' ? this.rotation.direction : 0,
-                this.rotation.axis === 'z' ? this.rotation.direction : 0,
+                this.slice.axis === 'x' ? this.slice.direction : 0,
+                this.slice.axis === 'y' ? this.slice.direction : 0,
+                this.slice.axis === 'z' ? this.slice.direction : 0,
             ).normalize(),
             rotationIncrement,
         );

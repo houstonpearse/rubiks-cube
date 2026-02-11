@@ -1,3 +1,4 @@
+// @ts-check
 import { Group } from 'three';
 import Materials from '../threejs/materials';
 import { createCornerGroup, createEdgeGroup, createCenterGroup } from '../threejs/pieces';

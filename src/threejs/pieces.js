@@ -1,3 +1,4 @@
+// @ts-check
 import { Group, BoxGeometry, Mesh, SphereGeometry, Material } from 'three';
 import Stickers from './stickers';
 import Materials from './materials';
