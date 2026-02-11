@@ -1,4 +1,5 @@
 // @ts-check
+/// <reference path="./globals.ts" preserve="true" />
 import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
@@ -28,7 +29,7 @@ const InternalEvents = Object.freeze({
     cameraPeekComplete: 'cameraPeekComplete',
 });
 
-class RubiksCube extends HTMLElement {
+export class RubiksCubeElement extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -40,6 +41,13 @@ class RubiksCube extends HTMLElement {
         this.settings = new Settings();
         /** @private @type {CubeSettings} */
         this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle);
+    }
+
+    /**
+     * @param {string} tagName the name of the tag to register the web component under
+     */
+    static register(tagName = 'rubiks-cube') {
+        customElements.define(tagName, this);
     }
 
     static get observedAttributes() {
@@ -486,6 +494,3 @@ class RubiksCube extends HTMLElement {
         updateCameraPosition(1000, 'power4.inOut'); // initial animation
     }
 }
-customElements.define('rubiks-cube', RubiksCube);
-
-export { RubiksCube };
