@@ -241,11 +241,41 @@ class RubiksCube extends HTMLElement {
         });
     }
 
+    /** @typedef {{state: string }} ResetCompleteEventData */
+    /**
+     * @returns {Promise<string>}
+     */
+    reset() {
+        this.dispatchEvent(new CustomEvent(InternalEvents.reset));
+        return new Promise((resolve, reject) => {
+            /** @param {CustomEvent<ResetCompleteEventData> | Event} event */
+            const handler = (event) => {
+                const customEvent = /** @type {CustomEvent<ResetCompleteEventData>} */ (event);
+                cleanup();
+                resolve(customEvent.detail.state);
+            };
+
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                reject('reset timed out');
+            }, 1000);
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.resetComplete, handler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.resetComplete, handler);
+        });
+    }
+
     /** @import {PeekType} from './core' */
     /** @typedef {{eventId: string, peekType: PeekType}} CameraPeekEventData */
     /** @import {PeekState} from './core' */
     /** @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
+     * This function changes the camera position to one of four states depending on the arguments passed.
+     *
      * @param {PeekType} peekType
      * @returns {Promise<PeekState>}
      */
@@ -273,35 +303,6 @@ class RubiksCube extends HTMLElement {
             };
 
             this.addEventListener(InternalEvents.cameraPeekComplete, handler);
-        });
-    }
-
-    /** @typedef {{state: string }} ResetCompleteEventData */
-    /**
-     * @returns {Promise<string>}
-     */
-    reset() {
-        this.dispatchEvent(new CustomEvent(InternalEvents.reset));
-        return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<ResetCompleteEventData> | Event} event */
-            const handler = (event) => {
-                console.log(InternalEvents.reset);
-                const customEvent = /** @type {CustomEvent<ResetCompleteEventData>} */ (event);
-                cleanup();
-                resolve(customEvent.detail.state);
-            };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject('reset timed out');
-            }, 100);
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.resetComplete, handler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.resetComplete, handler);
         });
     }
 
