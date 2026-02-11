@@ -4,7 +4,7 @@ import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './cube/cube';
 import { debounce } from './debouncer';
-import gsap from 'gsap';
+import { gsap } from 'gsap';
 import Settings from './settings';
 import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './cameraState';
@@ -27,16 +27,18 @@ const InternalEvents = Object.freeze({
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
 });
+
 class RubiksCube extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         const root = /** @type {ShadowRoot} */ (this.shadowRoot);
         root.innerHTML = `<canvas id="cube-canvas" style="display:block;"></canvas>`;
-        /** @type {HTMLCanvasElement} */
+        /** @private @type {HTMLCanvasElement} */
         this.canvas = /** @type {HTMLCanvasElement} */ (root.getElementById('cube-canvas'));
-        /** @type {Settings} */
+        /** @private @type {Settings} */
         this.settings = new Settings();
+        /** @private @type {CubeSettings} */
         this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle);
     }
 
@@ -133,18 +135,20 @@ class RubiksCube extends HTMLElement {
         this.init();
     }
 
+    /** @private */
     animateCameraSetting() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraSettingsChanged));
     }
 
+    /** @private */
     updateCameraFOV() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraFieldOfViewChanged));
     }
 
     /** @import {Movement} from './core' */
-    /** @typedef {{eventId: string, move: Movement}} MovementEvent */
-    /** @typedef {{eventId: string, move: Movement, state: string}} MovementCompleteEventData */
-    /** @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
+    /** @internal @typedef {{eventId: string, move: Movement}} MovementEvent */
+    /** @internal @typedef {{eventId: string, move: Movement, state: string}} MovementCompleteEventData */
+    /** @internal @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
      * @returns {Promise<string>}
@@ -192,9 +196,9 @@ class RubiksCube extends HTMLElement {
     }
 
     /** @import {Rotation} from './core' */
-    /** @typedef {{eventId: string, rotation: Rotation}} RotationEventData */
-    /** @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
-    /** @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
+    /** @internal @typedef {{eventId: string, rotation: Rotation}} RotationEventData */
+    /** @internal @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
+    /** @internal @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
     /**
      * @param {Rotation} rotation
      * @returns {Promise<string>}
@@ -241,7 +245,7 @@ class RubiksCube extends HTMLElement {
         });
     }
 
-    /** @typedef {{state: string }} ResetCompleteEventData */
+    /** @internal @typedef {{state: string }} ResetCompleteEventData */
     /**
      * @returns {Promise<string>}
      */
@@ -270,9 +274,9 @@ class RubiksCube extends HTMLElement {
     }
 
     /** @import {PeekType} from './core' */
-    /** @typedef {{eventId: string, peekType: PeekType}} CameraPeekEventData */
+    /** @internal @typedef {{eventId: string, peekType: PeekType}} CameraPeekEventData */
     /** @import {PeekState} from './core' */
-    /** @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
+    /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
      * This function changes the camera position to one of four states depending on the arguments passed.
      *
@@ -306,6 +310,7 @@ class RubiksCube extends HTMLElement {
         });
     }
 
+    /** @private */
     init() {
         // defined core threejs objects
         const canvas = this.canvas;

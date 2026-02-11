@@ -1,3 +1,4 @@
+// @ts-check
 const defaultSettings = {
     animationSpeedMs: 100,
     /** @type {import("./cube/cubeSettings").AnimationStyle} */

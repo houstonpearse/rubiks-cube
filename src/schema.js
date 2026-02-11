@@ -1,3 +1,7 @@
+// @ts-check
+/**
+ * @typedef {typeof AttributeNames[keyof typeof AttributeNames]} AttributeName
+ */
 export const AttributeNames = {
     /** @type {"piece-gap"} */
     pieceGap: 'piece-gap',

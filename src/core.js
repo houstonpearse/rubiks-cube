@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * @typedef {typeof Movements[keyof typeof Movements]} Movement
  */

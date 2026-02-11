@@ -1,3 +1,4 @@
+// @ts-check
 import { Group, Material, Mesh, Object3D, Vector3 } from 'three';
 import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';

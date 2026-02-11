@@ -1,3 +1,4 @@
+// @ts-check
 import { PeekStates, PeekTypes } from './core';
 
 export class CameraState {

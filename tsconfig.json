@@ -3,13 +3,13 @@
         "module": "es2015",
         "skipLibCheck": true,
         "allowJs": true,
-        "checkJs": true,
+        "checkJs": false,
         "declaration": true,
         "emitDeclarationOnly": true,
+        "stripInternal": true,
         "moduleResolution": "bundler",
         "outDir": "./types",
         "rootDir": "./src",
         "lib": ["DOM", "es2019"]
-    },
-    "include": ["./src/**/*"]
+    }
 }

@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {{axis: import('../core').Axis, layers: (-1|0|1)[], direction: 1|-1|2|-2}} Slice */
 
 import { Axi, Movements, Rotations } from '../core';

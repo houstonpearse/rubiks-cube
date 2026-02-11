@@ -1,3 +1,4 @@
+// @ts-check
 import { Vector3, Group } from 'three';
 
 export class CubeRotation {

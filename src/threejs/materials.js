@@ -1,3 +1,4 @@
+// @ts-check
 import { MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { FaceColours, Faces } from '../core';
 /** @typedef {{type: "sticker", face: import('../core').Face , color: import('../core').FaceColour}} StickerUserData */

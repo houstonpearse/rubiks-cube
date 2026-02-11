@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * @param {number} delay
  * @param {{ (entries: { contentRect: { width: number; height: number; }; }[]): void; apply?: any; }} f
