@@ -37,6 +37,28 @@ export default class Cube {
     }
 
     /**
+     *  @param {string} eventId
+     *  @param {import('../core').Rotation} rotation
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
+     */
+    rotation(eventId, rotation, completedCallback, failedCallback) {
+        const slice = GetRotationSlice(rotation);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
+    }
+
+    /**
+     *  @param {string} eventId
+     *  @param {import('../core').Movement} movement
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
+     */
+    movement(eventId, movement, completedCallback, failedCallback) {
+        const slice = GetMovementSlice(movement);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
+    }
+
+    /**
      * adds threejs objects to group
      */
     init() {
@@ -157,6 +179,15 @@ export default class Cube {
     }
 
     /**
+     *
+     * @param {string} kociembaState
+     * @param {((state: string) => boolean)} completedCallback
+     */
+    setState(kociembaState, completedCallback) {
+        completedCallback(this.kociembaState);
+    }
+
+    /**
      * Complete the current rotation and reset the cube
      * @param {(state:string) => boolean} completedCallback
      * @returns {void}
@@ -218,28 +249,6 @@ export default class Cube {
         this.group.add(...this.rotationGroup.children);
         this.rotationGroup.rotation.set(0, 0, 0);
         this.currentRotation.status = 'disposed';
-    }
-
-    /**
-     *  @param {string} eventId
-     *  @param {import('../core').Rotation} rotation
-     * @param {((state: string) => void )} completedCallback
-     * @param {((reason: string) => void )} failedCallback
-     */
-    rotation(eventId, rotation, completedCallback, failedCallback) {
-        const slice = GetRotationSlice(rotation);
-        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
-    }
-
-    /**
-     *  @param {string} eventId
-     *  @param {import('../core').Movement} movement
-     * @param {((state: string) => void )} completedCallback
-     * @param {((reason: string) => void )} failedCallback
-     */
-    movement(eventId, movement, completedCallback, failedCallback) {
-        const slice = GetMovementSlice(movement);
-        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
     }
 
     /**

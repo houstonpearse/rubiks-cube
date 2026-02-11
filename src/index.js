@@ -306,7 +306,6 @@ export class RubiksCubeElement extends HTMLElement {
         }
         /** @type {CameraPeekEventData} */
         const data = { eventId: crypto.randomUUID(), peekType };
-        this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeek, { detail: data }));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<CameraPeekCompleteEventData> | Event} event */ const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<CameraPeekCompleteEventData>} */ (event);
@@ -327,6 +326,7 @@ export class RubiksCubeElement extends HTMLElement {
             };
 
             this.addEventListener(InternalEvents.cameraPeekComplete, handler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeek, { detail: data }));
         });
     }
 
@@ -338,7 +338,6 @@ export class RubiksCubeElement extends HTMLElement {
      */
     setState(kociembaState) {
         const data = /** @type {SetStateEventData} */ ({ state: kociembaState });
-        this.dispatchEvent(new CustomEvent(InternalEvents.setState, { detail: data }));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<SetStateCompleteEventData> | Event} event */
             const handler = (event) => {
@@ -358,6 +357,7 @@ export class RubiksCubeElement extends HTMLElement {
             };
 
             this.addEventListener(InternalEvents.setStateComplete, handler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.setState, { detail: data }));
         });
     }
 
@@ -485,6 +485,19 @@ export class RubiksCubeElement extends HTMLElement {
                     }),
                 );
             cube.reset(completedCallback);
+        });
+
+        this.addEventListener(InternalEvents.setState, (event) => {
+            const customEvent = /** @type {CustomEvent<SetStateEventData>} */ (event);
+            const completedCallback = (/** @type {string} */ state) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.setStateComplete, {
+                        detail: /** @type {SetStateCompleteEventData} */ ({
+                            state: state,
+                        }),
+                    }),
+                );
+            cube.setState(customEvent.detail.state, completedCallback);
         });
 
         // Camera Events
