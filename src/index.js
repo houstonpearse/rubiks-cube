@@ -3,7 +3,6 @@ import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } f
 import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Cube from './cube/cube';
-import getRotationDetailsFromNotation from './cube/rotation';
 import { debounce } from './debouncer';
 import gsap from 'gsap';
 import Settings from './settings';
@@ -14,7 +13,20 @@ import { AttributeNames } from './schema';
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
-
+const InternalEvents = Object.freeze({
+    rotation: 'rotation',
+    rotationComplete: 'rotationComplete',
+    rotationFailed: 'rotationFailed',
+    movement: 'movement',
+    movementComplete: 'movementComplete',
+    movementFailed: 'movementFailed',
+    reset: 'reset',
+    resetComplete: 'resetComplete',
+    cameraSettingsChanged: 'cameraSettingsChanged',
+    cameraFieldOfViewChanged: 'cameraFieldOfViewChanged',
+    cameraPeek: 'cameraPeek',
+    cameraPeekComplete: 'cameraPeekComplete',
+});
 class RubiksCube extends HTMLElement {
     constructor() {
         super();
@@ -122,16 +134,17 @@ class RubiksCube extends HTMLElement {
     }
 
     animateCameraSetting() {
-        this.dispatchEvent(new CustomEvent('cameraSettingsChanged'));
+        this.dispatchEvent(new CustomEvent(InternalEvents.cameraSettingsChanged));
     }
 
     updateCameraFOV() {
-        this.dispatchEvent(new CustomEvent('cameraFieldOfViewChanged'));
+        this.dispatchEvent(new CustomEvent(InternalEvents.cameraFieldOfViewChanged));
     }
 
     /** @import {Movement} from './core' */
     /** @typedef {{eventId: string, move: Movement}} MovementEvent */
     /** @typedef {{eventId: string, move: Movement, state: string}} MovementCompleteEventData */
+    /** @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
      * @returns {Promise<string>}
@@ -139,23 +152,49 @@ class RubiksCube extends HTMLElement {
     move(move) {
         /** @type {MovementEvent} */
         const data = { eventId: crypto.randomUUID(), move };
-        this.dispatchEvent(new CustomEvent('movement', { detail: data }));
+        this.dispatchEvent(new CustomEvent(InternalEvents.movement, { detail: data }));
         return new Promise((resolve, reject) => {
-            this.addEventListener('movementComplete', (event) => {
+            /** @param {CustomEvent<MovementCompleteEventData> | Event} event */
+            const completedHandler = (event) => {
                 const customEvent = /** @type {CustomEvent<MovementCompleteEventData>} */ (event);
                 if (customEvent.detail.eventId === data.eventId) {
+                    cleanup();
                     resolve(customEvent.detail.state);
                 }
-            });
-            setTimeout(() => {
-                reject('move timed out');
-            }, 1000);
+            };
+
+            /** @param {CustomEvent<MovementFailedEventData> | Event} event */
+            const failedHandler = (event) => {
+                const customEvent = /** @type {CustomEvent<MovementFailedEventData>} */ (event);
+                if (customEvent.detail.eventId === data.eventId) {
+                    cleanup();
+                    reject(customEvent.detail.reason);
+                }
+            };
+
+            const timeoutId = setTimeout(
+                () => {
+                    cleanup();
+                    reject('movement timed out');
+                },
+                Math.max(this.settings.animationSpeedMs * 100, 100),
+            );
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.movementComplete, completedHandler);
+                this.removeEventListener(InternalEvents.movementFailed, failedHandler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.movementComplete, completedHandler);
+            this.addEventListener(InternalEvents.movementFailed, failedHandler);
         });
     }
 
     /** @import {Rotation} from './core' */
     /** @typedef {{eventId: string, rotation: Rotation}} RotationEventData */
-    /** @typedef {{eventId: string, rotation: Rotation, state: string}} RotationCompleteEventData*/
+    /** @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
+    /** @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
     /**
      * @param {Rotation} rotation
      * @returns {Promise<string>}
@@ -163,17 +202,42 @@ class RubiksCube extends HTMLElement {
     rotate(rotation) {
         /** @type {RotationEventData} */
         const data = { eventId: crypto.randomUUID(), rotation };
-        this.dispatchEvent(new CustomEvent('rotation', { detail: data }));
+        this.dispatchEvent(new CustomEvent(InternalEvents.rotation, { detail: data }));
         return new Promise((resolve, reject) => {
-            this.addEventListener('rotationComplete', (event) => {
+            /** @param {CustomEvent<RotationCompleteEventData> | Event} event */
+            const completeHanlder = (event) => {
                 const customEvent = /** @type {CustomEvent<RotationCompleteEventData>} */ (event);
                 if (customEvent.detail.eventId === data.eventId) {
+                    cleanup();
                     resolve(customEvent.detail.state);
                 }
-            });
-            setTimeout(() => {
-                reject('rotate timed out');
-            }, 1000);
+            };
+
+            /** @param {CustomEvent<RotationFailedEventData> | Event} event */
+            const failedHandler = (event) => {
+                const customEvent = /** @type {CustomEvent<RotationFailedEventData>} */ (event);
+                if (customEvent.detail.eventId === data.eventId) {
+                    cleanup();
+                    reject(customEvent.detail.reason);
+                }
+            };
+
+            const timeoutId = setTimeout(
+                () => {
+                    cleanup();
+                    reject('rotation timed out');
+                },
+                Math.max(this.settings.animationSpeedMs * 100, 100),
+            );
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.rotationComplete, completeHanlder);
+                this.removeEventListener(InternalEvents.rotationFailed, failedHandler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.rotationComplete, completeHanlder);
+            this.addEventListener(InternalEvents.rotationFailed, failedHandler);
         });
     }
 
@@ -188,7 +252,7 @@ class RubiksCube extends HTMLElement {
     peek(peekType) {
         /** @type {CameraPeekEventData} */
         const data = { eventId: crypto.randomUUID(), peekType };
-        this.dispatchEvent(new CustomEvent('cameraPeek', { detail: data }));
+        this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeek, { detail: data }));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<CameraPeekCompleteEventData> | Event} event */ const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<CameraPeekCompleteEventData>} */ (event);
@@ -204,28 +268,40 @@ class RubiksCube extends HTMLElement {
             }, 1000);
 
             const cleanup = () => {
-                this.removeEventListener('cameraPeekComplete', handler);
+                this.removeEventListener(InternalEvents.cameraPeekComplete, handler);
                 clearTimeout(timeoutId);
             };
 
-            this.addEventListener('cameraPeekComplete', handler);
+            this.addEventListener(InternalEvents.cameraPeekComplete, handler);
         });
     }
 
-    /** @typedef {{state: string, peekState: PeekState}} ResetCompleteEventData */
+    /** @typedef {{state: string }} ResetCompleteEventData */
     /**
      * @returns {Promise<string>}
      */
     reset() {
-        this.dispatchEvent(new CustomEvent('reset'));
+        this.dispatchEvent(new CustomEvent(InternalEvents.reset));
         return new Promise((resolve, reject) => {
-            this.addEventListener('resetComplete', (event) => {
+            /** @param {CustomEvent<ResetCompleteEventData> | Event} event */
+            const handler = (event) => {
+                console.log(InternalEvents.reset);
                 const customEvent = /** @type {CustomEvent<ResetCompleteEventData>} */ (event);
-                resolve(customEvent.detail.peekState);
-            });
-            setTimeout(() => {
+                cleanup();
+                resolve(customEvent.detail.state);
+            };
+
+            const timeoutId = setTimeout(() => {
+                cleanup();
                 reject('reset timed out');
-            }, 1000);
+            }, 100);
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.resetComplete, handler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.resetComplete, handler);
         });
     }
 
@@ -269,7 +345,7 @@ class RubiksCube extends HTMLElement {
         // controls.minPolarAngle = polarAngleOffset - maxPolarAngle;
 
         // add lighting to scene
-        const ambientLight = new AmbientLight('white', 0.5);
+        const ambientLight = new AmbientLight('white', 0.4);
         const spotLight1 = new DirectionalLight('white', 2);
         const spotLight2 = new DirectionalLight('white', 2);
         const spotLight3 = new DirectionalLight('white', 2);
@@ -284,33 +360,77 @@ class RubiksCube extends HTMLElement {
         const cube = new Cube(this.cubeSettings);
         scene.add(cube.group, cube.rotationGroup);
 
-        /** @param {string} eventId  */
-        const sendState = (eventId) => {
-            const event = new CustomEvent('state', { detail: { eventId, state: cube.kociembaState } });
-            this.dispatchEvent(event);
-        };
-
         // animation loop
         function animate() {
             controls.update();
-
-            var eventId = cube.update();
-            if (eventId) {
-                sendState(eventId);
-            }
+            cube.update();
             renderer.render(scene, camera);
         }
 
-        /**
-         * @param {string} eventId
-         * @param {string} actionId
-         */
-        const handleRotationAction = (eventId, actionId) => {
-            const rotationDetails = getRotationDetailsFromNotation(actionId);
-            if (rotationDetails !== undefined) {
-                cube.rotate(eventId, rotationDetails);
-            }
-        };
+        // Cube Events
+        this.addEventListener(InternalEvents.rotation, (event) => {
+            const customEvent = /** @type {CustomEvent<RotationEventData>} */ (event);
+            const completedCallback = (/** @type {string} */ state) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.rotationComplete, {
+                        detail: /** @type {RotationCompleteEventData} */ ({
+                            eventId: customEvent.detail.eventId,
+                            state: state,
+                            rotation: customEvent.detail.rotation,
+                        }),
+                    }),
+                );
+            const failedCallback = (/** @type {string} */ reason) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.rotationFailed, {
+                        detail: /** @type {RotationFailedEventData} */ ({
+                            eventId: customEvent.detail.eventId,
+                            reason: reason,
+                            rotation: customEvent.detail.rotation,
+                        }),
+                    }),
+                );
+            cube.rotation(customEvent.detail.eventId, customEvent.detail.rotation, completedCallback, failedCallback);
+        });
+
+        this.addEventListener(InternalEvents.movement, (event) => {
+            const customEvent = /** @type {CustomEvent<MovementEvent>} */ (event);
+            const completedCallback = (/** @type {string} */ state) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.movementComplete, {
+                        detail: /** @type {MovementCompleteEventData} */ ({
+                            eventId: customEvent.detail.eventId,
+                            state: state,
+                            move: customEvent.detail.move,
+                        }),
+                    }),
+                );
+            const failedCallback = (/** @type {string} */ reason) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.movementFailed, {
+                        detail: /** @type {MovementFailedEventData} */ ({
+                            eventId: customEvent.detail.eventId,
+                            reason: reason,
+                            move: customEvent.detail.move,
+                        }),
+                    }),
+                );
+            cube.movement(customEvent.detail.eventId, customEvent.detail.move, completedCallback, failedCallback);
+        });
+
+        this.addEventListener(InternalEvents.reset, () => {
+            const completedCallback = (/** @type {string} */ state) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.resetComplete, {
+                        detail: /** @type {ResetCompleteEventData} */ ({
+                            state: state,
+                        }),
+                    }),
+                );
+            cube.reset(completedCallback);
+        });
+
+        // Camera Events
 
         /**
          * @param {number} cameraSpeedMs
@@ -339,36 +459,20 @@ class RubiksCube extends HTMLElement {
             });
         };
 
-        // add event listeners for rotation and camera controls
-        this.addEventListener('cameraPeek', (event) => {
+        this.addEventListener(InternalEvents.cameraPeek, (event) => {
             const customEvent = /** @type {CustomEvent<CameraPeekEventData>} */ (event);
             cameraState.peekCamera(customEvent.detail.peekType);
             /** @type {CameraPeekCompleteEventData} */
             const data = { eventId: customEvent.detail.eventId, peekState: cameraState.toPeekState() };
-            const completedCallback = () => this.dispatchEvent(new CustomEvent('cameraPeekComplete', { detail: data }));
+            const completedCallback = () => this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeekComplete, { detail: data }));
             updateCameraPosition(this.settings.cameraSpeedMs, 'none', completedCallback);
         });
 
-        this.addEventListener('rotation', (event) => {
-            const customEvent = /** @type {CustomEvent<RotationEventData>} */ (event);
-            handleRotationAction(customEvent.detail.eventId, customEvent.detail.rotation);
-        });
-
-        this.addEventListener('movement', (event) => {
-            const customEvent = /** @type {CustomEvent<MovementEvent>} */ (event);
-            handleRotationAction(customEvent.detail.eventId, customEvent.detail.move);
-        });
-
-        this.addEventListener('reset', () => {
-            cube.reset();
-            sendState('reset');
-        });
-
-        this.addEventListener('cameraSettingsChanged', () => {
+        this.addEventListener(InternalEvents.cameraSettingsChanged, () => {
             updateCameraPosition(this.settings.cameraSpeedMs, 'none');
         });
 
-        this.addEventListener('cameraFieldOfViewChanged', () => {
+        this.addEventListener(InternalEvents.cameraFieldOfViewChanged, () => {
             camera.fov = this.settings.cameraFieldOfView;
             camera.updateProjectionMatrix();
         });

@@ -3,6 +3,8 @@ import { createCoreMesh } from '../threejs/pieces';
 import { createCubeState } from './cubeState';
 import { CubeRotation } from './cubeRotation';
 import CubeSettings from './cubeSettings';
+import GetMovementSlice, { GetRotationSlice } from './slice';
+import { Axi } from '../core';
 
 /** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
 export default class Cube {
@@ -69,7 +71,6 @@ export default class Cube {
 
     /**
      * update the cube and continue any rotations
-     * @returns {string | undefined }
      */
     update() {
         if (this.currentRotation === undefined) {
@@ -79,11 +80,11 @@ export default class Cube {
             this.currentRotation = this.rotationQueue.shift();
             if (this.currentRotation === undefined) {
                 this._matchSpeed = undefined; // reset speed for the match animation options
-                return undefined;
+                return;
             }
         }
         if (this.currentRotation.status === 'pending') {
-            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.rotation));
+            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.slice));
             this.currentRotation.initialise();
         }
         if (this.currentRotation.status === 'initialised' || this.currentRotation.status === 'inProgress') {
@@ -92,12 +93,11 @@ export default class Cube {
         }
         if (this.currentRotation.status === 'complete') {
             this.clearRotationGroup();
-            var eventId = this.currentRotation.eventId;
-            this.currentRotation = undefined;
             this.currentState = this.getStickerState();
-            return eventId;
+            this.currentRotation.completedCallback(this.kociembaState);
+            this.currentRotation = undefined;
         }
-        return undefined;
+        return;
     }
 
     /**
@@ -157,13 +157,16 @@ export default class Cube {
 
     /**
      * Complete the current rotation and reset the cube
+     * @param {(state:string) => boolean} completedCallback
      * @returns {void}
      */
-    reset() {
+    reset(completedCallback) {
+        this.rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('State reset during action'));
         this.rotationQueue = [];
         if (this.currentRotation) {
             this.currentRotation.update(this.rotationGroup, 0);
             this.clearRotationGroup();
+            this.currentRotation.failedCallback('State reset during action');
             this.currentRotation = undefined;
         }
         this.group.children.forEach((piece) => {
@@ -178,6 +181,11 @@ export default class Cube {
             piece.userData.rotation.y = v;
             piece.userData.rotation.z = w;
         });
+
+        this.currentState = this.getStickerState();
+        if (!completedCallback(this.kociembaState)) {
+            console.error('Failed to invoke reset completedCallback');
+        }
     }
 
     /**
@@ -212,31 +220,45 @@ export default class Cube {
     }
 
     /**
-     * @param {string} eventId
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
+     *  @param {string} eventId
+     *  @param {import('../core').Rotation} rotation
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
      */
-    rotate(eventId, input) {
-        this.rotationQueue.push(new CubeRotation(eventId, input));
+    rotation(eventId, rotation, completedCallback, failedCallback) {
+        const slice = GetRotationSlice(rotation);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
     }
 
     /**
-     * @param {{axis: "x"|"y"|"z", layers: (-1|0|1)[], direction: 1|-1|2|-2}} input
+     *  @param {string} eventId
+     *  @param {import('../core').Movement} movement
+     * @param {((state: string) => void )} completedCallback
+     * @param {((reason: string) => void )} failedCallback
+     */
+    movement(eventId, movement, completedCallback, failedCallback) {
+        const slice = GetMovementSlice(movement);
+        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
+    }
+
+    /**
+     * @param {import('./slice').Slice} slice
      * @returns {Object3D[]}
      */
-    getRotationLayer({ axis, layers, direction }) {
-        if (layers.length === 0) {
+    getRotationLayer(slice) {
+        if (slice.layers.length === 0) {
             return [...this.group.children];
         }
         return this.group.children.filter((piece) => {
-            if (axis === 'x') {
+            if (slice.axis === Axi.x) {
                 const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.x));
-                return layers.includes(roundedPos);
-            } else if (axis === 'y') {
+                return slice.layers.includes(roundedPos);
+            } else if (slice.axis === Axi.y) {
                 const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.y));
-                return layers.includes(roundedPos);
-            } else if (axis === 'z') {
+                return slice.layers.includes(roundedPos);
+            } else if (slice.axis === Axi.z) {
                 const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.z));
-                return layers.includes(roundedPos);
+                return slice.layers.includes(roundedPos);
             }
             return false;
         });
@@ -250,7 +272,7 @@ export default class Cube {
     }
 
     /**
-     * @param {{ up: string[][], down: string[][], front: string[][], back: string[][], left: string[][], right: string[][] }} stickerState
+     * @param {StickerState} stickerState
      * @returns {string}
      */
     toKociemba(stickerState) {
@@ -262,14 +284,7 @@ export default class Cube {
      */
     getStickerState() {
         /** @type {StickerState} */
-        let state = {
-            up: [[], [], []],
-            down: [[], [], []],
-            front: [[], [], []],
-            back: [[], [], []],
-            left: [[], [], []],
-            right: [[], [], []],
-        };
+        let state = { up: [[], [], []], down: [[], [], []], front: [[], [], []], back: [[], [], []], left: [[], [], []], right: [[], [], []] };
         this.group.children.forEach((piece) => {
             if (piece.userData.type === 'core') {
                 return;

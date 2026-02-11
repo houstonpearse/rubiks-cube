@@ -67,6 +67,15 @@ export const Rotations = Object.freeze({
 });
 
 /**
+ * @typedef {typeof Axi[keyof typeof Axi]} Axis
+ */
+export const Axi = Object.freeze({
+    x: 'x',
+    y: 'y',
+    z: 'z',
+});
+
+/**
  * @typedef {typeof Faces [keyof typeof Faces]} Face
  */
 export const Faces = Object.freeze({
