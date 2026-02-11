@@ -28,6 +28,8 @@ const InternalEvents = Object.freeze({
     cameraFieldOfViewChanged: 'cameraFieldOfViewChanged',
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
+    setState: 'setState',
+    setStateComplete: 'setStateComplete',
 });
 
 export class RubiksCubeElement extends HTMLElement {
@@ -168,7 +170,6 @@ export class RubiksCubeElement extends HTMLElement {
         }
         /** @type {MovementEvent} */
         const data = { eventId: crypto.randomUUID(), move };
-        this.dispatchEvent(new CustomEvent(InternalEvents.movement, { detail: data }));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<MovementCompleteEventData> | Event} event */
             const completedHandler = (event) => {
@@ -204,6 +205,7 @@ export class RubiksCubeElement extends HTMLElement {
 
             this.addEventListener(InternalEvents.movementComplete, completedHandler);
             this.addEventListener(InternalEvents.movementFailed, failedHandler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.movement, { detail: data }));
         });
     }
 
@@ -221,7 +223,6 @@ export class RubiksCubeElement extends HTMLElement {
         }
         /** @type {RotationEventData} */
         const data = { eventId: crypto.randomUUID(), rotation };
-        this.dispatchEvent(new CustomEvent(InternalEvents.rotation, { detail: data }));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<RotationCompleteEventData> | Event} event */
             const completeHanlder = (event) => {
@@ -257,6 +258,7 @@ export class RubiksCubeElement extends HTMLElement {
 
             this.addEventListener(InternalEvents.rotationComplete, completeHanlder);
             this.addEventListener(InternalEvents.rotationFailed, failedHandler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.rotation, { detail: data }));
         });
     }
 
@@ -265,7 +267,6 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<string>}
      */
     reset() {
-        this.dispatchEvent(new CustomEvent(InternalEvents.reset));
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<ResetCompleteEventData> | Event} event */
             const handler = (event) => {
@@ -285,6 +286,7 @@ export class RubiksCubeElement extends HTMLElement {
             };
 
             this.addEventListener(InternalEvents.resetComplete, handler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.reset));
         });
     }
 
@@ -325,6 +327,37 @@ export class RubiksCubeElement extends HTMLElement {
             };
 
             this.addEventListener(InternalEvents.cameraPeekComplete, handler);
+        });
+    }
+
+    /** @internal @typedef {{state: string }} SetStateEventData */
+    /** @internal @typedef {{state: string }} SetStateCompleteEventData */
+    /**
+     * @param {string} kociembaState
+     * @returns {Promise<string>}
+     */
+    setState(kociembaState) {
+        const data = /** @type {SetStateEventData} */ ({ state: kociembaState });
+        this.dispatchEvent(new CustomEvent(InternalEvents.setState, { detail: data }));
+        return new Promise((resolve, reject) => {
+            /** @param {CustomEvent<SetStateCompleteEventData> | Event} event */
+            const handler = (event) => {
+                const customEvent = /** @type {CustomEvent<SetStateCompleteEventData>} */ (event);
+                cleanup();
+                resolve(customEvent.detail.state);
+            };
+
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                reject('SetState timed out');
+            }, 1000);
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.setStateComplete, handler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.setStateComplete, handler);
         });
     }
 
