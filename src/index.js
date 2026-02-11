@@ -10,6 +10,7 @@ import Settings from './settings';
 import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './cameraState';
 import { AttributeNames } from './schema';
+import { Movements, PeekTypes, Rotations } from './core';
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
@@ -162,6 +163,9 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<string>}
      */
     move(move) {
+        if (!Object.values(Movements).includes(move)) {
+            return Promise.reject(`Invalid move - [${move}]. Valid moves are ${Object.values(Movements).join(', ')}`);
+        }
         /** @type {MovementEvent} */
         const data = { eventId: crypto.randomUUID(), move };
         this.dispatchEvent(new CustomEvent(InternalEvents.movement, { detail: data }));
@@ -212,6 +216,9 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<string>}
      */
     rotate(rotation) {
+        if (!Object.values(Rotations).includes(rotation)) {
+            return Promise.reject(`Invalid move - [${rotation}]. Valid moves are ${Object.values(Rotations).join(', ')}`);
+        }
         /** @type {RotationEventData} */
         const data = { eventId: crypto.randomUUID(), rotation };
         this.dispatchEvent(new CustomEvent(InternalEvents.rotation, { detail: data }));
@@ -292,6 +299,9 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<PeekState>}
      */
     peek(peekType) {
+        if (!Object.values(PeekTypes).includes(peekType)) {
+            return Promise.reject(`Invalid move - [${peekType}]. Valid moves are ${Object.values(PeekTypes).join(', ')}`);
+        }
         /** @type {CameraPeekEventData} */
         const data = { eventId: crypto.randomUUID(), peekType };
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeek, { detail: data }));
