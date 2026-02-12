@@ -3,18 +3,19 @@
 import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical } from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import Cube from './cube/cube';
+import RubiksCube3D from './cube/cube';
 import { debounce } from './debouncer';
 import { gsap } from 'gsap';
 import Settings from './settings';
 import CubeSettings from './cube/cubeSettings';
-import { CameraState } from './cameraState';
+import { CameraState } from './camera/cameraState';
 import { AttributeNames } from './schema';
 import { Movements, PeekTypes, Rotations } from './core';
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
+
 const InternalEvents = Object.freeze({
     rotation: 'rotation',
     rotationComplete: 'rotationComplete',
@@ -372,7 +373,6 @@ export class RubiksCubeElement extends HTMLElement {
             antialias: true,
         });
         renderer.setSize(this.clientWidth, this.clientHeight);
-        renderer.setAnimationLoop(animate);
         renderer.setPixelRatio(window.devicePixelRatio);
 
         //update renderer and camera when container resizes. debouncing events to reduce frequency
@@ -414,8 +414,8 @@ export class RubiksCubeElement extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        const cube = new Cube(this.cubeSettings);
-        scene.add(cube.group, cube.rotationGroup);
+        const cube = new RubiksCube3D(this.cubeSettings);
+        scene.add(cube);
 
         // animation loop
         function animate() {
@@ -423,6 +423,7 @@ export class RubiksCubeElement extends HTMLElement {
             cube.update();
             renderer.render(scene, camera);
         }
+        renderer.setAnimationLoop(animate);
 
         // Cube Events
         this.addEventListener(InternalEvents.rotation, (event) => {
@@ -447,7 +448,7 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.rotation(customEvent.detail.eventId, customEvent.detail.rotation, completedCallback, failedCallback);
+            cube.rotate(customEvent.detail.eventId, customEvent.detail.rotation, completedCallback, failedCallback);
         });
 
         this.addEventListener(InternalEvents.movement, (event) => {
@@ -508,21 +509,19 @@ export class RubiksCubeElement extends HTMLElement {
          * @param { undefined | (() => void) } completedCallback
          */
         const updateCameraPosition = (cameraSpeedMs, ease, completedCallback = undefined) => {
-            cameraSpeedMs = cameraSpeedMs ? cameraSpeedMs : this.settings.cameraSpeedMs;
             var phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
             var theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
             const startSpherical = new Spherical().setFromVector3(camera.position);
-            const targetSpherical = new Spherical(this.settings.cameraRadius, phi, theta);
             gsap.to(startSpherical, {
-                radius: targetSpherical.radius,
-                theta: targetSpherical.theta,
-                phi: targetSpherical.phi,
-                duration: cameraSpeedMs / 1000,
+                radius: this.settings.cameraRadius,
+                theta: theta,
+                phi: phi,
+                duration: (cameraSpeedMs ? cameraSpeedMs : this.settings.cameraSpeedMs) / 1000,
                 ease: ease,
                 overwrite: false,
                 onUpdate: () => {
                     camera.position.setFromSpherical(startSpherical);
-                    camera.lookAt(cube.group.position);
+                    camera.lookAt(cube.position);
                     controls.update();
                 },
                 onComplete: completedCallback,

@@ -6,31 +6,31 @@ import { CubeRotation } from './cubeRotation';
 import CubeSettings from './cubeSettings';
 import GetMovementSlice, { GetRotationSlice } from './slice';
 import { Axi } from '../core';
+import { createCubeGroup } from '../threejs/cubeGroup';
 
 /** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
-export default class Cube {
+export default class RubiksCube3D extends Object3D {
     /**
      *   @param {CubeSettings} cubeSettings
      */
     constructor(cubeSettings) {
+        super();
         /** @type {CubeSettings} */
-        this.cubeSettings = cubeSettings;
+        this._cubeSettings = cubeSettings;
         /** @type {Group} */
-        this.group = new Group();
+        this._mainGroup = createCubeGroup(cubeSettings.pieceGap);
         /** @type {Group} */
-        this.rotationGroup = new Group();
+        this._rotationGroup = new Group();
         /** @type {CubeRotation[]} */
-        this.rotationQueue = [];
+        this._rotationQueue = [];
         /** @type {CubeRotation | undefined} */
-        this.currentRotation = undefined;
-
+        this._currentRotation = undefined;
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
         /** @type {number} */
         this._lastGap = cubeSettings.pieceGap;
 
-        // initialise threejs Objects
-        this.init();
+        this.add(this._mainGroup, this._rotationGroup);
 
         /** @type {StickerState} */
         this.currentState = this.getStickerState();
@@ -39,86 +39,52 @@ export default class Cube {
     /**
      *  @param {string} eventId
      *  @param {import('../core').Rotation} rotation
-     * @param {((state: string) => void )} completedCallback
-     * @param {((reason: string) => void )} failedCallback
+     *  @param {((state: string) => void )} completedCallback
+     *  @param {((reason: string) => void )} failedCallback
      */
-    rotation(eventId, rotation, completedCallback, failedCallback) {
+    rotate(eventId, rotation, completedCallback, failedCallback) {
         const slice = GetRotationSlice(rotation);
-        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
+        this._rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
     }
 
     /**
      *  @param {string} eventId
      *  @param {import('../core').Movement} movement
-     * @param {((state: string) => void )} completedCallback
-     * @param {((reason: string) => void )} failedCallback
+     *  @param {((state: string) => void )} completedCallback
+     *  @param {((reason: string) => void )} failedCallback
      */
     movement(eventId, movement, completedCallback, failedCallback) {
         const slice = GetMovementSlice(movement);
-        this.rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
-    }
-
-    /**
-     * adds threejs objects to group
-     */
-    init() {
-        const core = createCoreMesh();
-        core.userData = {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 },
-            initialPosition: { x: 0, y: 0, z: 0 },
-            initialRotation: { x: 0, y: 0, z: 0 },
-            type: 'core',
-        };
-        this.group.add(core);
-
-        for (const piece of createCubeState()) {
-            var pieceGroup = piece.group;
-            pieceGroup.position.set(
-                piece.position.x * this.cubeSettings.pieceGap,
-                piece.position.y * this.cubeSettings.pieceGap,
-                piece.position.z * this.cubeSettings.pieceGap,
-            );
-            pieceGroup.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
-            pieceGroup.userData = {
-                position: Object.assign({}, piece.position),
-                rotation: Object.assign({}, piece.rotation),
-                initialPosition: Object.assign({}, piece.position),
-                initialRotation: Object.assign({}, piece.rotation),
-                type: piece.type,
-            };
-            this.group.add(pieceGroup);
-        }
-        return this.group;
+        this._rotationQueue.push(new CubeRotation(eventId, slice, completedCallback, failedCallback));
     }
 
     /**
      * update the cube and continue any rotations
      */
     update() {
-        if (this.currentRotation === undefined) {
-            if (this._lastGap !== this.cubeSettings.pieceGap) {
+        if (this._currentRotation === undefined) {
+            if (this._lastGap !== this._cubeSettings.pieceGap) {
                 this.updateGap();
             }
-            this.currentRotation = this.rotationQueue.shift();
-            if (this.currentRotation === undefined) {
+            this._currentRotation = this._rotationQueue.shift();
+            if (this._currentRotation === undefined) {
                 this._matchSpeed = undefined; // reset speed for the match animation options
                 return;
             }
         }
-        if (this.currentRotation.status === 'pending') {
-            this.rotationGroup.add(...this.getRotationLayer(this.currentRotation.slice));
-            this.currentRotation.initialise();
+        if (this._currentRotation.status === 'pending') {
+            this._rotationGroup.add(...this.getRotationLayer(this._currentRotation.slice));
+            this._currentRotation.initialise();
         }
-        if (this.currentRotation.status === 'initialised' || this.currentRotation.status === 'inProgress') {
+        if (this._currentRotation.status === 'initialised' || this._currentRotation.status === 'inProgress') {
             var speed = this.getRotationSpeed();
-            this.currentRotation.update(this.rotationGroup, speed);
+            this._currentRotation.update(this._rotationGroup, speed);
         }
-        if (this.currentRotation.status === 'complete') {
+        if (this._currentRotation.status === 'complete') {
             this.clearRotationGroup();
             this.currentState = this.getStickerState();
-            this.currentRotation.completedCallback(this.kociembaState);
-            this.currentRotation = undefined;
+            this._currentRotation.completedCallback(this.kociembaState);
+            this._currentRotation = undefined;
         }
         return;
     }
@@ -128,12 +94,12 @@ export default class Cube {
      * @returns {void}
      */
     updateGap() {
-        if (this.currentRotation === undefined) {
-            this.group.children.forEach((piece) => {
+        if (this._currentRotation === undefined) {
+            this._mainGroup.children.forEach((piece) => {
                 var { x, y, z } = piece.userData.position;
-                piece.position.set(x * this.cubeSettings.pieceGap, y * this.cubeSettings.pieceGap, z * this.cubeSettings.pieceGap);
+                piece.position.set(x * this._cubeSettings.pieceGap, y * this._cubeSettings.pieceGap, z * this._cubeSettings.pieceGap);
             });
-            this._lastGap = this.cubeSettings.pieceGap;
+            this._lastGap = this._cubeSettings.pieceGap;
         }
     }
 
@@ -148,19 +114,19 @@ export default class Cube {
      * @returns {number}
      */
     getRotationSpeed() {
-        if (this.cubeSettings.animationStyle === 'exponential') {
-            return this.cubeSettings.animationSpeedMs / 2 ** this.rotationQueue.length;
+        if (this._cubeSettings.animationStyle === 'exponential') {
+            return this._cubeSettings.animationSpeedMs / 2 ** this._rotationQueue.length;
         }
-        if (this.cubeSettings.animationStyle === 'next') {
-            return this.rotationQueue.length > 0 ? 0 : this.cubeSettings.animationSpeedMs;
+        if (this._cubeSettings.animationStyle === 'next') {
+            return this._rotationQueue.length > 0 ? 0 : this._cubeSettings.animationSpeedMs;
         }
-        if (this.cubeSettings.animationStyle === 'match') {
-            if (this.rotationQueue.length > 0) {
-                const rotation = /** @type {CubeRotation} */ (this.currentRotation);
+        if (this._cubeSettings.animationStyle === 'match') {
+            if (this._rotationQueue.length > 0) {
+                const rotation = /** @type {CubeRotation} */ (this._currentRotation);
                 const lastTimeStamp = rotation.timestampMs;
-                let minGap = this._matchSpeed ?? this.cubeSettings.animationSpeedMs;
-                for (var i = 0; i < this.rotationQueue.length; i++) {
-                    var gap = this.rotationQueue[i].timestampMs - lastTimeStamp;
+                let minGap = this._matchSpeed ?? this._cubeSettings.animationSpeedMs;
+                for (var i = 0; i < this._rotationQueue.length; i++) {
+                    var gap = this._rotationQueue[i].timestampMs - lastTimeStamp;
                     if (gap < minGap) {
                         minGap = gap;
                     }
@@ -170,12 +136,12 @@ export default class Cube {
             if (this._matchSpeed !== undefined) {
                 return this._matchSpeed;
             }
-            return this.cubeSettings.animationSpeedMs;
+            return this._cubeSettings.animationSpeedMs;
         }
-        if (this.cubeSettings.animationStyle === 'fixed') {
-            return this.cubeSettings.animationSpeedMs;
+        if (this._cubeSettings.animationStyle === 'fixed') {
+            return this._cubeSettings.animationSpeedMs;
         }
-        return this.cubeSettings.animationSpeedMs;
+        return this._cubeSettings.animationSpeedMs;
     }
 
     /**
@@ -193,18 +159,18 @@ export default class Cube {
      * @returns {void}
      */
     reset(completedCallback) {
-        this.rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('State reset during action'));
-        this.rotationQueue = [];
-        if (this.currentRotation) {
-            this.currentRotation.update(this.rotationGroup, 0);
+        this._rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('State reset during action'));
+        this._rotationQueue = [];
+        if (this._currentRotation) {
+            this._currentRotation.update(this._rotationGroup, 0);
             this.clearRotationGroup();
-            this.currentRotation.failedCallback('State reset during action');
-            this.currentRotation = undefined;
+            this._currentRotation.failedCallback('State reset during action');
+            this._currentRotation = undefined;
         }
-        this.group.children.forEach((piece) => {
+        this._mainGroup.children.forEach((piece) => {
             const { x, y, z } = piece.userData.initialPosition;
             const { x: u, y: v, z: w } = piece.userData.initialRotation;
-            piece.position.set(x * this.cubeSettings.pieceGap, y * this.cubeSettings.pieceGap, z * this.cubeSettings.pieceGap);
+            piece.position.set(x * this._cubeSettings.pieceGap, y * this._cubeSettings.pieceGap, z * this._cubeSettings.pieceGap);
             piece.rotation.set(u, v, w);
             piece.userData.position.x = x;
             piece.userData.position.y = y;
@@ -225,15 +191,15 @@ export default class Cube {
      * @returns {void}
      */
     clearRotationGroup() {
-        if (this.currentRotation == null) {
+        if (this._currentRotation == null) {
             console.error('cannot clear rotation when rotation is null');
             return;
         }
-        if (this.currentRotation.status != 'complete') {
+        if (this._currentRotation.status != 'complete') {
             console.error('cannot clear rotation group while rotating');
             return;
         }
-        this.rotationGroup.children.forEach((piece) => {
+        this._rotationGroup.children.forEach((piece) => {
             piece.getWorldPosition(piece.position);
             piece.getWorldQuaternion(piece.quaternion);
             var x = Math.round(piece.position.x);
@@ -246,9 +212,9 @@ export default class Cube {
             piece.userData.rotation.y = piece.rotation.y;
             piece.userData.rotation.z = piece.rotation.z;
         });
-        this.group.add(...this.rotationGroup.children);
-        this.rotationGroup.rotation.set(0, 0, 0);
-        this.currentRotation.status = 'disposed';
+        this._mainGroup.add(...this._rotationGroup.children);
+        this._rotationGroup.rotation.set(0, 0, 0);
+        this._currentRotation.status = 'disposed';
     }
 
     /**
@@ -257,9 +223,9 @@ export default class Cube {
      */
     getRotationLayer(slice) {
         if (slice.layers.length === 0) {
-            return [...this.group.children];
+            return [...this._mainGroup.children];
         }
-        return this.group.children.filter((piece) => {
+        return this._mainGroup.children.filter((piece) => {
             if (slice.axis === Axi.x) {
                 const roundedPos = /** @type {(-1|0|1)} */ (Math.round(piece.userData.position.x));
                 return slice.layers.includes(roundedPos);
@@ -295,7 +261,7 @@ export default class Cube {
     getStickerState() {
         /** @type {StickerState} */
         let state = { up: [[], [], []], down: [[], [], []], front: [[], [], []], back: [[], [], []], left: [[], [], []], right: [[], [], []] };
-        this.group.children.forEach((piece) => {
+        this._mainGroup.children.forEach((piece) => {
             if (piece.userData.type === 'core') {
                 return;
             }
