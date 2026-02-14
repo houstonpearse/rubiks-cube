@@ -80,24 +80,24 @@ export const Axi = Object.freeze({
  * @typedef {typeof Faces [keyof typeof Faces]} Face
  */
 export const Faces = Object.freeze({
-    up: 'U',
-    down: 'D',
-    left: 'L',
-    right: 'R',
-    front: 'F',
-    back: 'B',
+    U: 'U',
+    D: 'D',
+    L: 'L',
+    R: 'R',
+    F: 'F',
+    B: 'B',
 });
 
 /**
  * @typedef {typeof FaceColours [keyof typeof FaceColours]} FaceColour
  */
 export const FaceColours = Object.freeze({
-    up: 'white',
-    down: 'yellow',
-    left: 'orange',
-    right: 'red',
-    front: 'green',
-    back: 'blue',
+    U: 'white',
+    D: 'yellow',
+    L: '#fc9a05',
+    R: 'red',
+    F: '#2cbf13',
+    B: 'blue',
 });
 
 /**

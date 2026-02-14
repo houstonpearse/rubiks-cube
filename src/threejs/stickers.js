@@ -19,7 +19,7 @@ const centerSVG = loader.parse(`
 </svg>
 `);
 
-export default class Stickers {
+export default class StickerGeometries {
     static center = new ExtrudeGeometry(SVGLoader.createShapes(centerSVG.paths[0])[0], {
         depth: 15,
     })

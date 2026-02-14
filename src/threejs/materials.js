@@ -9,42 +9,42 @@ export default class Materials {
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.front, color: FaceColours.front },
+        userData: { type: 'sticker', face: Faces.F, color: FaceColours.F },
     });
     static back = new MeshStandardMaterial({
         color: 'blue',
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.back, color: FaceColours.back },
+        userData: { type: 'sticker', face: Faces.B, color: FaceColours.B },
     });
     static up = new MeshStandardMaterial({
         color: 'white',
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.up, color: FaceColours.up },
+        userData: { type: 'sticker', face: Faces.U, color: FaceColours.U },
     });
     static down = new MeshStandardMaterial({
         color: 'yellow',
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.down, color: FaceColours.down },
+        userData: { type: 'sticker', face: Faces.D, color: FaceColours.D },
     });
     static left = new MeshStandardMaterial({
         color: '#fc9a05',
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.left, color: FaceColours.left },
+        userData: { type: 'sticker', face: Faces.L, color: FaceColours.L },
     });
     static right = new MeshStandardMaterial({
         color: 'red',
         metalness: 0,
         roughness: 0.4,
         /** @type {StickerUserData} */
-        userData: { type: 'sticker', face: Faces.right, color: FaceColours.right },
+        userData: { type: 'sticker', face: Faces.R, color: FaceColours.R },
     });
     static core = new MeshBasicMaterial({
         color: 'black',

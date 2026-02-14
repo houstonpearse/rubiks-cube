@@ -1,6 +1,6 @@
 // @ts-check
 import { Group, BoxGeometry, Mesh, SphereGeometry, Material } from 'three';
-import Stickers from './stickers';
+import StickerGeometries from './stickers';
 import Materials from './materials';
 
 /**
@@ -18,21 +18,21 @@ export function createCornerGroup(frontMaterial, rightMaterial, topMaterial, cor
     group.add(boxMesh);
 
     // front
-    const frontSticker = new Mesh(Stickers.corner, frontMaterial);
+    const frontSticker = new Mesh(StickerGeometries.corner, frontMaterial);
     frontSticker.userData = { type: 'sticker' };
     frontSticker.position.set(0, 0, 0.5);
     frontSticker.rotation.set(0, 0, 0);
     group.add(frontSticker);
 
     //right
-    const rightSticker = new Mesh(Stickers.corner, rightMaterial);
+    const rightSticker = new Mesh(StickerGeometries.corner, rightMaterial);
     rightSticker.userData = { type: 'sticker' };
     rightSticker.position.set(0.5, 0, 0);
     rightSticker.rotation.set(Math.PI / 2, Math.PI / 2, 0);
     group.add(rightSticker);
 
     //white/yellow
-    const topSticker = new Mesh(Stickers.corner, topMaterial);
+    const topSticker = new Mesh(StickerGeometries.corner, topMaterial);
     topSticker.userData = { type: 'sticker' };
     topSticker.position.set(0, 0.5, 0);
     topSticker.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
@@ -55,14 +55,14 @@ export function createEdgeGroup(frontMaterial, topMaterial, coreMaterial) {
     group.add(boxMesh);
 
     // front
-    const frontSticker = new Mesh(Stickers.edge, frontMaterial);
+    const frontSticker = new Mesh(StickerGeometries.edge, frontMaterial);
     frontSticker.userData = { type: 'sticker' };
     frontSticker.position.set(0, 0, 0.5);
     frontSticker.rotation.set(0, 0, 0);
     group.add(frontSticker);
 
     // top
-    const topSticker = new Mesh(Stickers.edge, topMaterial);
+    const topSticker = new Mesh(StickerGeometries.edge, topMaterial);
     topSticker.userData = { type: 'sticker' };
     topSticker.position.set(0, 0.5, 0);
     topSticker.rotation.set(-Math.PI / 2, 0, Math.PI);
@@ -83,7 +83,7 @@ export function createCenterGroup(frontMaterial, coreMaterial) {
     boxMesh.userData = { type: 'piece' };
     group.add(boxMesh);
 
-    const frontSticker = new Mesh(Stickers.center, frontMaterial);
+    const frontSticker = new Mesh(StickerGeometries.center, frontMaterial);
     frontSticker.userData = { type: 'sticker' };
     frontSticker.position.set(0, 0, 0.5);
     frontSticker.rotation.set(0, 0, 0);
