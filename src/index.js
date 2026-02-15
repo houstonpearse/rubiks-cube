@@ -24,6 +24,7 @@ const InternalEvents = Object.freeze({
     movementFailed: 'movementFailed',
     reset: 'reset',
     resetComplete: 'resetComplete',
+    cameraRadiusChanged: 'cameraRadiusChanged',
     cameraSettingsChanged: 'cameraSettingsChanged',
     cameraFieldOfViewChanged: 'cameraFieldOfViewChanged',
     cameraPeek: 'cameraPeek',
@@ -91,7 +92,7 @@ export class RubiksCubeElement extends HTMLElement {
             case AttributeNames.cameraRadius:
                 this.settings.setCameraRadius(newVal);
                 if (oldVal !== newVal && oldVal !== null) {
-                    this.animateCameraSetting();
+                    this.animateCameraRadius();
                 }
                 break;
             case AttributeNames.cameraFieldOfView:
@@ -149,6 +150,11 @@ export class RubiksCubeElement extends HTMLElement {
     /** @private */
     animateCameraSetting() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraSettingsChanged));
+    }
+
+    /** @private */
+    animateCameraRadius() {
+        this.dispatchEvent(new CustomEvent(InternalEvents.cameraRadiusChanged));
     }
 
     /** @private */
@@ -501,20 +507,26 @@ export class RubiksCubeElement extends HTMLElement {
         });
 
         // Camera Events
-
         /**
+         * @returns {Spherical}
+         */
+        const getTargetCameraSpherical = () => {
+            const phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
+            const theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
+            return new Spherical(this.settings.cameraRadius, phi, theta);
+        };
+        /**
+         * @param {Spherical} targetSpherical
          * @param {number} cameraSpeedMs
          * @param {gsap.EaseString | gsap.EaseFunction | undefined} ease
          * @param { undefined | (() => void) } completedCallback
          */
-        const updateCameraPosition = (cameraSpeedMs, ease, completedCallback = undefined) => {
-            var phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
-            var theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
+        const updateCameraPosition = (targetSpherical, cameraSpeedMs, ease, completedCallback = undefined) => {
             const startSpherical = new Spherical().setFromVector3(camera.position);
             gsap.to(startSpherical, {
-                radius: this.settings.cameraRadius,
-                theta: theta,
-                phi: phi,
+                radius: targetSpherical.radius,
+                theta: targetSpherical.theta,
+                phi: targetSpherical.phi,
                 duration: (cameraSpeedMs ? cameraSpeedMs : this.settings.cameraSpeedMs) / 1000,
                 ease: ease,
                 overwrite: false,
@@ -533,11 +545,19 @@ export class RubiksCubeElement extends HTMLElement {
             /** @type {CameraPeekCompleteEventData} */
             const data = { eventId: customEvent.detail.eventId, peekState: cameraState.toPeekState() };
             const completedCallback = () => this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeekComplete, { detail: data }));
-            updateCameraPosition(this.settings.cameraSpeedMs, 'none', completedCallback);
+            const targetSpherical = getTargetCameraSpherical();
+            updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none', completedCallback);
         });
 
         this.addEventListener(InternalEvents.cameraSettingsChanged, () => {
-            updateCameraPosition(this.settings.cameraSpeedMs, 'none');
+            const targetSpherical = getTargetCameraSpherical();
+            updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none');
+        });
+
+        this.addEventListener(InternalEvents.cameraRadiusChanged, () => {
+            const targetSpherical = new Spherical().setFromVector3(camera.position);
+            targetSpherical.radius = this.settings.cameraRadius;
+            updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none');
         });
 
         this.addEventListener(InternalEvents.cameraFieldOfViewChanged, () => {
@@ -545,6 +565,6 @@ export class RubiksCubeElement extends HTMLElement {
             camera.updateProjectionMatrix();
         });
 
-        updateCameraPosition(1000, 'power4.inOut'); // initial animation
+        updateCameraPosition(getTargetCameraSpherical(), 1000, 'power4.inOut'); // initial animation
     }
 }
