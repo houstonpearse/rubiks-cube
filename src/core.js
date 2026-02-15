@@ -89,6 +89,18 @@ export const Faces = Object.freeze({
 });
 
 /**
+ * @typedef {typeof CubeTypes [keyof typeof CubeTypes]} CubeType
+ */
+export const CubeTypes = Object.freeze({
+    Two: 'Two',
+    Three: 'Three',
+    Four: 'Four',
+    Five: 'Five',
+    Six: 'Six',
+    Seven: 'Seven',
+});
+
+/**
  * @typedef {typeof FaceColours [keyof typeof FaceColours]} FaceColour
  */
 export const FaceColours = Object.freeze({

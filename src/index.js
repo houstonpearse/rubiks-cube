@@ -10,6 +10,7 @@ import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './camera/cameraState';
 import { AttributeNames } from './schema';
 import { Movements, PeekTypes, Rotations } from './core';
+import NewRubiksCube3D from './newCube/cube';
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
@@ -420,7 +421,8 @@ export class RubiksCubeElement extends HTMLElement {
 
         // create cube and add to scene
         const cube = new RubiksCube3D(this.cubeSettings);
-        scene.add(cube);
+        const newCube = new NewRubiksCube3D(this.cubeSettings);
+        scene.add(newCube);
 
         // animation loop
         function animate() {
