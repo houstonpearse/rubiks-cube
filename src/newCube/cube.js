@@ -34,18 +34,14 @@ export default class NewRubiksCube3D extends Object3D {
     createCubeGroup() {
         const cubeInfo = getCubeInfo(this._cubeSettings.cubeType);
         const pieceGap = this._cubeSettings.pieceGap;
-        const outerLayerMultiplier = this._cubeSettings.outerLayerMultiplier;
-        const outerLayerOffset = (cubeInfo.pieceSizes * (outerLayerMultiplier - 1)) / 2;
+        const outerLayerMultiplier = cubeInfo.outlerLayerMultiplier;
+        const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const group = new Group();
         const core = new Mesh(new SphereGeometry(cubeInfo.coreSize), Materials.core);
         group.add(core);
         for (const piece of cubeInfo.corners) {
             const corner = new CornerPiece();
-            corner.scale.set(
-                cubeInfo.pieceSizes * outerLayerMultiplier,
-                cubeInfo.pieceSizes * outerLayerMultiplier,
-                cubeInfo.pieceSizes * outerLayerMultiplier,
-            );
+            corner.scale.set(cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier);
             corner.position.set(
                 piece.position.x * (pieceGap + outerLayerOffset),
                 piece.position.y * (pieceGap + outerLayerOffset),
@@ -60,7 +56,7 @@ export default class NewRubiksCube3D extends Object3D {
         }
         for (const piece of cubeInfo.edges) {
             const edge = new EdgePiece();
-            edge.scale.set(cubeInfo.pieceSizes, cubeInfo.pieceSizes * outerLayerMultiplier, cubeInfo.pieceSizes * outerLayerMultiplier);
+            edge.scale.set(cubeInfo.pieceSize, cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier);
             edge.position.set(
                 piece.position.x * (pieceGap + (Math.abs(piece.position.x) == 1 ? outerLayerOffset : 0)),
                 piece.position.y * (pieceGap + (Math.abs(piece.position.y) == 1 ? outerLayerOffset : 0)),
@@ -75,7 +71,7 @@ export default class NewRubiksCube3D extends Object3D {
         }
         for (const piece of cubeInfo.centers) {
             const center = new CenterPiece();
-            center.scale.set(cubeInfo.pieceSizes, cubeInfo.pieceSizes, cubeInfo.pieceSizes * outerLayerMultiplier);
+            center.scale.set(cubeInfo.pieceSize, cubeInfo.pieceSize, cubeInfo.pieceSize * outerLayerMultiplier);
             center.position.set(
                 piece.position.x * (pieceGap + (Math.abs(piece.position.x) == 1 ? outerLayerOffset : 0)),
                 piece.position.y * (pieceGap + (Math.abs(piece.position.y) == 1 ? outerLayerOffset : 0)),

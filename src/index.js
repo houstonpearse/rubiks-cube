@@ -57,6 +57,7 @@ export class RubiksCubeElement extends HTMLElement {
 
     static get observedAttributes() {
         return [
+            AttributeNames.cubeType,
             AttributeNames.pieceGap,
             AttributeNames.animationSpeed,
             AttributeNames.animationStyle,
@@ -75,6 +76,10 @@ export class RubiksCubeElement extends HTMLElement {
      *  */
     attributeChangedCallback(name, oldVal, newVal) {
         switch (name) {
+            case AttributeNames.cubeType:
+                this.settings.setCubeType(newVal);
+                this.cubeSettings.cubeType = this.settings.cubeType;
+                break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
                 this.cubeSettings.pieceGap = this.settings.pieceGap;

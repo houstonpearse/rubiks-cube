@@ -101,6 +101,16 @@ export const CubeTypes = Object.freeze({
 });
 
 /**
+ * @typedef {typeof AnimationStyles[keyof typeof AnimationStyles]} AnimationStyle
+ */
+export const AnimationStyles = Object.freeze({
+    Exponential: 'exponential',
+    Next: 'next',
+    Fixed: 'fixed',
+    Match: 'match',
+});
+
+/**
  * @typedef {typeof FaceColours [keyof typeof FaceColours]} FaceColour
  */
 export const FaceColours = Object.freeze({

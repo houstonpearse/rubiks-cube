@@ -11,13 +11,36 @@ import { CubeTypes } from '../core';
 export function getCubeInfo(cubeType) {
     return {
         layers: middleLayers(cubeType),
-        pieceSizes: pieceSizes(cubeType),
+        pieceSize: pieceSize(cubeType),
         coreSize: coreSize(cubeType),
+        outlerLayerMultiplier: outlerLayerMultiplier(cubeType),
         corners: corners,
         edges: edges(middleLayers(cubeType)),
         centers: centers(middleLayers(cubeType)),
     };
 }
+/**
+ * @param {import("../core").CubeType} cubeType
+ * @return {number} core size
+ */
+export const outlerLayerMultiplier = (cubeType) => {
+    switch (cubeType) {
+        case CubeTypes.Two:
+            return 1;
+        case CubeTypes.Three:
+            return 1;
+        case CubeTypes.Four:
+            return 1.1;
+        case CubeTypes.Five:
+            return 1.2;
+        case CubeTypes.Six:
+            return 1.3;
+        case CubeTypes.Seven:
+            return 1.35;
+        default:
+            throw new Error(`Unsupported cube type: ${cubeType}`);
+    }
+};
 
 /**
  * @param {import("../core").CubeType} cubeType
@@ -68,7 +91,7 @@ export const middleLayers = (cubeType) => {
  * @param {import("../core").CubeType} cubeType
  * @return {number} piece size
  */
-export const pieceSizes = (cubeType) => {
+export const pieceSize = (cubeType) => {
     switch (cubeType) {
         case CubeTypes.Two:
             return 2;

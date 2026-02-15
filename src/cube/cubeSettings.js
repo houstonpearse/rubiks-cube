@@ -2,24 +2,21 @@
 
 import { CubeTypes } from '../core';
 
-/** @typedef {"exponential" | "next" | "fixed" | "match"} AnimationStyle */
 export default class CubeSettings {
     /**
      *
      * @param {number} pieceGap
      * @param {number} animationSpeed
-     * @param {AnimationStyle} animationStyle
+     * @param {import('../core').AnimationStyle} animationStyle
      */
     constructor(pieceGap, animationSpeed, animationStyle) {
         /** @type {number} pieceGap */
         this.pieceGap = pieceGap;
-        /** @type {number} pieceGap */
-        this.outerLayerMultiplier = 1;
         /** @type {import("../core").CubeType} */
-        this.cubeType = CubeTypes.Three;
+        this.cubeType = CubeTypes.Seven;
         /** @type {number} pieceGap */
         this.animationSpeedMs = animationSpeed;
-        /** @type {AnimationStyle} pieceGap */
+        /** @type {import('../core').AnimationStyle} pieceGap */
         this.animationStyle = animationStyle;
     }
 }

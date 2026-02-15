@@ -3,6 +3,8 @@
  * @typedef {typeof AttributeNames[keyof typeof AttributeNames]} AttributeName
  */
 export const AttributeNames = {
+    /** @type {"cube-type"} */
+    cubeType: 'cube-type',
     /** @type {"piece-gap"} */
     pieceGap: 'piece-gap',
     /** @type {"animation-speed-ms"} */
