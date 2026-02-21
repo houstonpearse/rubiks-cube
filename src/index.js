@@ -2,7 +2,7 @@
 /// <reference path="./globals.ts" preserve="true" />
 import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import RubiksCube3D from './cube/cube';
+import RubiksCube3D from './three/cube';
 import { debounce } from './debouncer';
 import { gsap } from 'gsap';
 import Settings from './settings';
@@ -10,7 +10,6 @@ import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './camera/cameraState';
 import { AttributeNames } from './schema';
 import { Movements, PeekTypes, Rotations } from './core';
-import RubiksCube3D from './three/cube';
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
