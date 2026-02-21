@@ -14,7 +14,8 @@ const ERROR_MARGIN = 0.0001;
 
 export default class RubiksCube3D extends Object3D {
     /**
-     *   @param {CubeSettings} cubeSettings
+     * @public
+     * @param {CubeSettings} cubeSettings
      */
     constructor(cubeSettings) {
         super();
@@ -64,7 +65,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Creates the main group containing all the pieces of the cube in their default position and rotation. Should only be called once during initialization.
-     * @internal
+     * @private
      **/
     createCubeGroup() {
         const cubeInfo = this._cubeInfo;
@@ -124,7 +125,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Returns the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
-     * @internal
+     * @private
      * @returns {import('../cube/stickerState').StickerState}
      */
     getStickerState() {
@@ -174,7 +175,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Sets the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
-     * @internal
+     * @private
      * @param {import('../cube/stickerState').StickerState} stickerState
      */
     setStickerState(stickerState) {
@@ -227,7 +228,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Returns the pieces that should be rotated for a given slice. If the slice has no layers, all pieces will be returned. Should only be called before an Animation is started.
-     * @internal
+     * @private
      * @param {import('../cube/animationSlice').Slice} slice
      * @returns {Object3D[]}
      */
@@ -252,6 +253,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Updates the gap of the pieces. To be used when the cube is not rotating
+     * @private
      * @param {number} pieceGap
      * @returns {void}
      */
@@ -275,6 +277,7 @@ export default class RubiksCube3D extends Object3D {
     }
 
     /**
+     * @private
      * @param {import('../core').CubeType} cubeType
      */
     updateCubeType(cubeType) {
@@ -287,7 +290,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * finish current rotation and clear rotation queue
-     * @internal
+     * @private
      */
     stop() {
         this._rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('Movement Interrupted.'));
@@ -309,7 +312,7 @@ export default class RubiksCube3D extends Object3D {
      * Adds pieces in the rotationGroup back into the main group.
      * Updates the position and rotation of the pieces according to their world position and rotation, then resets the rotation of the rotation group.
      * Should only be called when a rotation is in progress.
-     * @internal
+     * @private
      * @returns {void}
      */
     clearRotationGroup() {
@@ -348,7 +351,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Rotates the pieces in the rotation group according to the percentage of completion of the current animation. Should only be called when a rotation is in progress.
-     * @internal
+     * @private
      * @param {number} percentage
      * @param {AnimationState} animationState
      */
@@ -372,6 +375,7 @@ export default class RubiksCube3D extends Object3D {
      * - next: an animation speed of 0 when there is another animation in the queue
      * - match: will match the speed of rotations to the frequency of key presses.
      * - fixed: will return a constant value
+     * @private
      * @returns {number}
      */
     getRotationSpeed() {
@@ -407,6 +411,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Update the cube and continue any rotations. If a rotation is in progress, it will be updated. If no rotation is in progress, the next rotation in the queue will be started.
+     * @public
      */
     update() {
         if (this._currentRotation === undefined) {
@@ -442,6 +447,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * resets the cube to the default state and clears any queued rotations. If a rotation is in progress, it will be completed instantly before the reset.
+     * @public
      * @param {(state: string) => boolean} completedCallback
      */
     reset(completedCallback) {
@@ -454,6 +460,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * sets the state of the cube
+     * @public
      * @param {string} state
      * @param {(state: string) => boolean} completedCallback
      * @param {(reason: string) => boolean} failedCallback
@@ -474,6 +481,7 @@ export default class RubiksCube3D extends Object3D {
     }
 
     /**
+     *  @public
      *  @param {import('../core').Rotation} rotation
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
@@ -484,6 +492,7 @@ export default class RubiksCube3D extends Object3D {
     }
 
     /**
+     *  @public
      *  @param {import('../core').Movement} movement
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
