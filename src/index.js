@@ -32,6 +32,7 @@ const InternalEvents = Object.freeze({
     cameraPeekComplete: 'cameraPeekComplete',
     setState: 'setState',
     setStateComplete: 'setStateComplete',
+    setStateFailed: 'setStateFailed',
 });
 
 export class RubiksCubeElement extends HTMLElement {
@@ -344,6 +345,7 @@ export class RubiksCubeElement extends HTMLElement {
 
     /** @internal @typedef {{state: string }} SetStateEventData */
     /** @internal @typedef {{state: string }} SetStateCompleteEventData */
+    /** @internal @typedef {{reason: string }} SetStateFailedEventData */
     /**
      * @param {string} kociembaState
      * @returns {Promise<string>}
@@ -357,6 +359,12 @@ export class RubiksCubeElement extends HTMLElement {
                 cleanup();
                 resolve(customEvent.detail.state);
             };
+            /** @param {CustomEvent<SetStateFailedEventData> | Event} event */
+            const failedHandler = (event) => {
+                const customEvent = /** @type {CustomEvent<SetStateFailedEventData>} */ (event);
+                cleanup();
+                reject(customEvent.detail.reason);
+            };
 
             const timeoutId = setTimeout(() => {
                 cleanup();
@@ -365,10 +373,12 @@ export class RubiksCubeElement extends HTMLElement {
 
             const cleanup = () => {
                 this.removeEventListener(InternalEvents.setStateComplete, handler);
+                this.removeEventListener(InternalEvents.setStateFailed, failedHandler);
                 clearTimeout(timeoutId);
             };
 
             this.addEventListener(InternalEvents.setStateComplete, handler);
+            this.addEventListener(InternalEvents.setStateFailed, failedHandler);
             this.dispatchEvent(new CustomEvent(InternalEvents.setState, { detail: data }));
         });
     }
@@ -425,15 +435,14 @@ export class RubiksCubeElement extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        const cube = new RubiksCube3D(this.cubeSettings);
-        const newCube = new NewRubiksCube3D(this.cubeSettings);
-        scene.add(newCube);
+        //const cube = new RubiksCube3D(this.cubeSettings);
+        const cube = new NewRubiksCube3D(this.cubeSettings);
+        scene.add(cube);
 
         // animation loop
         function animate() {
             controls.update();
             cube.update();
-            newCube.update();
             renderer.render(scene, camera);
         }
         renderer.setAnimationLoop(animate);
@@ -461,7 +470,7 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.rotate(customEvent.detail.eventId, customEvent.detail.rotation, completedCallback, failedCallback);
+            cube.rotate(customEvent.detail.rotation, completedCallback, failedCallback);
         });
 
         this.addEventListener(InternalEvents.movement, (event) => {
@@ -486,7 +495,7 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.movement(customEvent.detail.eventId, customEvent.detail.move, completedCallback, failedCallback);
+            cube.movement(customEvent.detail.move, completedCallback, failedCallback);
         });
 
         this.addEventListener(InternalEvents.reset, () => {
@@ -511,7 +520,15 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.setState(customEvent.detail.state, completedCallback);
+            const failedCallback = (/** @type {string} */ reason) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.setStateFailed, {
+                        detail: /** @type {SetStateFailedEventData} */ ({
+                            reason: reason,
+                        }),
+                    }),
+                );
+            cube.setState(customEvent.detail.state, completedCallback, failedCallback);
         });
 
         // Camera Events

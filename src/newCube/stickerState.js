@@ -96,7 +96,7 @@ export function toKociemba(stickerState) {
 
 /**
  * @param {string} kociembaString
- * @returns {StickerState} stickerState
+ * @returns {StickerState | undefined} stickerState
  */
 export function fromKociemba(kociembaString) {
     const length = kociembaString.length;
@@ -114,14 +114,14 @@ export function fromKociemba(kociembaString) {
         case 6 * 7 ** 2:
             return fromKociembaWithLayerCount(kociembaString, 7);
         default:
-            throw new Error(`Invalid kociemba string length: ${length}`);
+            undefined;
     }
 }
 
 /**
  * @param {string} kociembaString
  * @param {number} layerCount
- * @returns {StickerState} stickerState
+ * @returns {StickerState | undefined } stickerState
  */
 function fromKociembaWithLayerCount(kociembaString, layerCount) {
     let stickerState = emptyStickerState(layerCount);
@@ -132,7 +132,7 @@ function fromKociembaWithLayerCount(kociembaString, layerCount) {
             for (let k = 0; k < layerCount; k++) {
                 const face = Object.values(Faces).find((face) => rowString[k] === face);
                 if (!face) {
-                    throw new Error(`Invalid face character: ${rowString[k]}`);
+                    return undefined;
                 }
                 switch (i) {
                     case 0:

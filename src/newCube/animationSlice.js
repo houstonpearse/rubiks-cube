@@ -1,134 +1,23 @@
 // @ts-check
 /** @typedef {{axis: import('../core').Axis, layers: number[], direction: number}} Slice */
 
-import { Axi, Movements, OuterBlockMovements, Rotations } from '../core';
-import { getMiddleLayers } from './cubeState';
+import { Axi, Rotations } from '../core';
+import { getAllLayers } from './cubeState';
 
 /**
- * @param {import("../core").Movement} movement
+ * @param {import('../core').OuterBlockMovement } outerBlockMovement
  * @param {import('../core').CubeType} cubeType
+ * @param {boolean} prioritiseStandardMovement
  * @returns {Slice}
  */
-export function GetMovementSlice(movement, cubeType) {
-    const middleLayers = getMiddleLayers(cubeType);
-    switch (movement) {
-        // Up
-        case Movements.U:
-            return { axis: Axi.y, layers: [1], direction: -1 };
-        case Movements.U2:
-            return { axis: Axi.y, layers: [1], direction: -2 };
-        case Movements.UP:
-            return { axis: Axi.y, layers: [1], direction: 1 };
-        case Movements.u:
-            return { axis: Axi.y, layers: [1, ...middleLayers], direction: -1 };
-        case Movements.u2:
-            return { axis: Axi.y, layers: [1, ...middleLayers], direction: -2 };
-        case Movements.uP:
-            return { axis: Axi.y, layers: [1, ...middleLayers], direction: 1 };
-        // Down
-        case Movements.D:
-            return { axis: Axi.y, layers: [-1], direction: -1 };
-        case Movements.D2:
-            return { axis: Axi.y, layers: [-1], direction: -2 };
-        case Movements.DP:
-            return { axis: Axi.y, layers: [-1], direction: 1 };
-        case Movements.d:
-            return { axis: Axi.y, layers: [-1, ...middleLayers], direction: -1 };
-        case Movements.d2:
-            return { axis: Axi.y, layers: [-1, ...middleLayers], direction: -2 };
-        case Movements.dP:
-            return { axis: Axi.y, layers: [-1, ...middleLayers], direction: 1 };
-        // Right
-        case Movements.R:
-            return { axis: Axi.x, layers: [1], direction: -1 };
-        case Movements.R2:
-            return { axis: Axi.x, layers: [1], direction: -2 };
-        case Movements.RP:
-            return { axis: Axi.x, layers: [1], direction: 1 };
-        case Movements.r:
-            return { axis: Axi.x, layers: [1, ...middleLayers], direction: -1 };
-        case Movements.r2:
-            return { axis: Axi.x, layers: [1, ...middleLayers], direction: -2 };
-        case Movements.rP:
-            return { axis: Axi.x, layers: [1, ...middleLayers], direction: 1 };
-        // Left
-        case Movements.L:
-            return { axis: Axi.x, layers: [-1], direction: -1 };
-        case Movements.L2:
-            return { axis: Axi.x, layers: [-1], direction: -2 };
-        case Movements.LP:
-            return { axis: Axi.x, layers: [-1], direction: 1 };
-        case Movements.l:
-            return { axis: Axi.x, layers: [-1, ...middleLayers], direction: -1 };
-        case Movements.l2:
-            return { axis: Axi.x, layers: [-1, ...middleLayers], direction: -2 };
-        case Movements.lP:
-            return { axis: Axi.x, layers: [-1, ...middleLayers], direction: 1 };
-        // Front
-        case Movements.F:
-            return { axis: Axi.z, layers: [1], direction: -1 };
-        case Movements.F2:
-            return { axis: Axi.z, layers: [1], direction: -2 };
-        case Movements.FP:
-            return { axis: Axi.z, layers: [1], direction: 1 };
-        case Movements.f:
-            return { axis: Axi.z, layers: [1, ...middleLayers], direction: -1 };
-        case Movements.f2:
-            return { axis: Axi.z, layers: [1, ...middleLayers], direction: -2 };
-        case Movements.fP:
-            return { axis: Axi.z, layers: [1, ...middleLayers], direction: 1 };
-        // Back
-        case Movements.B:
-            return { axis: Axi.z, layers: [-1], direction: -1 };
-        case Movements.B2:
-            return { axis: Axi.z, layers: [-1], direction: -2 };
-        case Movements.BP:
-            return { axis: Axi.z, layers: [-1], direction: 1 };
-        case Movements.b:
-            return { axis: Axi.z, layers: [-1, ...middleLayers], direction: -1 };
-        case Movements.b2:
-            return { axis: Axi.z, layers: [-1, ...middleLayers], direction: -2 };
-        case Movements.bP:
-            return { axis: Axi.z, layers: [-1, ...middleLayers], direction: 1 };
-        //Middle
-        case Movements.M:
-            return { axis: Axi.x, layers: [...middleLayers], direction: -1 };
-        case Movements.M2:
-            return { axis: Axi.x, layers: [...middleLayers], direction: -2 };
-        case Movements.MP:
-            return { axis: Axi.x, layers: [...middleLayers], direction: 1 };
-        //Equator
-        case Movements.E:
-            return { axis: Axi.y, layers: [...middleLayers], direction: -1 };
-        case Movements.E2:
-            return { axis: Axi.y, layers: [...middleLayers], direction: -2 };
-        case Movements.EP:
-            return { axis: Axi.y, layers: [...middleLayers], direction: 1 };
-        //Slice
-        case Movements.S:
-            return { axis: Axi.z, layers: [...middleLayers], direction: -1 };
-        case Movements.S2:
-            return { axis: Axi.z, layers: [...middleLayers], direction: -2 };
-        case Movements.SP:
-            return { axis: Axi.z, layers: [...middleLayers], direction: 1 };
-        default:
-            throw Error(`Failed to get movement slice. invalid movement: ${movement}`);
-    }
-}
-
-/**
- * @param { import("../core").WideMove | import("../core").TwoMove | import("../core").ThreeMove | import("../core").FourMove | import("../core").FiveMove | import('../core').SixMove} outerBlockMovement
- * @param {import('../core').CubeType} cubeType
- * @returns {Slice}
- */
-function GetLayerSlice(outerBlockMovement, cubeType) {
-    const middleLayers = getMiddleLayers(cubeType);
-    const result = RegExp(`^([23456])?([RLUDFB]w|[RLUDFB]|[rludfb])([123])?(\')?$`).exec(outerBlockMovement);
+export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMovement = false) {
+    const layers = getAllLayers(cubeType);
+    const result = RegExp(`^([23456])?([RLUDFB]w|[RLUDFBMES]|[rludfb])([123])?(\')?$`).exec(outerBlockMovement);
     if (result == null) {
         throw new Error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
     }
-    const layerNumber = result[1] ? parseInt(result[1]) : 2;
-    if (layerNumber > middleLayers.length + 1) {
+    let layerNumber = result[1] ? parseInt(result[1]) : undefined;
+    if (layerNumber != null && layerNumber > layers.length - 1) {
         throw new Error(`Failed to parse outerBlockMovement. layer number ${layerNumber} is too large for cube type ${cubeType}`);
     }
     const movementType = result[2];
@@ -144,6 +33,7 @@ function GetLayerSlice(outerBlockMovement, cubeType) {
             case 'L':
             case 'Lw':
             case 'l':
+            case 'M':
                 return Axi.x;
             case 'U':
             case 'Uw':
@@ -151,6 +41,7 @@ function GetLayerSlice(outerBlockMovement, cubeType) {
             case 'D':
             case 'Dw':
             case 'd':
+            case 'E':
                 return Axi.y;
             case 'F':
             case 'Fw':
@@ -158,6 +49,7 @@ function GetLayerSlice(outerBlockMovement, cubeType) {
             case 'B':
             case 'Bw':
             case 'b':
+            case 'S':
                 return Axi.z;
             default:
                 throw new Error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
@@ -168,52 +60,48 @@ function GetLayerSlice(outerBlockMovement, cubeType) {
         case 'R':
         case 'U':
         case 'F':
-            var layer = middleLayers[middleLayers.length - (layerNumber - 1)];
+            layerNumber = layerNumber ? layerNumber : 1;
+            var layer = layers[layers.length - layerNumber];
             return { axis, layers: [layer], direction };
         case 'L':
         case 'D':
         case 'B':
-            var layer = middleLayers[layerNumber - 2];
+            layerNumber = layerNumber ? layerNumber : 1;
+            var layer = layers[layerNumber - 1];
             return { axis, layers: [layer], direction };
         case 'Rw':
-        case 'r':
         case 'Uw':
-        case 'u':
         case 'Fw':
+            layerNumber = layerNumber ? layerNumber : 2;
+            var sliceLayers = layers.slice(layers.length - layerNumber);
+            return { axis, layers: sliceLayers, direction };
+        case 'r':
+        case 'u':
         case 'f':
-            var layers = middleLayers.slice(middleLayers.length - (layerNumber - 1));
-            return { axis, layers: [1, ...layers], direction };
+            var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
+            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            var sliceLayers = layers.slice(layers.length - layerNumber);
+            return { axis, layers: sliceLayers, direction };
         case 'Lw':
-        case 'l':
         case 'Dw':
-        case 'd':
         case 'Bw':
+            layerNumber = layerNumber ? layerNumber : 2;
+            var sliceLayers = layers.slice(0, layerNumber - 1);
+            return { axis, layers: sliceLayers, direction };
+        case 'l':
+        case 'd':
         case 'b':
-            var layers = middleLayers.slice(0, layerNumber - 2);
-            return { axis, layers: [-1, ...layers], direction };
+            var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
+            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            var sliceLayers = layers.slice(0, layerNumber - 1);
+            return { axis, layers: sliceLayers, direction };
+        case 'M':
+        case 'E':
+        case 'S':
+            var sliceLayers = layers.slice(1, layers.length - 2);
+            return { axis, layers: sliceLayers, direction };
         default:
             throw new Error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
-    }
-}
-
-/**
- * @param {import("../core").OuterBlockMovement} outerBlockMovement
- * @param {import('../core').CubeType} cubeType
- * @returns {Slice}
- */
-export function GetOuterBlockMovementSlice(outerBlockMovement, cubeType) {
-    switch (outerBlockMovement) {
-        case Object.values(OuterBlockMovements.Single).find((move) => move === outerBlockMovement):
-            return GetMovementSlice(outerBlockMovement, cubeType);
-        case Object.values(OuterBlockMovements.Wide).find((move) => move === outerBlockMovement):
-        case Object.values(OuterBlockMovements.Two).find((move) => move === outerBlockMovement):
-        case Object.values(OuterBlockMovements.Three).find((move) => move === outerBlockMovement):
-        case Object.values(OuterBlockMovements.Four).find((move) => move === outerBlockMovement):
-        case Object.values(OuterBlockMovements.Five).find((move) => move === outerBlockMovement):
-        case Object.values(OuterBlockMovements.Six).find((move) => move === outerBlockMovement):
-            return GetLayerSlice(outerBlockMovement, cubeType);
-        default:
-            throw Error(`Failed to get outer block movement slice. invalid movement: ${outerBlockMovement}`);
     }
 }
 

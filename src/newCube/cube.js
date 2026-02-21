@@ -6,10 +6,10 @@ import { ColorToFace, FaceColors, getCubeInfo } from './cubeState';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import Materials from '../threejs/materials';
-import { getEmptyStickerState, toKociemba } from './stickerState';
+import { fromKociemba, getEmptyStickerState, toKociemba } from './stickerState';
 import { Axi } from '../core';
 import { AnimationState, AnimationStatus } from './animationState';
-import { GetMovementSlice, GetOuterBlockMovementSlice } from './animationSlice';
+import { GetLayerSlice, GetRotationSlice } from './animationSlice';
 
 const ERROR_MARGIN = 0.0001;
 
@@ -21,6 +21,10 @@ export default class NewRubiksCube3D extends Object3D {
         super();
         /** @type {CubeSettings} */
         this._cubeSettings = cubeSettings;
+        /** @type {number} */
+        this._pieceGap = cubeSettings.pieceGap;
+        /** @type {import('../core').CubeType} */
+        this._cubeType = cubeSettings.cubeType;
         /** @type {import('./cubeState').CubeInfo} */
         this._cubeInfo = getCubeInfo(cubeSettings.cubeType);
         /** @type {Group} */
@@ -33,32 +37,39 @@ export default class NewRubiksCube3D extends Object3D {
         this._currentRotation = undefined;
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
-        /** @type {number} */
-        this._lastGap = cubeSettings.pieceGap;
         this.add(this._mainGroup, this._rotationGroup);
         this.setStickerState(this._cubeInfo.initialStickerState);
         this._rotationQueue.push(
             new AnimationState(
-                GetOuterBlockMovementSlice('2R', this._cubeSettings.cubeType),
+                GetLayerSlice('2R', this._cubeInfo.cubeType),
                 () => {},
                 () => {},
             ),
             new AnimationState(
-                GetMovementSlice('r', this._cubeSettings.cubeType),
+                GetLayerSlice('2l', this._cubeInfo.cubeType),
                 () => {},
                 () => {},
             ),
             new AnimationState(
-                GetOuterBlockMovementSlice('3U', this._cubeSettings.cubeType),
+                GetLayerSlice('3U', this._cubeInfo.cubeType),
+                () => {},
+                () => {},
+            ),
+            new AnimationState(
+                GetLayerSlice("3D'", this._cubeInfo.cubeType),
                 () => {},
                 () => {},
             ),
         );
     }
 
+    /**
+     * Creates the main group containing all the pieces of the cube in their default position and rotation. Should only be called once during initialization.
+     * @internal
+     **/
     createCubeGroup() {
         const cubeInfo = this._cubeInfo;
-        const pieceGap = this._cubeSettings.pieceGap;
+        const pieceGap = this._pieceGap;
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const group = new Group();
@@ -113,10 +124,12 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
+     * Returns the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
+     * @internal
      * @returns {import('./stickerState').StickerState}
      */
     getStickerState() {
-        let state = getEmptyStickerState(this._cubeSettings.cubeType);
+        let state = getEmptyStickerState(this._cubeInfo.cubeType);
         const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
         const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
         const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
@@ -161,6 +174,8 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
+     * Sets the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
+     * @internal
      * @param {import('./stickerState').StickerState} stickerState
      */
     setStickerState(stickerState) {
@@ -177,28 +192,34 @@ export default class NewRubiksCube3D extends Object3D {
                 stickerpos.normalize();
                 stickerpos.round();
                 if (stickerpos.x === 1) {
-                    const face =
-                        stickerState.right[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize);
+                    const face = stickerState.right[i][j];
                     sticker.color = FaceColors[face];
                 } else if (stickerpos.x === -1) {
-                    const face =
-                        stickerState.left[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize);
+                    const face = stickerState.left[i][j];
                     sticker.color = FaceColors[face];
                 } else if (stickerpos.y === 1) {
-                    const face =
-                        stickerState.up[Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    const face = stickerState.up[i][j];
                     sticker.color = FaceColors[face];
                 } else if (stickerpos.y === -1) {
-                    const face =
-                        stickerState.down[Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    const face = stickerState.down[i][j];
                     sticker.color = FaceColors[face];
                 } else if (stickerpos.z === 1) {
-                    const face =
-                        stickerState.front[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    const face = stickerState.front[i][j];
                     sticker.color = FaceColors[face];
                 } else if (stickerpos.z === -1) {
-                    const face =
-                        stickerState.back[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 - piecepos.x) / this._cubeInfo.pieceSize)];
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 - piecepos.x) / this._cubeInfo.pieceSize);
+                    const face = stickerState.back[i][j];
                     sticker.color = FaceColors[face];
                 }
             });
@@ -206,6 +227,8 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
+     * Returns the pieces that should be rotated for a given slice. If the slice has no layers, all pieces will be returned. Should only be called before an Animation is started.
+     * @internal
      * @param {import('./animationSlice').Slice} slice
      * @returns {Object3D[]}
      */
@@ -229,20 +252,70 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
+     * Updates the gap of the pieces. To be used when the cube is not rotating
+     * @param {number} pieceGap
+     * @returns {void}
+     */
+    updateGap(pieceGap) {
+        this._pieceGap = pieceGap;
+        const outerLayerMultiplier = this._cubeInfo.outerLayerMultiplier;
+        const outerLayerOffset = (this._cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
+        const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
+        const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
+        const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
+        [...corners, ...edges, ...centers].forEach((piece) => {
+            let xOuterLayer = Math.abs(Math.abs(piece.userData.position.x) - 1) < ERROR_MARGIN;
+            let yOuterLayer = Math.abs(Math.abs(piece.userData.position.y) - 1) < ERROR_MARGIN;
+            let zOuterLayer = Math.abs(Math.abs(piece.userData.position.z) - 1) < ERROR_MARGIN;
+            piece.position.set(
+                piece.userData.position.x * (pieceGap + (xOuterLayer ? outerLayerOffset : 0)),
+                piece.userData.position.y * (pieceGap + (yOuterLayer ? outerLayerOffset : 0)),
+                piece.userData.position.z * (pieceGap + (zOuterLayer ? outerLayerOffset : 0)),
+            );
+        });
+    }
+
+    /**
+     * @param {import('../core').CubeType} cubeType
+     */
+    updateCubeType(cubeType) {
+        this._cubeType = cubeType;
+        this._cubeInfo = getCubeInfo(cubeType);
+        this.remove(this._mainGroup);
+        this._mainGroup = this.createCubeGroup();
+        this.add(this._mainGroup);
+    }
+
+    /**
+     * finish current rotation and clear rotation queue
+     * @internal
+     */
+    stop() {
+        this._rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('Movement Interrupted.'));
+        this._rotationQueue = [];
+        if (this._currentRotation) {
+            const percentage = this._currentRotation.update(0);
+            this.rotateGroupByPercent(this._currentRotation, percentage);
+            if (this._currentRotation.status !== AnimationStatus.Complete) {
+                throw new Error('Failed to complete current rotation during stop');
+            }
+            this.clearRotationGroup();
+            const state = toKociemba(this.getStickerState());
+            this._currentRotation.complete(state);
+            this._currentRotation = undefined;
+        }
+    }
+
+    /**
      * Adds pieces in the rotationGroup back into the main group.
+     * Updates the position and rotation of the pieces according to their world position and rotation, then resets the rotation of the rotation group.
+     * Should only be called when a rotation is in progress.
+     * @internal
      * @returns {void}
      */
     clearRotationGroup() {
-        if (this._currentRotation == null) {
-            console.error('cannot clear rotation when rotation is null');
-            return;
-        }
-        if (this._currentRotation.status != 'complete') {
-            console.error('cannot clear rotation group while rotating');
-            return;
-        }
         const cubeInfo = this._cubeInfo;
-        const pieceGap = this._cubeSettings.pieceGap;
+        const pieceGap = this._pieceGap;
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const corners = this._rotationGroup.children.filter((x) => x instanceof CornerPiece);
@@ -275,12 +348,33 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
-     * update the cube and continue any rotations
+     * Rotates the pieces in the rotation group according to the percentage of completion of the current animation. Should only be called when a rotation is in progress.
+     * @internal
+     * @param {number} percentage
+     * @param {AnimationState} animationState
+     */
+    rotateGroupByPercent(animationState, percentage) {
+        const radians = (Math.abs(animationState.slice.direction) * ((percentage / 100) * Math.PI)) / 2;
+        this._rotationGroup.rotateOnWorldAxis(
+            new Vector3(
+                animationState.slice.axis === Axi.x ? animationState.slice.direction : 0,
+                animationState.slice.axis === Axi.y ? animationState.slice.direction : 0,
+                animationState.slice.axis === Axi.z ? animationState.slice.direction : 0,
+            ).normalize(),
+            radians,
+        );
+    }
+
+    /**
+     * Update the cube and continue any rotations. If a rotation is in progress, it will be updated. If no rotation is in progress, the next rotation in the queue will be started.
      */
     update() {
         if (this._currentRotation === undefined) {
-            if (this._lastGap !== this._cubeSettings.pieceGap) {
-                //this.updateGap();
+            if (this._pieceGap !== this._cubeSettings.pieceGap) {
+                this.updateGap(this._cubeSettings.pieceGap);
+            }
+            if (this._cubeType !== this._cubeSettings.cubeType) {
+                this.updateCubeType(this._cubeSettings.cubeType);
             }
             this._currentRotation = this._rotationQueue.shift();
             if (this._currentRotation === undefined) {
@@ -294,16 +388,8 @@ export default class NewRubiksCube3D extends Object3D {
         }
         if (this._currentRotation.status === AnimationStatus.Initialised || this._currentRotation.status === AnimationStatus.InProgress) {
             //var speed = this.getRotationSpeed();
-            const increment = this._currentRotation.update(1000);
-            const radians = (Math.abs(this._currentRotation.slice.direction) * ((increment / 100) * Math.PI)) / 2;
-            this._rotationGroup.rotateOnWorldAxis(
-                new Vector3(
-                    this._currentRotation.slice.axis === Axi.x ? this._currentRotation.slice.direction : 0,
-                    this._currentRotation.slice.axis === Axi.y ? this._currentRotation.slice.direction : 0,
-                    this._currentRotation.slice.axis === Axi.z ? this._currentRotation.slice.direction : 0,
-                ).normalize(),
-                radians,
-            );
+            const percentage = this._currentRotation.update(1000);
+            this.rotateGroupByPercent(this._currentRotation, percentage);
         }
         if (this._currentRotation.status === AnimationStatus.Complete) {
             this.clearRotationGroup();
@@ -311,5 +397,58 @@ export default class NewRubiksCube3D extends Object3D {
             this._currentRotation = undefined;
         }
         return;
+    }
+
+    /**
+     * resets the cube to the default state and clears any queued rotations. If a rotation is in progress, it will be completed instantly before the reset.
+     * @param {(state: string) => boolean} completedCallback
+     */
+    reset(completedCallback) {
+        this.stop();
+        this.setStickerState(this._cubeInfo.initialStickerState);
+        if (!completedCallback(toKociemba(this._cubeInfo.initialStickerState))) {
+            console.error('Failed to invoke reset completedCallback');
+        }
+    }
+
+    /**
+     * sets the state of the cube
+     * @param {string} state
+     * @param {(state: string) => boolean} completedCallback
+     * @param {(reason: string) => boolean} failedCallback
+     */
+    setState(state, completedCallback, failedCallback) {
+        const stickerState = fromKociemba(state);
+        if (stickerState == null) {
+            if (!failedCallback('Invalid Kociemba State')) {
+                console.error('Failed to invoke setState failedCallback');
+            }
+            return;
+        }
+        this.stop();
+        this.setStickerState(stickerState);
+        if (!completedCallback(toKociemba(this.getStickerState()))) {
+            console.error('Failed to invoke setState completedCallback');
+        }
+    }
+
+    /**
+     *  @param {import('../core').Rotation} rotation
+     *  @param {((state: string) => void )} completedCallback
+     *  @param {((reason: string) => void )} failedCallback
+     */
+    rotate(rotation, completedCallback, failedCallback) {
+        const slice = GetRotationSlice(rotation);
+        this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
+    }
+
+    /**
+     *  @param {import('../core').Movement} movement
+     *  @param {((state: string) => void )} completedCallback
+     *  @param {((reason: string) => void )} failedCallback
+     */
+    movement(movement, completedCallback, failedCallback) {
+        const slice = GetLayerSlice(movement, this._cubeInfo.cubeType);
+        this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
     }
 }

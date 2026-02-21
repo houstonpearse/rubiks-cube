@@ -6,13 +6,14 @@
 import { CubeTypes, Faces } from '../core';
 import { defaultStickerState } from './stickerState';
 
-/** @typedef {{layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
+/** @typedef {{cubeType: import('../core').CubeType, layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
 /**
  * @param {import("../core").CubeType} cubeType
  * @return {CubeInfo}
  */
 export function getCubeInfo(cubeType) {
     return {
+        cubeType: cubeType,
         layers: getMiddleLayers(cubeType),
         pieceSize: pieceSize(cubeType),
         coreSize: coreSize(cubeType),
@@ -111,6 +112,13 @@ export const getMiddleLayers = (cubeType) => {
         default:
             throw new Error(`Unsupported cube type: ${cubeType}`);
     }
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ */
+export const getAllLayers = (cubeType) => {
+    return [-1, ...getMiddleLayers(cubeType), 1];
 };
 
 /**
