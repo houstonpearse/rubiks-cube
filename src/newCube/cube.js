@@ -6,8 +6,10 @@ import { ColorToFace, FaceColors, getCubeInfo } from './cubeState';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import Materials from '../threejs/materials';
-import { getEmptyStickerState } from './stickerState';
+import { getEmptyStickerState, toKociemba } from './stickerState';
 import { Axi } from '../core';
+import { AnimationState, AnimationStatus } from './animationState';
+import { GetMovementSlice, GetOuterBlockMovementSlice } from './animationSlice';
 
 const ERROR_MARGIN = 0.0001;
 
@@ -25,7 +27,9 @@ export default class NewRubiksCube3D extends Object3D {
         this._mainGroup = this.createCubeGroup();
         /** @type {Group} */
         this._rotationGroup = new Group();
+        /** @type {AnimationState[]} */
         this._rotationQueue = [];
+        /** @type {AnimationState | undefined} */
         this._currentRotation = undefined;
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
@@ -33,7 +37,23 @@ export default class NewRubiksCube3D extends Object3D {
         this._lastGap = cubeSettings.pieceGap;
         this.add(this._mainGroup, this._rotationGroup);
         this.setStickerState(this._cubeInfo.initialStickerState);
-        console.log(this.getStickerState());
+        this._rotationQueue.push(
+            new AnimationState(
+                GetOuterBlockMovementSlice('2R', this._cubeSettings.cubeType),
+                () => {},
+                () => {},
+            ),
+            new AnimationState(
+                GetMovementSlice('r', this._cubeSettings.cubeType),
+                () => {},
+                () => {},
+            ),
+            new AnimationState(
+                GetOuterBlockMovementSlice('3U', this._cubeSettings.cubeType),
+                () => {},
+                () => {},
+            ),
+        );
     }
 
     createCubeGroup() {
@@ -100,28 +120,40 @@ export default class NewRubiksCube3D extends Object3D {
         const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
         const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
         const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
-        [...corners, ...edges, ...centers].forEach((corner) => {
-            corner.stickers.forEach((sticker) => {
+        [...corners, ...edges, ...centers].forEach((piece) => {
+            piece.stickers.forEach((sticker) => {
                 const face = ColorToFace(sticker.color);
                 const piecepos = new Vector3();
-                piecepos.copy(corner.userData.position);
+                piecepos.copy(piece.userData.position);
                 const stickerpos = new Vector3();
                 sticker.getWorldPosition(stickerpos);
                 stickerpos.sub(piecepos);
                 stickerpos.normalize();
                 stickerpos.round();
                 if (stickerpos.x === 1) {
-                    state.right[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize);
+                    state.right[i][j] = face;
                 } else if (stickerpos.x === -1) {
-                    state.left[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize);
+                    state.left[i][j] = face;
                 } else if (stickerpos.y === 1) {
-                    state.up[Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 + piecepos.z) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    state.up[i][j] = face;
                 } else if (stickerpos.y === -1) {
-                    state.down[Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 - piecepos.z) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    state.down[i][j] = face;
                 } else if (stickerpos.z === 1) {
-                    state.front[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 + piecepos.x) / this._cubeInfo.pieceSize);
+                    state.front[i][j] = face;
                 } else if (stickerpos.z === -1) {
-                    state.back[Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize)][Math.round((1 - piecepos.x) / this._cubeInfo.pieceSize)] = face;
+                    const i = Math.round((1 - piecepos.y) / this._cubeInfo.pieceSize);
+                    const j = Math.round((1 - piecepos.x) / this._cubeInfo.pieceSize);
+                    state.back[i][j] = face;
                 }
             });
         });
@@ -240,6 +272,44 @@ export default class NewRubiksCube3D extends Object3D {
         });
         this._mainGroup.add(...this._rotationGroup.children);
         this._rotationGroup.rotation.set(0, 0, 0);
-        this._currentRotation.status = 'disposed';
+    }
+
+    /**
+     * update the cube and continue any rotations
+     */
+    update() {
+        if (this._currentRotation === undefined) {
+            if (this._lastGap !== this._cubeSettings.pieceGap) {
+                //this.updateGap();
+            }
+            this._currentRotation = this._rotationQueue.shift();
+            if (this._currentRotation === undefined) {
+                this._matchSpeed = undefined; // reset speed for the match animation options
+                return;
+            }
+        }
+        if (this._currentRotation.status === AnimationStatus.Pending) {
+            this._rotationGroup.add(...this.getRotationLayer(this._currentRotation.slice));
+            this._currentRotation.initialise();
+        }
+        if (this._currentRotation.status === AnimationStatus.Initialised || this._currentRotation.status === AnimationStatus.InProgress) {
+            //var speed = this.getRotationSpeed();
+            const increment = this._currentRotation.update(1000);
+            const radians = (Math.abs(this._currentRotation.slice.direction) * ((increment / 100) * Math.PI)) / 2;
+            this._rotationGroup.rotateOnWorldAxis(
+                new Vector3(
+                    this._currentRotation.slice.axis === Axi.x ? this._currentRotation.slice.direction : 0,
+                    this._currentRotation.slice.axis === Axi.y ? this._currentRotation.slice.direction : 0,
+                    this._currentRotation.slice.axis === Axi.z ? this._currentRotation.slice.direction : 0,
+                ).normalize(),
+                radians,
+            );
+        }
+        if (this._currentRotation.status === AnimationStatus.Complete) {
+            this.clearRotationGroup();
+            this._currentRotation.complete(toKociemba(this.getStickerState()));
+            this._currentRotation = undefined;
+        }
+        return;
     }
 }

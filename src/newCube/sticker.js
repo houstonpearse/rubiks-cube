@@ -1,5 +1,5 @@
 // @ts-check
-import { Color, Mesh, MeshStandardMaterial } from 'three';
+import { Mesh, MeshStandardMaterial } from 'three';
 
 export class Sticker extends Mesh {
     /**

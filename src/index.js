@@ -433,6 +433,7 @@ export class RubiksCubeElement extends HTMLElement {
         function animate() {
             controls.update();
             cube.update();
+            newCube.update();
             renderer.render(scene, camera);
         }
         renderer.setAnimationLoop(animate);
