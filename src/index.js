@@ -124,6 +124,10 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     connectedCallback() {
+        if (this.hasAttribute(AttributeNames.cubeType)) {
+            this.settings.setCubeType(this.getAttribute(AttributeNames.cubeType));
+            this.cubeSettings.cubeType = this.settings.cubeType;
+        }
         if (this.hasAttribute(AttributeNames.pieceGap)) {
             this.settings.setPieceGap(this.getAttribute(AttributeNames.pieceGap));
             this.cubeSettings.pieceGap = this.settings.pieceGap;

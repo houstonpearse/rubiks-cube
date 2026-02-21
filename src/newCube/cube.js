@@ -7,7 +7,7 @@ import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import Materials from '../threejs/materials';
 import { fromKociemba, getEmptyStickerState, toKociemba } from './stickerState';
-import { Axi } from '../core';
+import { AnimationStyles, Axi } from '../core';
 import { AnimationState, AnimationStatus } from './animationState';
 import { GetLayerSlice, GetRotationSlice } from './animationSlice';
 
@@ -366,6 +366,47 @@ export default class NewRubiksCube3D extends Object3D {
     }
 
     /**
+     *
+     * calculates the current speed of the current rotation in ms.
+     * calculation is dependent on animation style and animation speed settings
+     * - exponential: speeds up rotations depending on the queue length
+     * - next: an animation speed of 0 when there is another animation in the queue
+     * - match: will match the speed of rotations to the frequency of key presses.
+     * - fixed: will return a constant value
+     * @returns {number}
+     */
+    getRotationSpeed() {
+        if (this._cubeSettings.animationStyle === AnimationStyles.Exponential) {
+            return this._cubeSettings.animationSpeedMs / 2 ** this._rotationQueue.length;
+        }
+        if (this._cubeSettings.animationStyle === AnimationStyles.Next) {
+            return this._rotationQueue.length > 0 ? 0 : this._cubeSettings.animationSpeedMs;
+        }
+        if (this._cubeSettings.animationStyle === AnimationStyles.Match) {
+            if (this._rotationQueue.length > 0) {
+                const gaps = this._rotationQueue.map((state, index) => {
+                    if (index == 0 && this._currentRotation != null) {
+                        return state.timestampMs - this._currentRotation.timestampMs;
+                    }
+                    if (index == 0) {
+                        return this._matchSpeed ?? this._cubeSettings.animationSpeedMs;
+                    }
+                    return state.timestampMs - this._rotationQueue[index - 1].timestampMs;
+                });
+                this._matchSpeed = Math.min(...gaps);
+            }
+            if (this._matchSpeed !== undefined) {
+                return this._matchSpeed;
+            }
+            return this._cubeSettings.animationSpeedMs;
+        }
+        if (this._cubeSettings.animationStyle === AnimationStyles.Fixed) {
+            return this._cubeSettings.animationSpeedMs;
+        }
+        return this._cubeSettings.animationSpeedMs;
+    }
+
+    /**
      * Update the cube and continue any rotations. If a rotation is in progress, it will be updated. If no rotation is in progress, the next rotation in the queue will be started.
      */
     update() {
@@ -387,8 +428,9 @@ export default class NewRubiksCube3D extends Object3D {
             this._currentRotation.initialise();
         }
         if (this._currentRotation.status === AnimationStatus.Initialised || this._currentRotation.status === AnimationStatus.InProgress) {
-            //var speed = this.getRotationSpeed();
-            const percentage = this._currentRotation.update(1000);
+            var speed = this.getRotationSpeed();
+            console.log(speed);
+            const percentage = this._currentRotation.update(speed);
             this.rotateGroupByPercent(this._currentRotation, percentage);
         }
         if (this._currentRotation.status === AnimationStatus.Complete) {

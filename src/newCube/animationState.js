@@ -54,6 +54,9 @@ export class AnimationState {
      * @returns {number} rotationIncrement
      */
     update(speedMs) {
+        if (speedMs < 0) {
+            throw new Error(`Speed is negative.`);
+        }
         if (this.status === AnimationStatus.Initialised) {
             this.status = AnimationStatus.InProgress;
         }
