@@ -14,21 +14,24 @@ export class Sticker extends Mesh {
                 roughness: 0.4,
             }),
         );
+        /** @type {{ color: import('three').ColorRepresentation }} */
+        this.userData = { color: 'white' };
     }
 
     /**
-     * @param {Color} color
+     * @param {import('three').ColorRepresentation} color
      */
     set color(color) {
         const material = /** @type {MeshStandardMaterial} */ (this.material);
         material.color.set(color);
+        this.userData.color = color;
     }
 
     /**
-     * @returns {Color} color
+     * @returns {import('three').ColorRepresentation} color
      */
     get color() {
         const material = /** @type {MeshStandardMaterial} */ (this.material);
-        return material.color;
+        return this.userData.color;
     }
 }

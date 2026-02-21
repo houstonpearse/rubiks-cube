@@ -1,7 +1,7 @@
 // @ts-check
 import { AnimationStyles, CubeTypes } from './core';
 const defaultSettings = {
-    cubeType: CubeTypes.Three,
+    cubeType: CubeTypes.Seven,
     animationSpeedMs: 100,
     /** @type {import('./core').AnimationStyle} */
     animationStyle: 'fixed',

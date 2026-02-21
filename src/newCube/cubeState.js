@@ -3,22 +3,48 @@
  * @typedef {{x: number,y: number,z: number}} vector
  */
 
-import { CubeTypes } from '../core';
+import { CubeTypes, Faces } from '../core';
+import { defaultStickerState } from './stickerState';
 
+/** @typedef {{layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
 /**
  * @param {import("../core").CubeType} cubeType
+ * @return {CubeInfo}
  */
 export function getCubeInfo(cubeType) {
     return {
-        layers: middleLayers(cubeType),
+        layers: getMiddleLayers(cubeType),
         pieceSize: pieceSize(cubeType),
         coreSize: coreSize(cubeType),
-        outlerLayerMultiplier: outlerLayerMultiplier(cubeType),
+        initialStickerState: defaultStickerState(cubeType),
+        outerLayerMultiplier: outlerLayerMultiplier(cubeType),
         corners: corners,
-        edges: edges(middleLayers(cubeType)),
-        centers: centers(middleLayers(cubeType)),
+        edges: edges(getMiddleLayers(cubeType)),
+        centers: centers(getMiddleLayers(cubeType)),
     };
 }
+
+export const FaceColors = {
+    [Faces.B]: 'blue',
+    [Faces.D]: 'yellow',
+    [Faces.F]: '#2cbf13',
+    [Faces.L]: '#fc9a05',
+    [Faces.R]: 'red',
+    [Faces.U]: 'white',
+};
+
+/**
+ * @param {import('three').ColorRepresentation} color
+ * @return {import('../core').Face}
+ * */
+export const ColorToFace = (color) => {
+    const face = Object.values(Faces).find((face) => FaceColors[face] === color);
+    if (!face) {
+        throw new Error(`Invalid color: ${color}`);
+    }
+    return face;
+};
+
 /**
  * @param {import("../core").CubeType} cubeType
  * @return {number} core size
@@ -68,7 +94,7 @@ export const coreSize = (cubeType) => {
 /**
  * @param {import("../core").CubeType} cubeType
  */
-export const middleLayers = (cubeType) => {
+export const getMiddleLayers = (cubeType) => {
     switch (cubeType) {
         case CubeTypes.Two:
             return [];

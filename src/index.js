@@ -45,7 +45,7 @@ export class RubiksCubeElement extends HTMLElement {
         /** @private @type {Settings} */
         this.settings = new Settings();
         /** @private @type {CubeSettings} */
-        this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle);
+        this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle, this.settings.cubeType);
     }
 
     /**
