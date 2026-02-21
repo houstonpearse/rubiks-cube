@@ -1,192 +1,337 @@
 // @ts-check
-import { Group } from 'three';
-import Materials from '../threejs/materials';
-import { createCornerGroup, createEdgeGroup, createCenterGroup } from '../threejs/pieces';
-
 /**
  * @typedef {{x: number,y: number,z: number}} vector
  */
 
+import { CubeTypes, Faces } from '../core';
+import { defaultStickerState } from './stickerState';
+
+/** @typedef {{cubeType: import('../core').CubeType, layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
 /**
- * @typedef {{position: vector, rotation: vector, type: "corner" | "edge" | "center", group: Group}} state
+ * @param {import("../core").CubeType} cubeType
+ * @return {CubeInfo}
  */
+export function getCubeInfo(cubeType) {
+    return {
+        cubeType: cubeType,
+        layers: getMiddleLayers(cubeType),
+        pieceSize: pieceSize(cubeType),
+        coreSize: coreSize(cubeType),
+        initialStickerState: defaultStickerState(cubeType),
+        outerLayerMultiplier: outlerLayerMultiplier(cubeType),
+        corners: corners,
+        edges: edges(getMiddleLayers(cubeType)),
+        centers: centers(getMiddleLayers(cubeType)),
+    };
+}
+
+export const FaceColors = {
+    [Faces.B]: 'blue',
+    [Faces.D]: 'yellow',
+    [Faces.F]: '#2cbf13',
+    [Faces.L]: '#fc9a05',
+    [Faces.R]: 'red',
+    [Faces.U]: 'white',
+};
 
 /**
- * @return {state[]}
+ * @param {import('three').ColorRepresentation} color
+ * @return {import('../core').Face}
+ * */
+export const ColorToFace = (color) => {
+    const face = Object.values(Faces).find((face) => FaceColors[face] === color);
+    if (!face) {
+        throw new Error(`Invalid color: ${color}`);
+    }
+    return face;
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ * @return {number} core size
  */
-const corners = () => [
+export const outlerLayerMultiplier = (cubeType) => {
+    switch (cubeType) {
+        case CubeTypes.Two:
+            return 1;
+        case CubeTypes.Three:
+            return 1;
+        case CubeTypes.Four:
+            return 1.1;
+        case CubeTypes.Five:
+            return 1.2;
+        case CubeTypes.Six:
+            return 1.3;
+        case CubeTypes.Seven:
+            return 1.35;
+        default:
+            throw new Error(`Unsupported cube type: ${cubeType}`);
+    }
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ * @return {number} core size
+ */
+export const coreSize = (cubeType) => {
+    switch (cubeType) {
+        case CubeTypes.Two:
+            return 2;
+        case CubeTypes.Three:
+            return 1.53;
+        case CubeTypes.Four:
+            return 1.36;
+        case CubeTypes.Five:
+            return 1.3;
+        case CubeTypes.Six:
+            return 1.22;
+        case CubeTypes.Seven:
+            return 1.21;
+        default:
+            throw new Error(`Unsupported cube type: ${cubeType}`);
+    }
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ */
+export const getMiddleLayers = (cubeType) => {
+    switch (cubeType) {
+        case CubeTypes.Two:
+            return [];
+        case CubeTypes.Three:
+            return [0];
+        case CubeTypes.Four:
+            return [-1 / 3, 1 / 3];
+        case CubeTypes.Five:
+            return [-1 / 2, 0, 1 / 2];
+        case CubeTypes.Six:
+            return [-3 / 5, -1 / 5, 1 / 5, 3 / 5];
+        case CubeTypes.Seven:
+            return [-2 / 3, -1 / 3, 0, 1 / 3, 2 / 3];
+        default:
+            throw new Error(`Unsupported cube type: ${cubeType}`);
+    }
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ */
+export const getAllLayers = (cubeType) => {
+    return [-1, ...getMiddleLayers(cubeType), 1];
+};
+
+/**
+ * @param {import("../core").CubeType} cubeType
+ * @return {number} piece size
+ */
+export const pieceSize = (cubeType) => {
+    switch (cubeType) {
+        case CubeTypes.Two:
+            return 2;
+        case CubeTypes.Three:
+            return 1;
+        case CubeTypes.Four:
+            return 2 / 3;
+        case CubeTypes.Five:
+            return 1 / 2;
+        case CubeTypes.Six:
+            return 2 / 5;
+        case CubeTypes.Seven:
+            return 1 / 3;
+        default:
+            throw new Error(`Unsupported cube type: ${cubeType}`);
+    }
+};
+
+/**
+ * @typedef {{position: vector, rotation: vector}} state
+ */
+
+/** @type {state[]} */
+export const corners = [
     {
         position: { x: 1, y: 1, z: 1 },
         rotation: { x: 0, y: 0, z: 0 },
-        type: 'corner',
-        group: createCornerGroup(Materials.front, Materials.right, Materials.up, Materials.core),
     },
     {
         position: { x: 1, y: 1, z: -1 },
         rotation: { x: 0, y: Math.PI / 2, z: 0 },
-        type: 'corner',
-        group: createCornerGroup(Materials.right, Materials.back, Materials.up, Materials.core),
     },
     {
         position: { x: 1, y: -1, z: 1 },
         rotation: { x: 0, y: Math.PI / 2, z: Math.PI },
-        type: 'corner',
-        group: createCornerGroup(Materials.right, Materials.front, Materials.down, Materials.core),
     },
     {
         position: { x: 1, y: -1, z: -1 },
         rotation: { x: 0, y: Math.PI, z: Math.PI },
-        type: 'corner',
-        group: createCornerGroup(Materials.back, Materials.right, Materials.down, Materials.core),
     },
     {
         position: { x: -1, y: 1, z: 1 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
-        type: 'corner',
-        group: createCornerGroup(Materials.left, Materials.front, Materials.up, Materials.core),
     },
     {
         position: { x: -1, y: 1, z: -1 },
         rotation: { x: 0, y: Math.PI, z: 0 },
-        type: 'corner',
-        group: createCornerGroup(Materials.back, Materials.left, Materials.up, Materials.core),
     },
     {
         position: { x: -1, y: -1, z: 1 },
         rotation: { x: 0, y: 0, z: Math.PI },
-        type: 'corner',
-        group: createCornerGroup(Materials.front, Materials.left, Materials.down, Materials.core),
     },
     {
         position: { x: -1, y: -1, z: -1 },
         rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
-        type: 'corner',
-        group: createCornerGroup(Materials.left, Materials.back, Materials.down, Materials.core),
     },
 ];
 
 /**
+ * @param {number[]} layers
  * @return {state[]}
  */
-const edges = () => [
-    {
-        position: { x: 1, y: 1, z: 0 },
-        rotation: { x: 0, y: Math.PI / 2, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.right, Materials.up, Materials.core),
-    },
-    {
-        position: { x: 1, y: 0, z: 1 },
-        rotation: { x: 0, y: 0, z: -Math.PI / 2 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.front, Materials.right, Materials.core),
-    },
-    {
-        position: { x: 1, y: 0, z: -1 },
-        rotation: { x: 0, y: Math.PI / 2, z: -Math.PI / 2 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.right, Materials.back, Materials.core),
-    },
-    {
-        position: { x: 1, y: -1, z: 0 },
-        rotation: { x: Math.PI, y: Math.PI / 2, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.right, Materials.down, Materials.core),
-    },
-    {
-        position: { x: 0, y: 1, z: 1 },
-        rotation: { x: 0, y: 0, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.front, Materials.up, Materials.core),
-    },
-    {
-        position: { x: 0, y: 1, z: -1 },
-        rotation: { x: -Math.PI / 2, y: 0, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.up, Materials.back, Materials.core),
-    },
-    {
-        position: { x: 0, y: -1, z: 1 },
-        rotation: { x: Math.PI / 2, y: 0, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.down, Materials.front, Materials.core),
-    },
-    {
-        position: { x: 0, y: -1, z: -1 },
-        rotation: { x: Math.PI, y: 0, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.back, Materials.down, Materials.core),
-    },
-    {
-        position: { x: -1, y: 1, z: 0 },
-        rotation: { x: 0, y: -Math.PI / 2, z: 0 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.left, Materials.up, Materials.core),
-    },
-    {
-        position: { x: -1, y: 0, z: 1 },
-        rotation: { x: 0, y: 0, z: Math.PI / 2 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.front, Materials.left, Materials.core),
-    },
-    {
-        position: { x: -1, y: 0, z: -1 },
-        rotation: { x: 0, y: -Math.PI / 2, z: Math.PI / 2 },
-        type: 'edge',
-        group: createEdgeGroup(Materials.left, Materials.back, Materials.core),
-    },
-    {
-        position: { x: -1, y: -1, z: 0 },
-        rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
-        type: 'edge',
-        group: createEdgeGroup(Materials.left, Materials.down, Materials.core),
-    },
+export const centers = (layers) => [
+    //right
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: 1, y: layer1, z: layer2 },
+                rotation: { x: 0, y: Math.PI / 2, z: 0 },
+            };
+        }),
+    ),
+    //up
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: layer1, y: 1, z: layer2 },
+                rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+            };
+        }),
+    ),
+    //front
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: layer1, y: layer2, z: 1 },
+                rotation: { x: 0, y: 0, z: 0 },
+            };
+        }),
+    ),
+    //back
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: layer1, y: layer2, z: -1 },
+                rotation: { x: 0, y: Math.PI, z: 0 },
+            };
+        }),
+    ),
+    //down
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: layer1, y: -1, z: layer2 },
+                rotation: { x: Math.PI / 2, y: 0, z: 0 },
+            };
+        }),
+    ),
+    //left
+    ...layers.flatMap((layer1) =>
+        layers.map((layer2) => {
+            return {
+                position: { x: -1, y: layer1, z: layer2 },
+                rotation: { x: 0, y: -Math.PI / 2, z: 0 },
+            };
+        }),
+    ),
 ];
 
 /**
+ * @param {number[]} layers
  * @return {state[]}
  */
-const centers = () => [
-    {
-        position: { x: 1, y: 0, z: 0 },
-        rotation: { x: 0, y: Math.PI / 2, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.right, Materials.core),
-    },
-    {
-        position: { x: 0, y: 1, z: 0 },
-        rotation: { x: -Math.PI / 2, y: 0, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.up, Materials.core),
-    },
-    {
-        position: { x: 0, y: 0, z: 1 },
-        rotation: { x: 0, y: 0, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.front, Materials.core),
-    },
-    {
-        position: { x: 0, y: 0, z: -1 },
-        rotation: { x: 0, y: Math.PI, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.back, Materials.core),
-    },
-    {
-        position: { x: 0, y: -1, z: 0 },
-        rotation: { x: Math.PI / 2, y: 0, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.down, Materials.core),
-    },
-    {
-        position: { x: -1, y: 0, z: 0 },
-        rotation: { x: 0, y: -Math.PI / 2, z: 0 },
-        type: 'center',
-        group: createCenterGroup(Materials.left, Materials.core),
-    },
+export const edges = (layers) => [
+    // RU
+    ...layers.map((layer) => {
+        return {
+            position: { x: 1, y: 1, z: layer },
+            rotation: { x: 0, y: Math.PI / 2, z: 0 },
+        };
+    }),
+    // RF
+    ...layers.map((layer) => {
+        return {
+            position: { x: 1, y: layer, z: 1 },
+            rotation: { x: 0, y: 0, z: -Math.PI / 2 },
+        };
+    }),
+    // RB
+    ...layers.map((layer) => {
+        return {
+            position: { x: 1, y: layer, z: -1 },
+            rotation: { x: 0, y: Math.PI / 2, z: -Math.PI / 2 },
+        };
+    }),
+    // RD
+    ...layers.map((layer) => {
+        return {
+            position: { x: 1, y: -1, z: layer },
+            rotation: { x: Math.PI, y: Math.PI / 2, z: 0 },
+        };
+    }),
+    // UF
+    ...layers.map((layer) => {
+        return {
+            position: { x: layer, y: 1, z: 1 },
+            rotation: { x: 0, y: 0, z: 0 },
+        };
+    }),
+    // UB
+    ...layers.map((layer) => {
+        return {
+            position: { x: layer, y: 1, z: -1 },
+            rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+        };
+    }),
+    // DF
+    ...layers.map((layer) => {
+        return {
+            position: { x: layer, y: -1, z: 1 },
+            rotation: { x: Math.PI / 2, y: 0, z: 0 },
+        };
+    }),
+    // DB
+    ...layers.map((layer) => {
+        return {
+            position: { x: layer, y: -1, z: -1 },
+            rotation: { x: Math.PI, y: 0, z: 0 },
+        };
+    }),
+    // LU
+    ...layers.map((layer) => {
+        return {
+            position: { x: -1, y: 1, z: layer },
+            rotation: { x: 0, y: -Math.PI / 2, z: 0 },
+        };
+    }),
+    // LF
+    ...layers.map((layer) => {
+        return {
+            position: { x: -1, y: layer, z: 1 },
+            rotation: { x: 0, y: 0, z: Math.PI / 2 },
+        };
+    }),
+    // LB
+    ...layers.map((layer) => {
+        return {
+            position: { x: -1, y: layer, z: -1 },
+            rotation: { x: 0, y: -Math.PI / 2, z: Math.PI / 2 },
+        };
+    }),
+    // LD
+    ...layers.map((layer) => {
+        return {
+            position: { x: -1, y: -1, z: layer },
+            rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
+        };
+    }),
 ];
-
-/**
- * @return {state[]}
- */
-const createCubeState = () => [...corners(), ...edges(), ...centers()];
-export { createCubeState };

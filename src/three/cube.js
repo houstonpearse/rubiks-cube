@@ -1,31 +1,30 @@
 // @ts-check
-import { Group, Mesh, Object3D, SphereGeometry, Vector3 } from 'three';
+import { Group, Mesh, MeshBasicMaterial, Object3D, SphereGeometry, Vector3 } from 'three';
 import { CornerPiece } from './cornerPiece';
 import CubeSettings from '../cube/cubeSettings';
-import { ColorToFace, FaceColors, getCubeInfo } from './cubeState';
+import { ColorToFace, FaceColors, getCubeInfo } from '../cube/cubeState';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
-import Materials from '../threejs/materials';
-import { fromKociemba, getEmptyStickerState, toKociemba } from './stickerState';
-import { AnimationStyles, Axi } from '../core';
-import { AnimationState, AnimationStatus } from './animationState';
-import { GetLayerSlice, GetRotationSlice } from './animationSlice';
+import { fromKociemba, getEmptyStickerState, toKociemba } from '../cube/stickerState';
+import { AnimationStyles, Axi, CubeTypes } from '../core';
+import { AnimationState, AnimationStatus } from '../cube/animationState';
+import { GetLayerSlice, GetRotationSlice } from '../cube/animationSlice';
 
 const ERROR_MARGIN = 0.0001;
 
-export default class NewRubiksCube3D extends Object3D {
+export default class RubiksCube3D extends Object3D {
     /**
      *   @param {CubeSettings} cubeSettings
      */
     constructor(cubeSettings) {
         super();
         /** @type {CubeSettings} */
-        this._cubeSettings = cubeSettings;
+        this._cubeSettings = cubeSettings ?? new CubeSettings(1.04, 150, 'fixed', CubeTypes.Three);
         /** @type {number} */
         this._pieceGap = cubeSettings.pieceGap;
         /** @type {import('../core').CubeType} */
         this._cubeType = cubeSettings.cubeType;
-        /** @type {import('./cubeState').CubeInfo} */
+        /** @type {import('../cube/cubeState').CubeInfo} */
         this._cubeInfo = getCubeInfo(cubeSettings.cubeType);
         /** @type {Group} */
         this._mainGroup = this.createCubeGroup();
@@ -73,7 +72,7 @@ export default class NewRubiksCube3D extends Object3D {
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const group = new Group();
-        const core = new Mesh(new SphereGeometry(cubeInfo.coreSize), Materials.core);
+        const core = new Mesh(new SphereGeometry(cubeInfo.coreSize), new MeshBasicMaterial({ color: 'black' }));
         group.add(core);
         for (const piece of cubeInfo.corners) {
             const corner = new CornerPiece();
@@ -126,7 +125,7 @@ export default class NewRubiksCube3D extends Object3D {
     /**
      * Returns the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
      * @internal
-     * @returns {import('./stickerState').StickerState}
+     * @returns {import('../cube/stickerState').StickerState}
      */
     getStickerState() {
         let state = getEmptyStickerState(this._cubeInfo.cubeType);
@@ -176,7 +175,7 @@ export default class NewRubiksCube3D extends Object3D {
     /**
      * Sets the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
      * @internal
-     * @param {import('./stickerState').StickerState} stickerState
+     * @param {import('../cube/stickerState').StickerState} stickerState
      */
     setStickerState(stickerState) {
         const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
@@ -229,7 +228,7 @@ export default class NewRubiksCube3D extends Object3D {
     /**
      * Returns the pieces that should be rotated for a given slice. If the slice has no layers, all pieces will be returned. Should only be called before an Animation is started.
      * @internal
-     * @param {import('./animationSlice').Slice} slice
+     * @param {import('../cube/animationSlice').Slice} slice
      * @returns {Object3D[]}
      */
     getRotationLayer(slice) {
@@ -460,7 +459,7 @@ export default class NewRubiksCube3D extends Object3D {
      * @param {(reason: string) => boolean} failedCallback
      */
     setState(state, completedCallback, failedCallback) {
-        const stickerState = fromKociemba(state);
+        const stickerState = fromKociemba(state, this._cubeType);
         if (stickerState == null) {
             if (!failedCallback('Invalid Kociemba State')) {
                 console.error('Failed to invoke setState failedCallback');

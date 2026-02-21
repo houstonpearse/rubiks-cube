@@ -3,13 +3,17 @@ import { BoxGeometry, ExtrudeGeometry, Mesh, MeshBasicMaterial, Object3D } from 
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
 import { Sticker } from './sticker';
 
-// @ts-check
+/** @typedef {{ positon: import('three').Vector3Like, rotation: import('three').Vector3Like }} EdgePieceUserData*/
+
 export class EdgePiece extends Object3D {
     constructor() {
         super();
         const boxGeom = new BoxGeometry(1, 1, 1);
         const boxMesh = new Mesh(boxGeom, new MeshBasicMaterial({ color: 'black' }));
         this.add(boxMesh);
+
+        /** @type {EdgePieceUserData} */
+        this.userData = { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } };
 
         this.frontSticker = new EdgeSticker();
         this.frontSticker.position.set(0, 0, 0.5);

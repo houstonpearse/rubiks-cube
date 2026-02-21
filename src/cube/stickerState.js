@@ -96,22 +96,47 @@ export function toKociemba(stickerState) {
 
 /**
  * @param {string} kociembaString
+ * @param {import('../core').CubeType} cubeType
  * @returns {StickerState | undefined} stickerState
  */
-export function fromKociemba(kociembaString) {
+export function fromKociemba(kociembaString, cubeType) {
     const length = kociembaString.length;
-    switch (length) {
-        case 6 * 2 ** 2:
+    switch (cubeType) {
+        case CubeTypes.Two:
+            if (length != 6 * 2 ** 2) {
+                console.error('Invalid state string length. Length must be 24 for 2x2 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 2);
-        case 6 * 3 ** 2:
+        case CubeTypes.Three:
+            if (length != 6 * 3 ** 2) {
+                console.error('Invalid state string length. Length must be 54 for 3x3 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 3);
-        case 6 * 4 ** 2:
+        case CubeTypes.Four:
+            if (length != 6 * 4 ** 2) {
+                console.error('Invalid state string length. Length must be 96 for 4x4 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 4);
-        case 6 * 5 ** 2:
+        case CubeTypes.Five:
+            if (length != 6 * 5 ** 2) {
+                console.error('Invalid state string length. Length must be 150 for 5x5 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 5);
-        case 6 * 6 ** 2:
+        case CubeTypes.Six:
+            if (length != 6 * 6 ** 2) {
+                console.error('Invalid state string length. Length must be 216 for 6x6 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 6);
-        case 6 * 7 ** 2:
+        case CubeTypes.Seven:
+            if (length != 6 * 7 ** 2) {
+                console.error('Invalid state string length. Length must be 294 for 7x7 cubes.');
+                return;
+            }
             return fromKociembaWithLayerCount(kociembaString, 7);
         default:
             undefined;
