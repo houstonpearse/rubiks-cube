@@ -22,9 +22,10 @@ function drainUpdates(cube, maxIterations = 20) {
     for (let i = 0; i < maxIterations; i++) {
         cube.update();
         if (!cube._currentRotation && cube._rotationQueue.length === 0) {
-            break;
+            return;
         }
     }
+    throw new Error('Animation Queue not empty');
 }
 
 describe('Cube initial state and reset', () => {
@@ -95,54 +96,30 @@ describe('Cube initial state and reset', () => {
         drainUpdates(cube);
         expect(/** @type {string?} **/ (resetState)).toBe(initialState);
     });
+
+    it('check sexy move matches the expected state', () => {
+        const cube = createTestCube();
+        const moves = [Movements.Single.R, Movements.Single.U, Movements.Single.RP, Movements.Single.UP];
+
+        /** @type {string?} */
+        let finalState = null;
+        for (const move of moves) {
+            cube.movement(
+                move,
+                (state) => {
+                    finalState = state;
+                },
+                () => {
+                    throw new Error('Movement failed unexpectedly');
+                },
+            );
+            drainUpdates(cube);
+        }
+
+        const EXPECTED_STATE = 'UULUUFUUFRRUBRRURRFFDFFUFFFDDRDDDDDDBLLLLLLLLBRRBBBBBB';
+
+        expect(/** @type {string?} **/ (finalState)).toBe(EXPECTED_STATE);
+    });
 });
 
-// describe('Cube rotation speed calculation', () => {
-//     it('uses fixed animation speed when style is "fixed"', () => {
-//         const cube = createTestCube();
-//         cube.cubeSettings.animationSpeedMs = 123;
-//         cube.cubeSettings.animationStyle = 'fixed';
-
-//         const speed = cube.getRotationSpeed();
-//         expect(speed).toBe(123);
-//     });
-
-//     it('speeds up with queue length when style is "exponential"', () => {
-//         const cube = createTestCube();
-//         cube.cubeSettings.animationSpeedMs = 1000;
-//         cube.cubeSettings.animationStyle = 'exponential';
-
-//         // No queued rotations.
-//         expect(cube.getRotationSpeed()).toBe(1000);
-
-//         // Pretend we have two more rotations queued; speed halves per item in queue.
-//         cube.rotationQueue.push({ timestampMs: performance.now() });
-//         expect(cube.getRotationSpeed()).toBe(500);
-//     });
-// });
-
-// // Placeholder tests for concrete state strings after specific move sequences.
-// // Once you have the exact expected Kociemba states for key sequences, we can
-// // replace the TODOs below and unskip these tests.
-
-// test.skip('applies a known move sequence and matches the expected state (to be filled)', () => {
-//     const cube = createTestCube();
-//     const moves = [Movements.R, Movements.U, Movements.RP, Movements.UP];
-
-//     for (const move of moves) {
-//         cube.movement(
-//             crypto.randomUUID(),
-//             move,
-//             () => true,
-//             () => {
-//                 throw new Error('Movement failed unexpectedly');
-//             },
-//         );
-//         drainUpdates(cube);
-//     }
-
-//     const state = cube.kociembaState;
-//     const EXPECTED_STATE = 'TODO_FILL_ME_ONCE_KNOWN';
-
-//     expect(state).toBe(EXPECTED_STATE);
-// });
+// test.;

@@ -411,7 +411,6 @@ export default class RubiksCube3D extends Object3D {
         }
         if (this._currentRotation.status === AnimationStatus.Initialised || this._currentRotation.status === AnimationStatus.InProgress) {
             var speed = this.getRotationSpeed();
-            console.log(speed);
             const percentage = this._currentRotation.update(speed);
             this.rotateGroupByPercent(this._currentRotation, percentage);
         }
