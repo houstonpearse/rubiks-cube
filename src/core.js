@@ -1,68 +1,15 @@
 // @ts-check
 /**
- * @typedef {typeof Movements[keyof typeof Movements]} Movement
+ * @typedef {typeof Movements.Single[keyof typeof Movements.Single]} SingleMove
+ * @typedef {typeof Movements.Wide[keyof typeof Movements.Wide]} WideMove
+ * @typedef {typeof Movements.Two[keyof typeof Movements.Two]} TwoMove
+ * @typedef {typeof Movements.Three[keyof typeof Movements.Three]} ThreeMove
+ * @typedef {typeof Movements.Four[keyof typeof Movements.Four]} FourMove
+ * @typedef {typeof Movements.Five[keyof typeof Movements.Five]} FiveMove
+ * @typedef {typeof Movements.Six[keyof typeof Movements.Six]} SixMove
+ * @typedef {SingleMove | WideMove | TwoMove | ThreeMove | FourMove | FiveMove | SixMove} Movement
  */
 export const Movements = Object.freeze({
-    R: 'R',
-    R2: 'R2',
-    RP: "R'",
-    L: 'L',
-    L2: 'L2',
-    LP: "L'",
-    U: 'U',
-    U2: 'U2',
-    UP: "U'",
-    D: 'D',
-    D2: 'D2',
-    DP: "D'",
-    F: 'F',
-    F2: 'F2',
-    FP: "F'",
-    B: 'B',
-    B2: 'B2',
-    BP: "B'",
-    // Wide moves
-    r: 'r',
-    r2: 'r2',
-    rP: "r'",
-    l: 'l',
-    l2: 'l2',
-    lP: "l'",
-    u: 'u',
-    u2: 'u2',
-    uP: "u'",
-    d: 'd',
-    d2: 'd2',
-    dP: "d'",
-    f: 'f',
-    f2: 'f2',
-    fP: "f'",
-    b: 'b',
-    b2: 'b2',
-    bP: "b'",
-    // Slice moves
-    M: 'M',
-    M2: 'M2',
-    MP: "M'",
-    E: 'E',
-    E2: 'E2',
-    EP: "E'",
-    S: 'S',
-    S2: 'S2',
-    SP: "S'",
-});
-
-/**
- * @typedef {typeof OuterBlockMovements.Single[keyof typeof OuterBlockMovements.Single]} SingleMove
- * @typedef {typeof OuterBlockMovements.Wide[keyof typeof OuterBlockMovements.Wide]} WideMove
- * @typedef {typeof OuterBlockMovements.Two[keyof typeof OuterBlockMovements.Two]} TwoMove
- * @typedef {typeof OuterBlockMovements.Three[keyof typeof OuterBlockMovements.Three]} ThreeMove
- * @typedef {typeof OuterBlockMovements.Four[keyof typeof OuterBlockMovements.Four]} FourMove
- * @typedef {typeof OuterBlockMovements.Five[keyof typeof OuterBlockMovements.Five]} FiveMove
- * @typedef {typeof OuterBlockMovements.Six[keyof typeof OuterBlockMovements.Six]} SixMove
- * @typedef {SingleMove | WideMove | TwoMove | ThreeMove | FourMove | FiveMove | SixMove} OuterBlockMovement
- */
-export const OuterBlockMovements = Object.freeze({
     Single: Object.freeze({
         R: 'R',
         R2: 'R2',
@@ -425,15 +372,6 @@ export const Rotations = Object.freeze({
     z: 'z',
     z2: 'z2',
     zP: "z'",
-});
-
-/**
- * @typedef {typeof Axi[keyof typeof Axi]} Axis
- */
-export const Axi = Object.freeze({
-    x: 'x',
-    y: 'y',
-    z: 'z',
 });
 
 /**

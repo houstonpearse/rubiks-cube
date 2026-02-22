@@ -8,13 +8,11 @@ import { gsap } from 'gsap';
 import Settings from './settings';
 import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './camera/cameraState';
-import { AttributeNames } from './schema';
-import { Movements, PeekTypes, Rotations } from './core';
+import { PeekTypes, Rotations } from './core';
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
-
 const InternalEvents = Object.freeze({
     rotation: 'rotation',
     rotationComplete: 'rotationComplete',
@@ -33,6 +31,30 @@ const InternalEvents = Object.freeze({
     setStateComplete: 'setStateComplete',
     setStateFailed: 'setStateFailed',
 });
+
+/**
+ * @typedef {typeof AttributeNames[keyof typeof AttributeNames]} AttributeName
+ */
+export const AttributeNames = {
+    /** @type {"cube-type"} */
+    cubeType: 'cube-type',
+    /** @type {"piece-gap"} */
+    pieceGap: 'piece-gap',
+    /** @type {"animation-speed-ms"} */
+    animationSpeed: 'animation-speed-ms',
+    /** @type {"animation-style"} */
+    animationStyle: 'animation-style',
+    /** @type {"camera-speed-ms"} */
+    cameraSpeed: 'camera-speed-ms',
+    /** @type {"camera-radius"} */
+    cameraRadius: 'camera-radius',
+    /** @type {"camera-field-of-view"} */
+    cameraFieldOfView: 'camera-field-of-view',
+    /** @type {"camera-peek-angle-horizontal"} */
+    cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
+    /** @type {"camera-peek-angle-vertical"} */
+    cameraPeekAngleVertical: 'camera-peek-angle-vertical',
+};
 
 export class RubiksCubeElement extends HTMLElement {
     constructor() {
@@ -181,8 +203,9 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<string>}
      */
     move(move) {
-        if (!Object.values(Movements).includes(move)) {
-            return Promise.reject(`Invalid move - [${move}]. Valid moves are ${Object.values(Movements).join(', ')}`);
+        const regex = /^([23456])?([RLUDFB]w|[RLUDFBMES]|[rludfb])([123])?(\')?$/;
+        if (!regex.test(move)) {
+            return Promise.reject(`Invalid move - [${move}]. Valid move does not match pattern /^([23456])?([RLUDFB]w|[RLUDFBMES]|[rludfb])([123])?(\')?$/ `);
         }
         /** @type {MovementEvent} */
         const data = { eventId: crypto.randomUUID(), move };

@@ -1,5 +1,4 @@
 // @ts-check
-
 /** @typedef {AnimationStatus[keyof AnimationStatus]} AnimationStatusType */
 export const AnimationStatus = Object.freeze({
     Pending: 'pending',

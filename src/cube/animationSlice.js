@@ -1,11 +1,18 @@
 // @ts-check
-/** @typedef {{axis: import('../core').Axis, layers: number[], direction: number}} Slice */
-
-import { Axi, Rotations } from '../core';
+import { Rotations } from '../core';
 import { getAllLayers } from './cubeState';
 
+/** @typedef {typeof Axi[keyof typeof Axi]} Axis */
+export const Axi = Object.freeze({
+    x: 'x',
+    y: 'y',
+    z: 'z',
+});
+
+/** @typedef {{axis: Axis, layers: number[], direction: number}} Slice */
+
 /**
- * @param {import('../core').OuterBlockMovement } outerBlockMovement
+ * @param {import('../core').Movement } outerBlockMovement
  * @param {import('../core').CubeType} cubeType
  * @param {boolean} prioritiseStandardMovement
  * @returns {Slice}

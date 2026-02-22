@@ -1,6 +1,6 @@
 {
     "name": "@houstonp/rubiks-cube",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "Rubiks Cube Web Component built with threejs",
     "author": "Houston Pearse",
     "license": "MIT",
@@ -17,10 +17,6 @@
         ".": {
             "types": "./types/index.d.ts",
             "default": "./src/index.js"
-        },
-        "./schema": {
-            "types": "./types/schema.d.ts",
-            "default": "./src/schema.js"
         },
         "./core": {
             "types": "./types/core.d.ts",

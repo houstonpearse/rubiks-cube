@@ -6,9 +6,9 @@ import { ColorToFace, FaceColors, getCubeInfo } from '../cube/cubeState';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import { fromKociemba, getEmptyStickerState, toKociemba } from '../cube/stickerState';
-import { AnimationStyles, Axi, CubeTypes } from '../core';
+import { AnimationStyles, CubeTypes } from '../core';
 import { AnimationState, AnimationStatus } from '../cube/animationState';
-import { GetLayerSlice, GetRotationSlice } from '../cube/animationSlice';
+import { Axi, GetLayerSlice, GetRotationSlice } from '../cube/animationSlice';
 
 const ERROR_MARGIN = 0.0001;
 
