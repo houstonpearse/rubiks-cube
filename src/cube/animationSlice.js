@@ -29,7 +29,7 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
     }
     const movementType = result[2];
     const rotationNumber = result[3] ? parseInt(result[3]) : 1;
-    const isPrime = result[4] === '`';
+    const isPrime = result[4] === "'";
     const direction = (isPrime ? -1 : 1) * rotationNumber;
 
     const axis = (() => {
@@ -69,7 +69,7 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
         case 'F':
             layerNumber = layerNumber ? layerNumber : 1;
             var layer = layers[layers.length - layerNumber];
-            return { axis, layers: [layer], direction };
+            return { axis, layers: [layer], direction: -direction };
         case 'L':
         case 'D':
         case 'B':
@@ -81,32 +81,32 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
         case 'Fw':
             layerNumber = layerNumber ? layerNumber : 2;
             var sliceLayers = layers.slice(layers.length - layerNumber);
-            return { axis, layers: sliceLayers, direction };
+            return { axis, layers: sliceLayers, direction: -direction };
         case 'r':
         case 'u':
         case 'f':
             var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
             var sliceLayers = layers.slice(layers.length - layerNumber);
-            return { axis, layers: sliceLayers, direction };
+            return { axis, layers: sliceLayers, direction: -direction };
         case 'Lw':
         case 'Dw':
         case 'Bw':
             layerNumber = layerNumber ? layerNumber : 2;
-            var sliceLayers = layers.slice(0, layerNumber - 1);
+            var sliceLayers = layers.slice(0, layerNumber);
             return { axis, layers: sliceLayers, direction };
         case 'l':
         case 'd':
         case 'b':
             var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
-            var sliceLayers = layers.slice(0, layerNumber - 1);
+            var sliceLayers = layers.slice(0, layerNumber);
             return { axis, layers: sliceLayers, direction };
         case 'M':
         case 'E':
         case 'S':
-            var sliceLayers = layers.slice(1, layers.length - 2);
-            return { axis, layers: sliceLayers, direction };
+            var sliceLayers = layers.slice(1, layers.length - 1);
+            return { axis, layers: sliceLayers, direction: -direction };
         default:
             throw new Error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
     }
