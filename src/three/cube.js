@@ -39,28 +39,6 @@ export default class RubiksCube3D extends Object3D {
         this._matchSpeed = undefined;
         this.add(this._mainGroup, this._rotationGroup);
         this.setStickerState(this._cubeInfo.initialStickerState);
-        this._rotationQueue.push(
-            new AnimationState(
-                GetLayerSlice('2R', this._cubeInfo.cubeType),
-                () => {},
-                () => {},
-            ),
-            new AnimationState(
-                GetLayerSlice('2l', this._cubeInfo.cubeType),
-                () => {},
-                () => {},
-            ),
-            new AnimationState(
-                GetLayerSlice('3U', this._cubeInfo.cubeType),
-                () => {},
-                () => {},
-            ),
-            new AnimationState(
-                GetLayerSlice("3D'", this._cubeInfo.cubeType),
-                () => {},
-                () => {},
-            ),
-        );
     }
 
     /**
@@ -453,7 +431,7 @@ export default class RubiksCube3D extends Object3D {
     reset(completedCallback) {
         this.stop();
         this.setStickerState(this._cubeInfo.initialStickerState);
-        if (!completedCallback(toKociemba(this._cubeInfo.initialStickerState))) {
+        if (!completedCallback(toKociemba(this.getStickerState()))) {
             console.error('Failed to invoke reset completedCallback');
         }
     }
