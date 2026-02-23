@@ -38,7 +38,7 @@ export class AnimationState {
 
     /** @param {string} state */
     complete(state) {
-        this.status = AnimationStatus.Complete;
+        this.status = AnimationStatus.Disposed;
         this.completedCallback(state);
     }
 

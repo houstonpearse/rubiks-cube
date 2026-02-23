@@ -211,9 +211,6 @@ export default class RubiksCube3D extends Object3D {
      * @returns {Object3D[]}
      */
     getRotationLayer(slice) {
-        if (slice.layers.length === 0) {
-            return [...this._mainGroup.children];
-        }
         const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
         const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
         const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
@@ -404,6 +401,12 @@ export default class RubiksCube3D extends Object3D {
                 this._matchSpeed = undefined; // reset speed for the match animation options
                 return;
             }
+            if (this._currentRotation.slice.layers.length === 0) {
+                console.error('current rotation has no layers. ');
+                this._currentRotation.complete(toKociemba(this.getStickerState()));
+                this._currentRotation = undefined;
+                return;
+            }
         }
         if (this._currentRotation.status === AnimationStatus.Pending) {
             this._rotationGroup.add(...this.getRotationLayer(this._currentRotation.slice));
@@ -464,7 +467,11 @@ export default class RubiksCube3D extends Object3D {
      *  @param {((reason: string) => void )} failedCallback
      */
     rotate(rotation, completedCallback, failedCallback) {
-        const slice = GetRotationSlice(rotation);
+        const slice = GetRotationSlice(rotation, this._cubeInfo.cubeType);
+        if (slice == null) {
+            failedCallback('Invalid Rotation');
+            return;
+        }
         this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
     }
 
@@ -476,6 +483,10 @@ export default class RubiksCube3D extends Object3D {
      */
     movement(movement, completedCallback, failedCallback) {
         const slice = GetLayerSlice(movement, this._cubeInfo.cubeType);
+        if (slice == null) {
+            failedCallback('Invalid Movement');
+            return;
+        }
         this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
     }
 }
