@@ -1,7 +1,9 @@
 // @ts-check
+import { AnimationStyles, CubeTypes } from './core';
 const defaultSettings = {
+    cubeType: CubeTypes.Seven,
     animationSpeedMs: 100,
-    /** @type {import("./cube/cubeSettings").AnimationStyle} */
+    /** @type {import('./core').AnimationStyle} */
     animationStyle: 'fixed',
     pieceGap: 1.04,
     cameraSpeedMs: 100,
@@ -10,8 +12,6 @@ const defaultSettings = {
     cameraPeekAngleVertical: 0.6,
     cameraFieldOfView: 75,
 };
-/** @type {import("./cube/cubeSettings").AnimationStyle[]} */
-const validAnimationStyles = ['exponential', 'next', 'fixed', 'match'];
 const minGap = 1;
 const minRadius = 4;
 const minFieldOfView = 30;
@@ -19,11 +19,13 @@ const maxFieldOfView = 100;
 
 export default class Settings {
     constructor() {
+        /** @type {import("./core").CubeType} */
+        this.cubeType = defaultSettings.cubeType;
         /** @type {number} */
         this.pieceGap = defaultSettings.pieceGap;
         /** @type {number} */
         this.animationSpeedMs = defaultSettings.animationSpeedMs;
-        /** @type {import("./cube/cubeSettings").AnimationStyle} */
+        /** @type {import("./core").AnimationStyle} */
         this.animationStyle = defaultSettings.animationStyle;
         /** @type {number} */
         this.cameraSpeedMs = defaultSettings.cameraSpeedMs;
@@ -35,6 +37,16 @@ export default class Settings {
         this.cameraPeekAngleHorizontal = defaultSettings.cameraPeekAngleHorizontal;
         /** @type {number} */
         this.cameraPeekAngleVertical = defaultSettings.cameraPeekAngleVertical;
+    }
+
+    /** @param {any} value */
+    setCubeType(value) {
+        if (value && Object.values(CubeTypes).includes(value)) {
+            const cubeType = /** @type {import('./core').CubeType} */ (value);
+            this.cubeType = cubeType;
+            return;
+        }
+        console.warn(`Invalid cube type value. Accepted Values are [${Object.values(CubeTypes).join(', ')}] Value is ${value}`);
     }
 
     /** @param {string | null} value*/
@@ -57,14 +69,14 @@ export default class Settings {
         console.warn(`Invalid animation speed value. Min is 0. Value is ${value}`);
     }
 
-    /** @param {string | null} value */
+    /** @param {any} value */
     setAnimationStyle(value) {
-        if (validAnimationStyles.some((style) => style === value)) {
-            const validStyle = /** @type {import("./cube/cubeSettings").AnimationStyle} */ (value);
+        if (value && Object.values(AnimationStyles).includes(value)) {
+            const validStyle = /** @type {import("./core").AnimationStyle} */ (value);
             this.animationStyle = validStyle;
             return;
         }
-        console.warn(`Invalid animation style value. Accepted Values are [${validAnimationStyles.join(', ')}] Value is ${value}`);
+        console.warn(`Invalid animation style value. Accepted Values are [${Object.values(AnimationStyles).join(', ')}] Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */

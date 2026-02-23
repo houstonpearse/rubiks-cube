@@ -1,5 +1,5 @@
 // @ts-check
-import { PeekStates, PeekTypes } from './core';
+import { PeekStates, PeekTypes } from '../core';
 
 export class CameraState {
     /**
@@ -14,7 +14,7 @@ export class CameraState {
     }
 
     /**
-     * @param {import("./core").PeekType} peekType
+     * @param {import("../core").PeekType} peekType
      */
     peekCamera(peekType) {
         switch (peekType) {
@@ -58,7 +58,7 @@ export class CameraState {
         }
     }
     /**
-     * @returns {import("./core").PeekState}
+     * @returns {import("../core").PeekState}
      */
     toPeekState() {
         if (this.Right && this.Up) {
