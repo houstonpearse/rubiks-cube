@@ -11,6 +11,6 @@ export function debounce(f, delay) {
      */
     return function (...args) {
         clearTimeout(timer);
-        timer = setTimeout(() => f.apply(this, args), delay);
+        timer = window.setTimeout(() => f.apply(this, args), delay);
     };
 }
