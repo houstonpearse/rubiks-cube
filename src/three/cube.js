@@ -30,14 +30,14 @@ export default class RubiksCube3D extends Object3D {
         /** @type {Group} */
         this._mainGroup = this.createCubeGroup();
         /** @type {Group} */
-        this._rotationGroup = new Group();
+        this._animationGroup = new Group();
         /** @type {AnimationState[]} */
-        this._rotationQueue = [];
+        this._animationQueue = [];
         /** @type {AnimationState | undefined} */
-        this._currentRotation = undefined;
+        this._currentAnimation = undefined;
         /** @type {number | undefined} */
         this._matchSpeed = undefined;
-        this.add(this._mainGroup, this._rotationGroup);
+        this.add(this._mainGroup, this._animationGroup);
         this.setStickerState(this._cubeInfo.initialStickerState);
     }
 
@@ -268,18 +268,18 @@ export default class RubiksCube3D extends Object3D {
      * @private
      */
     stop() {
-        this._rotationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('Movement Interrupted.'));
-        this._rotationQueue = [];
-        if (this._currentRotation) {
-            const percentage = this._currentRotation.update(0);
-            this.rotateGroupByPercent(this._currentRotation, percentage);
-            if (this._currentRotation.status !== AnimationStatus.Complete) {
+        this._animationQueue.forEach((cubeRotation) => cubeRotation.failedCallback('Movement Interrupted.'));
+        this._animationQueue = [];
+        if (this._currentAnimation) {
+            const percentage = this._currentAnimation.update(0);
+            this.rotateGroupByPercent(this._currentAnimation, percentage);
+            if (this._currentAnimation.status !== AnimationStatus.Complete) {
                 throw new Error('Failed to complete current rotation during stop');
             }
             this.clearRotationGroup();
             const state = toKociemba(this.getStickerState());
-            this._currentRotation.complete(state);
-            this._currentRotation = undefined;
+            this._currentAnimation.complete(state);
+            this._currentAnimation = undefined;
         }
     }
 
@@ -295,9 +295,9 @@ export default class RubiksCube3D extends Object3D {
         const pieceGap = this._pieceGap;
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
-        const corners = this._rotationGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._rotationGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._rotationGroup.children.filter((x) => x instanceof CenterPiece);
+        const corners = this._animationGroup.children.filter((x) => x instanceof CornerPiece);
+        const edges = this._animationGroup.children.filter((x) => x instanceof EdgePiece);
+        const centers = this._animationGroup.children.filter((x) => x instanceof CenterPiece);
         [...centers, ...corners, ...edges].forEach((piece) => {
             piece.getWorldPosition(piece.position);
             piece.getWorldQuaternion(piece.quaternion);
@@ -320,8 +320,8 @@ export default class RubiksCube3D extends Object3D {
             piece.userData.rotation.y = piece.rotation.y;
             piece.userData.rotation.z = piece.rotation.z;
         });
-        this._mainGroup.add(...this._rotationGroup.children);
-        this._rotationGroup.rotation.set(0, 0, 0);
+        this._mainGroup.add(...this._animationGroup.children);
+        this._animationGroup.rotation.set(0, 0, 0);
     }
 
     /**
@@ -332,7 +332,7 @@ export default class RubiksCube3D extends Object3D {
      */
     rotateGroupByPercent(animationState, percentage) {
         const radians = (Math.abs(animationState.slice.direction) * ((percentage / 100) * Math.PI)) / 2;
-        this._rotationGroup.rotateOnWorldAxis(
+        this._animationGroup.rotateOnWorldAxis(
             new Vector3(
                 animationState.slice.axis === Axi.x ? animationState.slice.direction : 0,
                 animationState.slice.axis === Axi.y ? animationState.slice.direction : 0,
@@ -355,23 +355,27 @@ export default class RubiksCube3D extends Object3D {
      */
     getRotationSpeed() {
         if (this._cubeSettings.animationStyle === AnimationStyles.Exponential) {
-            return this._cubeSettings.animationSpeedMs / 2 ** this._rotationQueue.length;
+            return this._cubeSettings.animationSpeedMs / 1.5 ** this._animationQueue.length;
+        }
+        if (this._cubeSettings.animationStyle === AnimationStyles.Linear) {
+            return this._cubeSettings.animationSpeedMs / (1 + this._animationQueue.length);
         }
         if (this._cubeSettings.animationStyle === AnimationStyles.Next) {
-            return this._rotationQueue.length > 0 ? 0 : this._cubeSettings.animationSpeedMs;
+            return this._animationQueue.length > 0 ? 0 : this._cubeSettings.animationSpeedMs;
         }
         if (this._cubeSettings.animationStyle === AnimationStyles.Match) {
-            if (this._rotationQueue.length > 0) {
-                const gaps = this._rotationQueue.map((state, index) => {
-                    if (index == 0 && this._currentRotation != null) {
-                        return state.timestampMs - this._currentRotation.timestampMs;
+            if (this._animationQueue.length > 0) {
+                const gaps = this._animationQueue.map((state, index) => {
+                    if (index == 0 && this._currentAnimation != null) {
+                        return state.timestampMs - this._currentAnimation.timestampMs;
                     }
                     if (index == 0) {
                         return this._matchSpeed ?? this._cubeSettings.animationSpeedMs;
                     }
-                    return state.timestampMs - this._rotationQueue[index - 1].timestampMs;
+                    return state.timestampMs - this._animationQueue[index - 1].timestampMs;
                 });
-                this._matchSpeed = Math.min(...gaps);
+                const minimumSpeed = this._cubeSettings.animationSpeedMs / 5;
+                this._matchSpeed = Math.max(Math.min(...gaps), minimumSpeed);
             }
             if (this._matchSpeed !== undefined) {
                 return this._matchSpeed;
@@ -389,38 +393,38 @@ export default class RubiksCube3D extends Object3D {
      * @public
      */
     update() {
-        if (this._currentRotation === undefined) {
+        if (this._currentAnimation === undefined) {
             if (this._pieceGap !== this._cubeSettings.pieceGap) {
                 this.updateGap(this._cubeSettings.pieceGap);
             }
             if (this._cubeType !== this._cubeSettings.cubeType) {
                 this.updateCubeType(this._cubeSettings.cubeType);
             }
-            this._currentRotation = this._rotationQueue.shift();
-            if (this._currentRotation === undefined) {
+            this._currentAnimation = this._animationQueue.shift();
+            if (this._currentAnimation === undefined) {
                 this._matchSpeed = undefined; // reset speed for the match animation options
                 return;
             }
-            if (this._currentRotation.slice.layers.length === 0) {
+            if (this._currentAnimation.slice.layers.length === 0) {
                 console.error('current rotation has no layers. ');
-                this._currentRotation.complete(toKociemba(this.getStickerState()));
-                this._currentRotation = undefined;
+                this._currentAnimation.complete(toKociemba(this.getStickerState()));
+                this._currentAnimation = undefined;
                 return;
             }
         }
-        if (this._currentRotation.status === AnimationStatus.Pending) {
-            this._rotationGroup.add(...this.getRotationLayer(this._currentRotation.slice));
-            this._currentRotation.initialise();
+        if (this._currentAnimation.status === AnimationStatus.Pending) {
+            this._animationGroup.add(...this.getRotationLayer(this._currentAnimation.slice));
+            this._currentAnimation.initialise();
         }
-        if (this._currentRotation.status === AnimationStatus.Initialised || this._currentRotation.status === AnimationStatus.InProgress) {
+        if (this._currentAnimation.status === AnimationStatus.Initialised || this._currentAnimation.status === AnimationStatus.InProgress) {
             var speed = this.getRotationSpeed();
-            const percentage = this._currentRotation.update(speed);
-            this.rotateGroupByPercent(this._currentRotation, percentage);
+            const percentage = this._currentAnimation.update(speed);
+            this.rotateGroupByPercent(this._currentAnimation, percentage);
         }
-        if (this._currentRotation.status === AnimationStatus.Complete) {
+        if (this._currentAnimation.status === AnimationStatus.Complete) {
             this.clearRotationGroup();
-            this._currentRotation.complete(toKociemba(this.getStickerState()));
-            this._currentRotation = undefined;
+            this._currentAnimation.complete(toKociemba(this.getStickerState()));
+            this._currentAnimation = undefined;
         }
         return;
     }
@@ -472,7 +476,7 @@ export default class RubiksCube3D extends Object3D {
             failedCallback('Invalid Rotation');
             return;
         }
-        this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
     }
 
     /**
@@ -487,6 +491,6 @@ export default class RubiksCube3D extends Object3D {
             failedCallback('Invalid Movement');
             return;
         }
-        this._rotationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
     }
 }

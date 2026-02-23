@@ -403,6 +403,7 @@ export const CubeTypes = Object.freeze({
  */
 export const AnimationStyles = Object.freeze({
     Exponential: 'exponential',
+    Linear: 'linear',
     Next: 'next',
     Fixed: 'fixed',
     Match: 'match',

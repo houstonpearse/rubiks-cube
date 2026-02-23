@@ -19,7 +19,7 @@ export function drainUpdates(cube, maxIterations = 20) {
     // Step the cube until the current rotation and queue are empty, or until we hit a safety cap.
     for (let i = 0; i < maxIterations; i++) {
         cube.update();
-        if (!cube._currentRotation && cube._rotationQueue.length === 0) {
+        if (!cube._currentAnimation && cube._animationQueue.length === 0) {
             return;
         }
     }
