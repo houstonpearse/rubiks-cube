@@ -13,6 +13,7 @@ const defaultSettings = {
     cameraFieldOfView: 75,
 };
 const minGap = 1;
+const maxGap = 1.1;
 const minRadius = 4;
 const minFieldOfView = 30;
 const maxFieldOfView = 100;
@@ -52,11 +53,11 @@ export default class Settings {
     /** @param {string | null} value*/
     setPieceGap(value) {
         const gap = Number(value);
-        if (gap >= minGap && value != null) {
+        if (gap >= minGap && gap <= maxGap && value != null) {
             this.pieceGap = gap;
             return;
         }
-        console.warn(`Invalid pieceGap value. Min is ${minGap}. Value is ${value}`);
+        console.warn(`Invalid pieceGap value. Min is ${minGap}. Max is ${maxGap}. Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */
@@ -96,7 +97,7 @@ export default class Settings {
             this.cameraRadius = radius;
             return;
         }
-        console.warn(`Invalid camera radius value. Min is ${radius}. Value is ${value}`);
+        console.warn(`Invalid camera radius value. Min is ${minRadius}. Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */

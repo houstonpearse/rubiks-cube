@@ -76,17 +76,17 @@ export const outlerLayerMultiplier = (cubeType) => {
 export const coreSize = (cubeType) => {
     switch (cubeType) {
         case CubeTypes.Two:
-            return 2;
+            return 1.7;
         case CubeTypes.Three:
-            return 1.53;
+            return 1.32;
         case CubeTypes.Four:
-            return 1.36;
+            return 1.25;
         case CubeTypes.Five:
-            return 1.3;
+            return 1.2;
         case CubeTypes.Six:
-            return 1.22;
+            return 1.18;
         case CubeTypes.Seven:
-            return 1.21;
+            return 1.16;
         default:
             throw new Error(`Unsupported cube type: ${cubeType}`);
     }

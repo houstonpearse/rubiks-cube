@@ -9,6 +9,7 @@ import { fromKociemba, getEmptyStickerState, toKociemba } from '../cube/stickerS
 import { AnimationStyles, CubeTypes } from '../core';
 import { AnimationState, AnimationStatus } from '../cube/animationState';
 import { Axi, GetLayerSlice, GetRotationSlice } from '../cube/animationSlice';
+import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 
 const ERROR_MARGIN = 0.0001;
 
@@ -51,7 +52,10 @@ export default class RubiksCube3D extends Object3D {
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const group = new Group();
-        const core = new Mesh(new SphereGeometry(cubeInfo.coreSize), new MeshBasicMaterial({ color: 'black' }));
+        const core = new Mesh(
+            new RoundedBoxGeometry(2 * cubeInfo.coreSize, 2 * cubeInfo.coreSize, 2 * cubeInfo.coreSize, 3, 0.75),
+            new MeshBasicMaterial({ color: 'black' }),
+        );
         group.add(core);
         for (const piece of cubeInfo.corners) {
             const corner = new CornerPiece();
@@ -261,6 +265,7 @@ export default class RubiksCube3D extends Object3D {
         this.remove(this._mainGroup);
         this._mainGroup = this.createCubeGroup();
         this.add(this._mainGroup);
+        this.setStickerState(this._cubeInfo.initialStickerState);
     }
 
     /**
