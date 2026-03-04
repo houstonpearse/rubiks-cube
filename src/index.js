@@ -606,7 +606,7 @@ export class RubiksCubeElement extends HTMLElement {
             const customEvent = /** @type {CustomEvent<SetTypeEventData>} */ (event);
             const completedCallback = (/** @type {string} */ state) =>
                 this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setStateComplete, {
+                    new CustomEvent(InternalEvents.setTypeComplete, {
                         detail: /** @type {SetTypeCompleteEventData} */ ({
                             state: state,
                         }),
@@ -614,7 +614,7 @@ export class RubiksCubeElement extends HTMLElement {
                 );
             const failedCallback = (/** @type {string} */ reason) =>
                 this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setStateFailed, {
+                    new CustomEvent(InternalEvents.setTypeFailed, {
                         detail: /** @type {SetTypeFailedEventData} */ ({
                             reason: reason,
                         }),
