@@ -104,7 +104,6 @@ export class RubiksCubeElement extends HTMLElement {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
                 this.cubeSettings.cubeType = this.settings.cubeType;
-                this.setType(this.settings.cubeType);
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
@@ -427,6 +426,7 @@ export class RubiksCubeElement extends HTMLElement {
             /** @param {CustomEvent<SetTypeCompleteEventData> | Event} event */
             const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<SetTypeCompleteEventData>} */ (event);
+                this.setAttribute(AttributeNames.cubeType, cubeType);
                 cleanup();
                 resolve(customEvent.detail.state);
             };
