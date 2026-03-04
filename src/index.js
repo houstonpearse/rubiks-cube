@@ -30,6 +30,9 @@ const InternalEvents = Object.freeze({
     setState: 'setState',
     setStateComplete: 'setStateComplete',
     setStateFailed: 'setStateFailed',
+    setType: 'setType',
+    setTypeComplete: 'setTypeComplete',
+    setTypeFailed: 'setTypeFailed',
 });
 
 /**
@@ -101,6 +104,7 @@ export class RubiksCubeElement extends HTMLElement {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
                 this.cubeSettings.cubeType = this.settings.cubeType;
+                this.setType(this.settings.cubeType);
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
@@ -409,6 +413,47 @@ export class RubiksCubeElement extends HTMLElement {
         });
     }
 
+    /** @import {CubeType} from './core' */
+    /** @internal @typedef {{cubeType: CubeType}} SetTypeEventData */
+    /** @internal @typedef {{state: string }} SetTypeCompleteEventData */
+    /** @internal @typedef {{reason: string }} SetTypeFailedEventData */
+    /**
+     * @param {CubeType} cubeType
+     * @returns {Promise<string>}
+     */
+    setType(cubeType) {
+        const data = /** @type {SetTypeEventData} */ ({ cubeType: cubeType });
+        return new Promise((resolve, reject) => {
+            /** @param {CustomEvent<SetTypeCompleteEventData> | Event} event */
+            const handler = (event) => {
+                const customEvent = /** @type {CustomEvent<SetTypeCompleteEventData>} */ (event);
+                cleanup();
+                resolve(customEvent.detail.state);
+            };
+            /** @param {CustomEvent<SetTypeFailedEventData> | Event} event */
+            const failedHandler = (event) => {
+                const customEvent = /** @type {CustomEvent<SetTypeFailedEventData>} */ (event);
+                cleanup();
+                reject(customEvent.detail.reason);
+            };
+
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                reject('setType timed out');
+            }, 1000);
+
+            const cleanup = () => {
+                this.removeEventListener(InternalEvents.setTypeComplete, handler);
+                this.removeEventListener(InternalEvents.setTypeFailed, failedHandler);
+                clearTimeout(timeoutId);
+            };
+
+            this.addEventListener(InternalEvents.setTypeComplete, handler);
+            this.addEventListener(InternalEvents.setTypeFailed, failedHandler);
+            this.dispatchEvent(new CustomEvent(InternalEvents.setType, { detail: data }));
+        });
+    }
+
     /** @private */
     init() {
         // defined core threejs objects
@@ -555,6 +600,27 @@ export class RubiksCubeElement extends HTMLElement {
                     }),
                 );
             cube.setState(customEvent.detail.state, completedCallback, failedCallback);
+        });
+
+        this.addEventListener(InternalEvents.setType, (event) => {
+            const customEvent = /** @type {CustomEvent<SetTypeEventData>} */ (event);
+            const completedCallback = (/** @type {string} */ state) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.setStateComplete, {
+                        detail: /** @type {SetTypeCompleteEventData} */ ({
+                            state: state,
+                        }),
+                    }),
+                );
+            const failedCallback = (/** @type {string} */ reason) =>
+                this.dispatchEvent(
+                    new CustomEvent(InternalEvents.setStateFailed, {
+                        detail: /** @type {SetTypeFailedEventData} */ ({
+                            reason: reason,
+                        }),
+                    }),
+                );
+            cube.setType(customEvent.detail.cubeType, completedCallback, failedCallback);
         });
 
         // Camera Events

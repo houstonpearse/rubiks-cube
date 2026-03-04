@@ -470,6 +470,31 @@ export default class RubiksCube3D extends Object3D {
     }
 
     /**
+     * sets the state of the cube
+     * @public
+     * @param {import('../core').CubeType} cubeType
+     * @param {(state: string) => boolean} completedCallback
+     * @param {(reason: string) => boolean} failedCallback
+     */
+    setType(cubeType, completedCallback, failedCallback) {
+        if (!Object.values(CubeTypes).includes(cubeType)) {
+            if (!failedCallback('Failed to set CubeType. Invalid CubeType.')) {
+                console.error('Failed to invoke setType failedCallback');
+            }
+        }
+        this.stop();
+        this._cubeType = cubeType;
+        this._cubeInfo = getCubeInfo(cubeType);
+        this.remove(this._mainGroup);
+        this._mainGroup = this.createCubeGroup();
+        this.add(this._mainGroup);
+        this.setStickerState(this._cubeInfo.initialStickerState);
+        if (!completedCallback(toKociemba(this.getStickerState()))) {
+            console.error('Failed to invoke setState completedCallback');
+        }
+    }
+
+    /**
      *  @public
      *  @param {import('../core').Rotation} rotation
      *  @param {((state: string) => void )} completedCallback
