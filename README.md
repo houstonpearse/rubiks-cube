@@ -1,6 +1,8 @@
 # Rubiks Cube Web Component
 
-A Rubik's Cube web component built with Three.js, WebGPU, and GSAP. The cube renders into a shadow‑DOM canvas and exposes a small, promise‑based API for cube moves, rotations, reset, state setting, and camera "peek" positions. Supports 2x2, 3x3, 4x4, 5x5, 6x6, and 7x7 Rubik's cubes.
+A Rubik's Cube web component built with Three.js, WebGPU, and GSAP. The cube renders into a shadow‑DOM canvas and
+exposes a small, promise‑based API for cube moves, rotations, reset, state setting, and camera "peek" positions.
+Supports 2x2, 3x3, 4x4, 5x5, 6x6, and 7x7 Rubik's cubes.
 
 ![cube](cube.png)
 
@@ -29,22 +31,23 @@ RubiksCubeElement.register();
 ```html
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Rubiks Cube Demo</title>
-    </head>
-    <body>
-        <!-- Create a 3x3 cube with custom settings -->
-        <rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04" camera-speed-ms="100"></rubiks-cube>
+<head>
+    <meta charset="utf-8" />
+    <title>Rubiks Cube Demo</title>
+</head>
+<body>
+<!-- Create a 3x3 cube with custom settings -->
+<rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04"
+             camera-speed-ms="100"></rubiks-cube>
 
-        <!-- Or create a 2x2 cube -->
-        <rubiks-cube cube-type="Two"></rubiks-cube>
+<!-- Or create a 2x2 cube -->
+<rubiks-cube cube-type="Two"></rubiks-cube>
 
-        <!-- Or create a 7x7 cube -->
-        <rubiks-cube cube-type="Seven"></rubiks-cube>
+<!-- Or create a 7x7 cube -->
+<rubiks-cube cube-type="Seven"></rubiks-cube>
 
-        <script type="module" src="index.js"></script>
-    </body>
+<script type="module" src="index.js"></script>
+</body>
 </html>
 ```
 
@@ -75,7 +78,7 @@ cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 ```
 
 | attribute                    | accepted values                                            | Description                                                                                                                                                              |
-| ---------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|------------------------------|------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                               |
 | animation-speed-ms           | integer greater than or equal to 0                         | Sets the duration of cube animations in milliseconds                                                                                                                     |
 | animation-style              | `"exponential"`, `"next"`, `"fixed"`, `"match"`            | `fixed`: fixed animation lengths, `next`: skips to next animation, `exponential`: speeds up successive animations, `match`: matches the speed to the frequency of events |
@@ -93,6 +96,14 @@ The `RubiksCubeElement` instance exposes async methods that return the cube stat
 ### Move
 
 Performs a cube movement and resolves with the new state string.
+
+```ts
+move(move
+:
+Movement, options ? : AnimationOptions | null
+):
+Promise<string>
+```
 
 ```js
 import { RubiksCubeElement } from '@houstonp/rubiks-cube';
@@ -121,6 +132,15 @@ await cube.move(Movements.Single.M); // Middle layer
 await cube.move(Movements.Single.E); // Equatorial layer
 await cube.move(Movements.Single.S); // Standing layer
 
+// Override animation speed for a single move
+await cube.move(Movements.Single.R, { animationSpeedMs: 200 });
+
+// Reverse the move direction (R is treated as R')
+await cube.move(Movements.Single.R, { reverse: true });
+
+// Translate 3x3 notation to big cube notation (e.g. r on a 7x7 becomes 6r)
+await cube.move(Movements.Wide.r, { translate: true });
+
 // Chain multiple moves
 const moves = [Movements.Single.R, Movements.Single.U, Movements.Single.RP, Movements.Single.UP];
 for (const move of moves) {
@@ -132,6 +152,14 @@ for (const move of moves) {
 ### Rotate
 
 Rotates the entire cube and resolves with the new state string.
+
+```ts
+rotate(rotation
+:
+Rotation, options ? : AnimationOptions | null
+):
+Promise<string>
+```
 
 ```js
 import { RubiksCubeElement } from '@houstonp/rubiks-cube';
@@ -153,6 +181,12 @@ await cube.rotate(Rotations.yP); // 90 degrees counter-clockwise
 await cube.rotate(Rotations.z); // 90 degrees clockwise
 await cube.rotate(Rotations.z2); // 180 degrees
 await cube.rotate(Rotations.zP); // 90 degrees counter-clockwise
+
+// Override animation speed for a single rotation
+await cube.rotate(Rotations.y, { animationSpeedMs: 600 });
+
+// Reverse rotation direction (y is treated as y')
+await cube.rotate(Rotations.y, { reverse: true });
 ```
 
 ### Reset
@@ -177,7 +211,8 @@ const resetState = await cube.reset();
 
 ### SetState
 
-Sets the cube to a specific state using a Kociemba-format state string. This allows you to restore a previously saved state or set up specific cube configurations.
+Sets the cube to a specific state using a Kociemba-format state string. This allows you to restore a previously saved
+state or set up specific cube configurations.
 
 ```js
 import { RubiksCubeElement } from '@houstonp/rubiks-cube';
@@ -206,6 +241,14 @@ await cube.setState(scrambledState);
 
 Animates the camera to a new "peek" position and resolves with the new peek state.
 
+```ts
+peek(peekType
+:
+PeekType, options ? : CameraOptions | null
+):
+Promise<PeekState>
+```
+
 ```js
 import { RubiksCubeElement } from '@houstonp/rubiks-cube';
 import { PeekTypes, PeekStates } from '@houstonp/rubiks-cube/core';
@@ -227,7 +270,27 @@ await cube.peek(PeekTypes.Vertical); // Reset vertical peek
 // The peek method returns the current peek state
 const peekState = await cube.peek(PeekTypes.RightUp);
 console.log('Current peek state:', peekState); // e.g., 'rightUp'
+
+// Override camera animation speed for a single peek
+await cube.peek(PeekTypes.Left, { cameraSpeedMs: 150 });
 ```
+
+### Options
+
+`AnimationOptions` can be passed to `move` and `rotate` to customise individual operations, taking precedence over the
+corresponding element attributes.
+
+| Option             | Type      | Description                                                                                                 |
+|--------------------|-----------|-------------------------------------------------------------------------------------------------------------|
+| `animationSpeedMs` | `number`  | Duration of the animation in milliseconds. Overrides the `animation-speed-ms` attribute for this call only. |
+| `reverse`          | `boolean` | Reverses the direction of the move or rotation (e.g. `R` is treated as `R'`).                               |
+| `translate`        | `boolean` | Translates 3x3 notation to the equivalent big-cube notation (e.g. `r` on a 7x7 is treated as `6r`).         |
+
+`CameraOptions` can be passed to `peek` to customise the camera animation.
+
+| Option          | Type     | Description                                                                                                     |
+|-----------------|----------|-----------------------------------------------------------------------------------------------------------------|
+| `cameraSpeedMs` | `number` | Duration of the camera animation in milliseconds. Overrides the `camera-speed-ms` attribute for this call only. |
 
 ### Complete Example
 
@@ -259,21 +322,27 @@ await cube.reset();
 await cube.setState(currentState);
 ```
 
-All methods return promises that resolve with the new state string (or peek state for `peek`). They reject if the operation fails or times out.
+All methods return promises that resolve with the new state string (or peek state for `peek`). They reject if the
+operation fails or times out.
 
 ## Rubiks Cube Notation
 
 Notations can include the number of rotations of a face. For example, `U2` means rotate the upper face 180 degrees.
 
-Notations can also include a prime symbol `'` to indicate a counter‑clockwise rotation. For example, `U'` means rotate the upper face counter‑clockwise. The direction is always determined relative to the face being moved.
+Notations can also include a prime symbol `'` to indicate a counter‑clockwise rotation. For example, `U'` means rotate
+the upper face counter‑clockwise. The direction is always determined relative to the face being moved.
 
-Notations can also include a layer identifier for larger cubes. For example `3R2'` means rotate the Third layer from the right face counter-clockwise twice.
+Notations can also include a layer identifier for larger cubes. For example `3R2'` means rotate the Third layer from the
+right face counter-clockwise twice.
 
-When both a number and a prime symbol are included, the number is stated before the prime symbol. For example, `U2'` means rotate the upper face 180 degrees counter‑clockwise, and `U'2` is invalid.
+When both a number and a prime symbol are included, the number is stated before the prime symbol. For example, `U2'`
+means rotate the upper face 180 degrees counter‑clockwise, and `U'2` is invalid.
 
-Valid notation constants are available via the `core` export. Use these constants instead of string literals for better type safety and autocomplete support.
+Valid notation constants are available via the `core` export. Use these constants instead of string literals for better
+type safety and autocomplete support.
 
-Duplicate or equivalent notations are not provided in the `core` export. For example `R3` and `R'` are equivalent and only `R'` is provided in the export.
+Duplicate or equivalent notations are not provided in the `core` export. For example `R3` and `R'` are equivalent and
+only `R'` is provided in the export.
 
 ```js
 import { RubiksCubeElement } from '@houstonp/rubiks-cube';
@@ -310,7 +379,7 @@ some notation may not work as intended as there is no known interpretation. eg `
 Standard Notation
 
 | Notation | Movement                                   |
-| -------- | ------------------------------------------ |
+|----------|--------------------------------------------|
 | U        | Top face clockwise                         |
 | u        | Top two layers clockwise                   |
 | D        | Bottom face clockwise                      |
@@ -330,7 +399,7 @@ Standard Notation
 Big Cube Notation. Not all listed for brevity.
 
 | Notation | Movement                                        |
-| -------- | ----------------------------------------------- |
+|----------|-------------------------------------------------|
 | NR       | Nth Right most layer                            |
 | NRw      | All Right layers up to the Nth Right most layer |
 | Nr       | All Right layers up to the Nth Right most layer |
@@ -338,7 +407,7 @@ Big Cube Notation. Not all listed for brevity.
 Rotation Notation
 
 | Notation | Rotation                                         |
-| -------- | ------------------------------------------------ |
+|----------|--------------------------------------------------|
 | x        | Rotate cube on x axis clockwise (direction of R) |
 | y        | Rotate cube on y axis clockwise (direction of U) |
 | z        | Rotate cube on z axis clockwise (direction of F) |
@@ -367,4 +436,6 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     bun run build:types
     ```
 
-The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the package. There is currently no dedicated demo app or automated test suite in this repository; you can import the component into your own app (e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.
+The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the
+package. There is currently no dedicated demo app in this repository; you can import the component into your own app (
+e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.
