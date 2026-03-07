@@ -1,6 +1,6 @@
 // @ts-check
 /// <reference path="./globals.ts" preserve="true" />
-import { Scene, PerspectiveCamera, AmbientLight, DirectionalLight, Spherical, WebGLRenderer } from 'three';
+import { AmbientLight, DirectionalLight, PerspectiveCamera, Scene, Spherical, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import RubiksCube3D from './three/cube';
 import { debounce } from './debouncer';
@@ -39,23 +39,23 @@ const InternalEvents = Object.freeze({
  * @typedef {typeof AttributeNames[keyof typeof AttributeNames]} AttributeName
  */
 export const AttributeNames = {
-    /** @type {"cube-type"} */
+    /** @type {'cube-type'} */
     cubeType: 'cube-type',
-    /** @type {"piece-gap"} */
+    /** @type {'piece-gap'} */
     pieceGap: 'piece-gap',
-    /** @type {"animation-speed-ms"} */
+    /** @type {'animation-speed-ms'} */
     animationSpeed: 'animation-speed-ms',
-    /** @type {"animation-style"} */
+    /** @type {'animation-style'} */
     animationStyle: 'animation-style',
-    /** @type {"camera-speed-ms"} */
+    /** @type {'camera-speed-ms'} */
     cameraSpeed: 'camera-speed-ms',
-    /** @type {"camera-radius"} */
+    /** @type {'camera-radius'} */
     cameraRadius: 'camera-radius',
-    /** @type {"camera-field-of-view"} */
+    /** @type {'camera-field-of-view'} */
     cameraFieldOfView: 'camera-field-of-view',
-    /** @type {"camera-peek-angle-horizontal"} */
+    /** @type {'camera-peek-angle-horizontal'} */
     cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
-    /** @type {"camera-peek-angle-vertical"} */
+    /** @type {'camera-peek-angle-vertical'} */
     cameraPeekAngleVertical: 'camera-peek-angle-vertical',
 };
 
@@ -198,20 +198,21 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     /** @import {Movement} from './core' */
-    /** @internal @typedef {{eventId: string, move: Movement}} MovementEvent */
+    /** @internal @typedef {{eventId: string, move: Movement, options: import('./core').AnimationOptions?}} MovementEvent */
     /** @internal @typedef {{eventId: string, move: Movement, state: string}} MovementCompleteEventData */
+
     /** @internal @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
+     * @param {import('./core').AnimationOptions?} options
      * @returns {Promise<string>}
      */
-    move(move) {
-        const regex = /^([23456])?([RLUDFB]w|[RLUDFBMES]|[rludfb])([123])?(\')?$/;
-        if (!regex.test(move)) {
-            return Promise.reject(`Invalid move - [${move}]. Valid move does not match pattern /^([23456])?([RLUDFB]w|[RLUDFBMES]|[rludfb])([123])?(\')?$/ `);
+    move(move, options = null) {
+        if (!RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).test(move)) {
+            return Promise.reject(`Invalid move - ${move}. Must match /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/ `);
         }
         /** @type {MovementEvent} */
-        const data = { eventId: crypto.randomUUID(), move };
+        const data = { eventId: crypto.randomUUID(), move, options };
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<MovementCompleteEventData> | Event} event */
             const completedHandler = (event) => {
@@ -236,7 +237,7 @@ export class RubiksCubeElement extends HTMLElement {
                     cleanup();
                     reject('movement timed out');
                 },
-                Math.max(this.settings.animationSpeedMs * 100, 100),
+                Math.max((options?.animationSpeedMs ?? this.settings.animationSpeedMs) * 100, 100),
             );
 
             const cleanup = () => {
@@ -252,19 +253,22 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     /** @import {Rotation} from './core' */
-    /** @internal @typedef {{eventId: string, rotation: Rotation}} RotationEventData */
+    /** @internal @typedef {{eventId: string, rotation: Rotation, options: import('./core').AnimationOptions?}} RotationEventData */
     /** @internal @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
+
     /** @internal @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
+   
     /**
      * @param {Rotation} rotation
+     * @param {import('./core').AnimationOptions?} options
      * @returns {Promise<string>}
      */
-    rotate(rotation) {
-        if (!Object.values(Rotations).includes(rotation)) {
+    rotate(rotation, options = null) {
+        if (!RegExp(`^([xyz])(\\d)?(\')?$`).test(rotation)) {
             return Promise.reject(`Invalid move - [${rotation}]. Valid moves are ${Object.values(Rotations).join(', ')}`);
         }
         /** @type {RotationEventData} */
-        const data = { eventId: crypto.randomUUID(), rotation };
+        const data = { eventId: crypto.randomUUID(), rotation, options };
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<RotationCompleteEventData> | Event} event */
             const completeHanlder = (event) => {
@@ -289,7 +293,7 @@ export class RubiksCubeElement extends HTMLElement {
                     cleanup();
                     reject('rotation timed out');
                 },
-                Math.max(this.settings.animationSpeedMs * 100, 100),
+                Math.max((options?.animationSpeedMs ?? this.settings.animationSpeedMs) * 100, 100),
             );
 
             const cleanup = () => {
@@ -333,21 +337,23 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     /** @import {PeekType} from './core' */
-    /** @internal @typedef {{eventId: string, peekType: PeekType}} CameraPeekEventData */
+    /** @internal @typedef {{eventId: string, peekType: PeekType, options: import('./core').CameraOptions?}} CameraPeekEventData */
     /** @import {PeekState} from './core' */
+
     /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
      * This function changes the camera position to one of four states depending on the arguments passed.
      *
      * @param {PeekType} peekType
+     * @param {import('./core').CameraOptions?} options
      * @returns {Promise<PeekState>}
      */
-    peek(peekType) {
+    peek(peekType, options = null) {
         if (!Object.values(PeekTypes).includes(peekType)) {
             return Promise.reject(`Invalid move - [${peekType}]. Valid moves are ${Object.values(PeekTypes).join(', ')}`);
         }
         /** @type {CameraPeekEventData} */
-        const data = { eventId: crypto.randomUUID(), peekType };
+        const data = { eventId: crypto.randomUUID(), peekType, options };
         return new Promise((resolve, reject) => {
             /** @param {CustomEvent<CameraPeekCompleteEventData> | Event} event */ const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<CameraPeekCompleteEventData>} */ (event);
@@ -374,6 +380,7 @@ export class RubiksCubeElement extends HTMLElement {
 
     /** @internal @typedef {{state: string }} SetStateEventData */
     /** @internal @typedef {{state: string }} SetStateCompleteEventData */
+
     /** @internal @typedef {{reason: string }} SetStateFailedEventData */
     /**
      * @param {string} kociembaState
@@ -415,6 +422,7 @@ export class RubiksCubeElement extends HTMLElement {
     /** @import {CubeType} from './core' */
     /** @internal @typedef {{cubeType: CubeType}} SetTypeEventData */
     /** @internal @typedef {{state: string }} SetTypeCompleteEventData */
+
     /** @internal @typedef {{reason: string }} SetTypeFailedEventData */
     /**
      * @param {CubeType} cubeType
@@ -478,10 +486,18 @@ export class RubiksCubeElement extends HTMLElement {
         ).observe(this);
 
         // add camera
-        const camera = new PerspectiveCamera(this.settings.cameraFieldOfView, this.clientWidth / this.clientHeight, 1, 2000);
-        const cameraSpherical = new Spherical(50, (3 * Math.PI) / 8, -Math.PI / 4);
-        camera.position.setFromSpherical(cameraSpherical);
+        /**
+         * @returns {Spherical}
+         */
         const cameraState = new CameraState();
+        const getTargetCameraSpherical = () => {
+            const phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
+            const theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
+            return new Spherical(this.settings.cameraRadius, phi, theta);
+        };
+        const camera = new PerspectiveCamera(this.settings.cameraFieldOfView, this.clientWidth / this.clientHeight, 1, 2000);
+        const cameraSpherical = getTargetCameraSpherical();
+        camera.position.setFromSpherical(cameraSpherical);
 
         // add orbit controls for camera
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -516,6 +532,7 @@ export class RubiksCubeElement extends HTMLElement {
             cube.update();
             renderer.render(scene, camera);
         }
+
         renderer.setAnimationLoop(animate);
 
         // Cube Events
@@ -541,7 +558,7 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.rotate(customEvent.detail.rotation, completedCallback, failedCallback);
+            cube.rotate(customEvent.detail.rotation, completedCallback, failedCallback, customEvent.detail.options);
         });
 
         this.addEventListener(InternalEvents.movement, (event) => {
@@ -566,7 +583,7 @@ export class RubiksCubeElement extends HTMLElement {
                         }),
                     }),
                 );
-            cube.movement(customEvent.detail.move, completedCallback, failedCallback);
+            cube.movement(customEvent.detail.move, completedCallback, failedCallback, customEvent.detail.options);
         });
 
         this.addEventListener(InternalEvents.reset, () => {
@@ -624,14 +641,7 @@ export class RubiksCubeElement extends HTMLElement {
         });
 
         // Camera Events
-        /**
-         * @returns {Spherical}
-         */
-        const getTargetCameraSpherical = () => {
-            const phi = polarAngleOffset + (cameraState.Up ? -this.settings.cameraPeekAngleVertical : this.settings.cameraPeekAngleVertical) * maxPolarAngle;
-            const theta = (cameraState.Right ? this.settings.cameraPeekAngleHorizontal : -this.settings.cameraPeekAngleHorizontal) * maxAzimuthAngle;
-            return new Spherical(this.settings.cameraRadius, phi, theta);
-        };
+
         /**
          * @param {Spherical} targetSpherical
          * @param {number} cameraSpeedMs
@@ -663,7 +673,7 @@ export class RubiksCubeElement extends HTMLElement {
             const data = { eventId: customEvent.detail.eventId, peekState: cameraState.toPeekState() };
             const completedCallback = () => this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeekComplete, { detail: data }));
             const targetSpherical = getTargetCameraSpherical();
-            updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none', completedCallback);
+            updateCameraPosition(targetSpherical, customEvent.detail.options?.cameraSpeedMs ?? this.settings.cameraSpeedMs, 'none', completedCallback);
         });
 
         this.addEventListener(InternalEvents.cameraSettingsChanged, () => {
@@ -681,7 +691,5 @@ export class RubiksCubeElement extends HTMLElement {
             camera.fov = this.settings.cameraFieldOfView;
             camera.updateProjectionMatrix();
         });
-
-        updateCameraPosition(getTargetCameraSpherical(), 1000, 'power4.inOut'); // initial animation
     }
 }

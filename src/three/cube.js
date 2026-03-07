@@ -1,5 +1,5 @@
 // @ts-check
-import { Group, Mesh, MeshBasicMaterial, Object3D, SphereGeometry, Vector3 } from 'three';
+import { Group, Mesh, MeshBasicMaterial, Object3D, Vector3 } from 'three';
 import { CornerPiece } from './cornerPiece';
 import CubeSettings from '../cube/cubeSettings';
 import { ColorToFace, FaceColors, getCubeInfo } from '../cube/cubeState';
@@ -76,9 +76,9 @@ export default class RubiksCube3D extends Object3D {
             const edge = new EdgePiece();
             edge.scale.set(cubeInfo.pieceSize, cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier);
             edge.position.set(
-                piece.position.x * (pieceGap + (Math.abs(piece.position.x) == 1 ? outerLayerOffset : 0)),
-                piece.position.y * (pieceGap + (Math.abs(piece.position.y) == 1 ? outerLayerOffset : 0)),
-                piece.position.z * (pieceGap + (Math.abs(piece.position.z) == 1 ? outerLayerOffset : 0)),
+                piece.position.x * (pieceGap + (Math.abs(piece.position.x) === 1 ? outerLayerOffset : 0)),
+                piece.position.y * (pieceGap + (Math.abs(piece.position.y) === 1 ? outerLayerOffset : 0)),
+                piece.position.z * (pieceGap + (Math.abs(piece.position.z) === 1 ? outerLayerOffset : 0)),
             );
             edge.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
             edge.userData = {
@@ -91,9 +91,9 @@ export default class RubiksCube3D extends Object3D {
             const center = new CenterPiece();
             center.scale.set(cubeInfo.pieceSize, cubeInfo.pieceSize, cubeInfo.pieceSize * outerLayerMultiplier);
             center.position.set(
-                piece.position.x * (pieceGap + (Math.abs(piece.position.x) == 1 ? outerLayerOffset : 0)),
-                piece.position.y * (pieceGap + (Math.abs(piece.position.y) == 1 ? outerLayerOffset : 0)),
-                piece.position.z * (pieceGap + (Math.abs(piece.position.z) == 1 ? outerLayerOffset : 0)),
+                piece.position.x * (pieceGap + (Math.abs(piece.position.x) === 1 ? outerLayerOffset : 0)),
+                piece.position.y * (pieceGap + (Math.abs(piece.position.y) === 1 ? outerLayerOffset : 0)),
+                piece.position.z * (pieceGap + (Math.abs(piece.position.z) === 1 ? outerLayerOffset : 0)),
             );
             center.rotation.set(piece.rotation.x, piece.rotation.y, piece.rotation.z);
             center.userData = {
@@ -359,6 +359,9 @@ export default class RubiksCube3D extends Object3D {
      * @returns {number}
      */
     getRotationSpeed() {
+        if (this._currentAnimation?.overwriteAnimationSpeedMs) {
+            return this._currentAnimation?.overwriteAnimationSpeedMs;
+        }
         if (this._cubeSettings.animationStyle === AnimationStyles.Exponential) {
             return this._cubeSettings.animationSpeedMs / 1.5 ** this._animationQueue.length;
         }
@@ -371,10 +374,10 @@ export default class RubiksCube3D extends Object3D {
         if (this._cubeSettings.animationStyle === AnimationStyles.Match) {
             if (this._animationQueue.length > 0) {
                 const gaps = this._animationQueue.map((state, index) => {
-                    if (index == 0 && this._currentAnimation != null) {
+                    if (index === 0 && this._currentAnimation != null) {
                         return state.timestampMs - this._currentAnimation.timestampMs;
                     }
-                    if (index == 0) {
+                    if (index === 0) {
                         return this._matchSpeed ?? this._cubeSettings.animationSpeedMs;
                     }
                     return state.timestampMs - this._animationQueue[index - 1].timestampMs;
@@ -422,7 +425,7 @@ export default class RubiksCube3D extends Object3D {
             this._currentAnimation.initialise();
         }
         if (this._currentAnimation.status === AnimationStatus.Initialised || this._currentAnimation.status === AnimationStatus.InProgress) {
-            var speed = this.getRotationSpeed();
+            let speed = this.getRotationSpeed();
             const percentage = this._currentAnimation.update(speed);
             this.rotateGroupByPercent(this._currentAnimation, percentage);
         }
@@ -431,7 +434,6 @@ export default class RubiksCube3D extends Object3D {
             this._currentAnimation.complete(toKociemba(this.getStickerState()));
             this._currentAnimation = undefined;
         }
-        return;
     }
 
     /**
@@ -499,14 +501,15 @@ export default class RubiksCube3D extends Object3D {
      *  @param {import('../core').Rotation} rotation
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
+     *  @param {import('../core').AnimationOptions?} options
      */
-    rotate(rotation, completedCallback, failedCallback) {
-        const slice = GetRotationSlice(rotation, this._cubeInfo.cubeType);
+    rotate(rotation, completedCallback, failedCallback, options) {
+        const slice = GetRotationSlice(rotation, this._cubeInfo.cubeType, options);
         if (slice == null) {
             failedCallback('Invalid Rotation');
             return;
         }
-        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options));
     }
 
     /**
@@ -514,13 +517,14 @@ export default class RubiksCube3D extends Object3D {
      *  @param {import('../core').Movement} movement
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
+     *  @param {import('../core').AnimationOptions?} options
      */
-    movement(movement, completedCallback, failedCallback) {
-        const slice = GetLayerSlice(movement, this._cubeInfo.cubeType);
+    movement(movement, completedCallback, failedCallback, options) {
+        const slice = GetLayerSlice(movement, this._cubeInfo.cubeType, options);
         if (slice == null) {
             failedCallback('Invalid Movement');
             return;
         }
-        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options));
     }
 }

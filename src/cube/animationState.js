@@ -13,14 +13,17 @@ export class AnimationState {
      * @param {import('./animationSlice').Slice} slice
      * @param {((state: string) => void )} completedCallback
      * @param {((reason: string) => void )} failedCallback
+     * @param {import('../core').AnimationOptions?} options
      */
-    constructor(slice, completedCallback, failedCallback) {
+    constructor(slice, completedCallback, failedCallback, options) {
         /** @type {((state: string) => void )} */
         this.completedCallback = completedCallback;
         /** @type {((reason: string) => void )} */
         this.failedCallback = failedCallback;
         /** @type {import('./animationSlice').Slice} */
         this.slice = slice;
+        /** @type {number | undefined} */
+        this.overwriteAnimationSpeedMs = options?.animationSpeedMs;
         /** @type {AnimationStatusType} */
         this.status = AnimationStatus.Pending;
         /** @type {number} */
@@ -68,12 +71,12 @@ export class AnimationState {
             throw new Error(`Cannot update AnimationState. LastUpdated is not set. Value: "${this._lastUpdatedTimeMs}".`);
         }
 
-        var intervalMs = performance.now() - this._lastUpdatedTimeMs;
+        const intervalMs = performance.now() - this._lastUpdatedTimeMs;
         this._lastUpdatedTimeMs = performance.now();
 
-        var increment = 100 - this._rotationPercentage;
-        if (speedMs != 0) {
-            var potentialIncrement = (intervalMs / speedMs) * 100;
+        let increment = 100 - this._rotationPercentage;
+        if (speedMs !== 0) {
+            let potentialIncrement = (intervalMs / speedMs) * 100;
             if (potentialIncrement + this._rotationPercentage < 100) {
                 increment = potentialIncrement;
             }

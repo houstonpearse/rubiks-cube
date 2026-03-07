@@ -1,4 +1,17 @@
 // @ts-check
+
+/**
+ * @typedef AnimationOptions
+ * @property {boolean} [translate] translates 3x3 algorithm notation to equivalent big cube notation eg. 7x7 r will be treated as 6r
+ * @property {number} [animationSpeedMs]
+ * @property {boolean} [reverse] reverses the direction of the animation e.g. R will be treated as R'
+ */
+
+/**
+ * @typedef CameraOptions
+ * @property {number} [cameraSpeedMs]
+ */
+
 /**
  * @typedef {typeof Movements.Single[keyof typeof Movements.Single]} SingleMove
  * @typedef {typeof Movements.Wide[keyof typeof Movements.Wide]} WideMove

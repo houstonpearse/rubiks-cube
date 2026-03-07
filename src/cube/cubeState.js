@@ -8,7 +8,7 @@ import { defaultStickerState } from './stickerState';
 
 /** @typedef {{cubeType: import('../core').CubeType, layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
  * @return {CubeInfo}
  */
 export function getCubeInfo(cubeType) {
@@ -47,7 +47,7 @@ export const ColorToFace = (color) => {
 };
 
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
  * @return {number} core size
  */
 export const outlerLayerMultiplier = (cubeType) => {
@@ -70,7 +70,7 @@ export const outlerLayerMultiplier = (cubeType) => {
 };
 
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
  * @return {number} core size
  */
 export const coreSize = (cubeType) => {
@@ -93,7 +93,8 @@ export const coreSize = (cubeType) => {
 };
 
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
+ * @return {number[]} middle layers (excluding outer layers)
  */
 export const getMiddleLayers = (cubeType) => {
     switch (cubeType) {
@@ -115,14 +116,15 @@ export const getMiddleLayers = (cubeType) => {
 };
 
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
+ * @return {number[]} all layers including outer layers
  */
 export const getAllLayers = (cubeType) => {
     return [-1, ...getMiddleLayers(cubeType), 1];
 };
 
 /**
- * @param {import("../core").CubeType} cubeType
+ * @param {import('../core').CubeType} cubeType
  * @return {number} piece size
  */
 export const pieceSize = (cubeType) => {

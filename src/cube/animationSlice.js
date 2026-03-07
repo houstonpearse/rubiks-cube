@@ -14,25 +14,30 @@ export const Axi = Object.freeze({
 /**
  * @param {import('../core').Movement } outerBlockMovement
  * @param {import('../core').CubeType} cubeType
- * @param {boolean} prioritiseStandardMovement
+ * @param {import('../core').AnimationOptions?} options
  * @returns {Slice | undefined}
  */
-export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMovement = false) {
+export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
+    const prioritiseStandardMovement = options?.translate === true;
+    const reverse = options?.reverse === true;
     const layers = getAllLayers(cubeType);
     const result = RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).exec(outerBlockMovement);
     if (result == null) {
         console.error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
         return undefined;
     }
+    /** @type {number | undefined} */
     let layerRangeLower = undefined;
+    /** @type {number | undefined} */
     let layerRangeUpper = undefined;
+    /** @type {number | undefined} */
     let layerNumber = undefined;
     if (result[1]?.includes('-')) {
         layerRangeLower = parseInt(result[1][0]);
         layerRangeUpper = parseInt(result[1][2]);
     } else {
         layerNumber = result[1] ? parseInt(result[1]) : undefined;
-    } // some input validation
+    }
 
     if (layerRangeLower != null && layerRangeUpper != null) {
         if (layerRangeLower >= layerRangeUpper || layerRangeUpper > layers.length || layerRangeLower > layers.length - 1) {
@@ -51,8 +56,8 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
 
     const movementType = result[2];
     const rotationNumber = result[3] ? parseInt(result[3]) % 4 : 1;
-    const isPrime = result[4] === "'";
-    const direction = (isPrime ? -1 : 1) * rotationNumber;
+    const isPrime = result[4] === '\'';
+    const direction = (reverse ? -1 : 1) * (isPrime ? -1 : 1) * rotationNumber;
 
     let axis = undefined;
     switch (movementType) {
@@ -96,79 +101,88 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
     switch (movementType) {
         case 'R':
         case 'U':
-        case 'F':
+        case 'F': {
             layerNumber = layerNumber ? layerNumber : 1;
-            var layer = layers[layers.length - layerNumber];
+            const layer = layers[layers.length - layerNumber];
             return { axis, layers: [layer], direction: -direction };
+        }
         case 'L':
         case 'D':
-        case 'B':
+        case 'B': {
             layerNumber = layerNumber ? layerNumber : 1;
-            var layer = layers[layerNumber - 1];
+            const layer = layers[layerNumber - 1];
             return { axis, layers: [layer], direction };
+        }
         case 'Rw':
         case 'Uw':
-        case 'Fw':
+        case 'Fw': {
             layerNumber = layerNumber ? layerNumber : 2;
-            var sliceLayers = layers.slice(layers.length - layerNumber);
+            let sliceLayers = layers.slice(layers.length - layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                var sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
+                sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
             }
             return { axis, layers: sliceLayers, direction: -direction };
+        }
         case 'r':
         case 'u':
-        case 'f':
-            var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
+        case 'f': {
+            const defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
-            var sliceLayers = layers.slice(layers.length - layerNumber);
+            let sliceLayers = layers.slice(layers.length - layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                var sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
+                sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
             }
             return { axis, layers: sliceLayers, direction: -direction };
+        }
         case 'Lw':
         case 'Dw':
-        case 'Bw':
+        case 'Bw': {
             layerNumber = layerNumber ? layerNumber : 2;
-            var sliceLayers = layers.slice(0, layerNumber);
+            let sliceLayers = layers.slice(0, layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                var sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
+                sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
             }
             return { axis, layers: sliceLayers, direction };
+        }
         case 'l':
         case 'd':
-        case 'b':
-            var defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
+        case 'b': {
+            const defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
-            var sliceLayers = layers.slice(0, layerNumber);
+            let sliceLayers = layers.slice(0, layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                var sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
+                sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
             }
             return { axis, layers: sliceLayers, direction };
+        }
         case 'M':
-        case 'E':
-            var defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
+        case 'E': {
+            const defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
-            var lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
-            var upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
-            var sliceLayers = layers.slice(lower, upper);
+            const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
+            const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
+            const sliceLayers = layers.slice(lower, upper);
             return { axis, layers: sliceLayers, direction };
+        }
         case 'm':
-        case 'e':
+        case 'e': {
             layerNumber = layerNumber ? layerNumber : 1;
-            var sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
+            const sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
             return { axis, layers: sliceLayers, direction };
-        case 'S':
-            var defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
+        }
+        case 'S': {
+            const defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
             layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
-            var lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
-            var upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
-            var sliceLayers = layers.slice(lower, upper);
+            const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
+            const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
+            const sliceLayers = layers.slice(lower, upper);
             return { axis, layers: sliceLayers, direction: -direction };
-        case 's':
+        }
+        case 's': {
             layerNumber = layerNumber ? layerNumber : 1;
-            var sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
+            const sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
             return { axis, layers: sliceLayers, direction: -direction };
-
+        }
         default:
             console.error(`${outerBlockMovement} is invalid. Invalid movementType ${movementType}.`);
             return undefined;
@@ -176,11 +190,13 @@ export function GetLayerSlice(outerBlockMovement, cubeType, prioritiseStandardMo
 }
 
 /**
- * @param {import("../core").Rotation} rotation
+ * @param {import('../core').Rotation} rotation
  * @param {import('../core').CubeType} cubeType
+ * @param {import('../core').AnimationOptions?} options
  * @returns {Slice | undefined}
  */
-export function GetRotationSlice(rotation, cubeType) {
+export function GetRotationSlice(rotation, cubeType, options = null) {
+    const reverse = options?.reverse ?? false;
     const result = RegExp(`^([xyz])(\\d)?(\')?$`).exec(rotation);
     if (result == null) {
         console.error(`Failed to parse rotation. invalid rotation: [${rotation}]`);
@@ -189,8 +205,8 @@ export function GetRotationSlice(rotation, cubeType) {
     const rotationType = result[1];
     const rotationNumber = result[2] ? parseInt(result[2]) : 1;
 
-    const isPrime = result[3] === "'";
-    const direction = (isPrime ? 1 : -1) * (rotationNumber % 4);
+    const isPrime = result[3] === '\'';
+    const direction = (reverse ? -1 : 1) * (isPrime ? 1 : -1) * (rotationNumber % 4);
     switch (rotationType) {
         case Rotations.x:
             return { axis: Axi.x, layers: getAllLayers(cubeType), direction };
