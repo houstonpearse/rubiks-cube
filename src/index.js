@@ -257,7 +257,7 @@ export class RubiksCubeElement extends HTMLElement {
     /** @internal @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
 
     /** @internal @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
-   
+
     /**
      * @param {Rotation} rotation
      * @param {import('./core').AnimationOptions?} options

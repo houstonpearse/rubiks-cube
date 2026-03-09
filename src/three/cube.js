@@ -359,7 +359,7 @@ export default class RubiksCube3D extends Object3D {
      * @returns {number}
      */
     getRotationSpeed() {
-        if (this._currentAnimation?.overwriteAnimationSpeedMs) {
+        if (this._currentAnimation?.overwriteAnimationSpeedMs != null) {
             return this._currentAnimation?.overwriteAnimationSpeedMs;
         }
         if (this._cubeSettings.animationStyle === AnimationStyles.Exponential) {
