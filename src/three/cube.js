@@ -6,9 +6,9 @@ import { ColorToFace, FaceColors, getCubeInfo } from '../cube/cubeState';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import { fromKociemba, getEmptyStickerState, toKociemba } from '../cube/stickerState';
-import { AnimationStyles, CubeTypes } from '../core';
+import { AnimationStyles, CubeTypes, Movements } from '../core';
 import { AnimationState, AnimationStatus } from '../cube/animationState';
-import { Axi, GetLayerSlice, GetRotationSlice } from '../cube/animationSlice';
+import { Axi, GetMovementSlice, GetRotationSlice } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 
 const ERROR_MARGIN = 0.0001;
@@ -211,7 +211,7 @@ export default class RubiksCube3D extends Object3D {
     /**
      * Returns the pieces that should be rotated for a given slice. If the slice has no layers, all pieces will be returned. Should only be called before an Animation is started.
      * @private
-     * @param {import('../cube/animationSlice').Slice} slice
+     * @param {import('../state/slice').Slice} slice
      * @returns {Object3D[]}
      */
     getRotationLayer(slice) {
@@ -306,17 +306,17 @@ export default class RubiksCube3D extends Object3D {
         [...centers, ...corners, ...edges].forEach((piece) => {
             piece.getWorldPosition(piece.position);
             piece.getWorldQuaternion(piece.quaternion);
-            if (cubeInfo.layers.some((layer) => Math.abs(layer - piece.position.x / pieceGap) < ERROR_MARGIN)) {
+            if (cubeInfo.middleLayers.some((layer) => Math.abs(layer - piece.position.x / pieceGap) < ERROR_MARGIN)) {
                 piece.userData.position.x = piece.position.x / pieceGap;
             } else {
                 piece.userData.position.x = piece.position.x / (pieceGap + outerLayerOffset);
             }
-            if (cubeInfo.layers.some((layer) => Math.abs(layer - piece.position.y / pieceGap) < ERROR_MARGIN)) {
+            if (cubeInfo.middleLayers.some((layer) => Math.abs(layer - piece.position.y / pieceGap) < ERROR_MARGIN)) {
                 piece.userData.position.y = piece.position.y / pieceGap;
             } else {
                 piece.userData.position.y = piece.position.y / (pieceGap + outerLayerOffset);
             }
-            if (cubeInfo.layers.some((layer) => Math.abs(layer - piece.position.z / pieceGap) < ERROR_MARGIN)) {
+            if (cubeInfo.middleLayers.some((layer) => Math.abs(layer - piece.position.z / pieceGap) < ERROR_MARGIN)) {
                 piece.userData.position.z = piece.position.z / pieceGap;
             } else {
                 piece.userData.position.z = piece.position.z / (pieceGap + outerLayerOffset);
@@ -501,15 +501,22 @@ export default class RubiksCube3D extends Object3D {
      *  @param {import('../core').Rotation} rotation
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
-     *  @param {import('../core').AnimationOptions?} options
+     *  @param {import('../core').AnimationOptions} [options]
      */
     rotate(rotation, completedCallback, failedCallback, options) {
-        const slice = GetRotationSlice(rotation, this._cubeInfo.cubeType, options);
+        if (options?.reverse) {
+            if (rotation.charAt(-1) === "'") {
+                rotation = /** @type {import('../core').Rotation} */ (rotation.slice(0, -1));
+            } else {
+                rotation = rotation + "'";
+            }
+        }
+        const slice = GetRotationSlice(rotation, this._cubeInfo.layers);
         if (slice == null) {
             failedCallback('Invalid Rotation');
             return;
         }
-        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options?.animationSpeedMs));
     }
 
     /**
@@ -517,14 +524,26 @@ export default class RubiksCube3D extends Object3D {
      *  @param {import('../core').Movement} movement
      *  @param {((state: string) => void )} completedCallback
      *  @param {((reason: string) => void )} failedCallback
-     *  @param {import('../core').AnimationOptions?} options
+     *  @param {import('../core').AnimationOptions} [options]
      */
     movement(movement, completedCallback, failedCallback, options) {
-        const slice = GetLayerSlice(movement, this._cubeInfo.cubeType, options);
+        if (options?.reverse) {
+            if (movement.at(-1) === "'") {
+                movement = /** @type {import('../core').Movement} */ (movement.slice(0, -1));
+            } else {
+                movement = movement + "'";
+            }
+        }
+        if (options?.translate) {
+            if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (movement))) {
+                movement = this._cubeInfo.layers.length - 1 + movement;
+            }
+        }
+        const slice = GetMovementSlice(movement, this._cubeInfo.layers);
         if (slice == null) {
             failedCallback('Invalid Movement');
             return;
         }
-        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options));
+        this._animationQueue.push(new AnimationState(slice, completedCallback, failedCallback, options?.animationSpeedMs));
     }
 }

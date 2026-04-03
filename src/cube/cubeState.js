@@ -6,7 +6,7 @@
 import { CubeTypes, Faces } from '../core';
 import { defaultStickerState } from './stickerState';
 
-/** @typedef {{cubeType: import('../core').CubeType, layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
+/** @typedef {{cubeType: import('../core').CubeType, middleLayers: number[], layers: number[], pieceSize: number, coreSize: number,initialStickerState: import('./stickerState').StickerState, outerLayerMultiplier: number, corners: state[], edges: state[], centers: state[]}} CubeInfo */
 /**
  * @param {import('../core').CubeType} cubeType
  * @return {CubeInfo}
@@ -14,7 +14,8 @@ import { defaultStickerState } from './stickerState';
 export function getCubeInfo(cubeType) {
     return {
         cubeType: cubeType,
-        layers: getMiddleLayers(cubeType),
+        middleLayers: getMiddleLayers(cubeType),
+        layers: getAllLayers(cubeType),
         pieceSize: pieceSize(cubeType),
         coreSize: coreSize(cubeType),
         initialStickerState: defaultStickerState(cubeType),

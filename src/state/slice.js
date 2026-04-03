@@ -1,6 +1,5 @@
 // @ts-check
 import { Rotations } from '../core';
-import { getAllLayers } from './cubeState';
 
 /** @typedef {typeof Axi[keyof typeof Axi]} Axis */
 export const Axi = Object.freeze({
@@ -12,18 +11,14 @@ export const Axi = Object.freeze({
 /** @typedef {{axis: Axis, layers: number[], direction: number}} Slice */
 
 /**
- * @param {import('../core').Movement } outerBlockMovement
- * @param {import('../core').CubeType} cubeType
- * @param {import('../core').AnimationOptions?} options
+ * @param {import('../core').Movement } movement
+ * @param {number[]} layers
  * @returns {Slice | undefined}
  */
-export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
-    const prioritiseStandardMovement = options?.translate === true;
-    const reverse = options?.reverse === true;
-    const layers = getAllLayers(cubeType);
-    const result = RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).exec(outerBlockMovement);
+export function GetMovementSlice(movement, layers) {
+    const result = RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).exec(movement);
     if (result == null) {
-        console.error(`Failed to parse outerBlockMovement. invalid movement: ${outerBlockMovement}`);
+        console.error(`Failed to parse outerBlockMovement. invalid movement: ${movement}`);
         return undefined;
     }
     /** @type {number | undefined} */
@@ -42,22 +37,20 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
     if (layerRangeLower != null && layerRangeUpper != null) {
         if (layerRangeLower >= layerRangeUpper || layerRangeUpper > layers.length || layerRangeLower > layers.length - 1) {
             console.error(
-                `${outerBlockMovement} is not valid for the current cubeType: ${cubeType}. For range inputs like x-yr it should follow that 1 <= x < y <= ${layers.length}.`,
+                `${movement} is not valid for the current cubeType. For range inputs like x-yr it should follow that 1 <= x < y <= ${layers.length}.`,
             );
             return undefined;
         }
     }
     if (layerNumber != null && layerNumber > layers.length) {
-        console.error(
-            `${outerBlockMovement} is not valid for the current cubeType: ${cubeType}. For inputs like xR it should follow that x <= ${layers.length}.`,
-        );
+        console.error(`${movement} is not valid for the current cubeType. For inputs like xR it should follow that x <= ${layers.length}.`);
         return undefined;
     }
 
     const movementType = result[2];
     const rotationNumber = result[3] ? parseInt(result[3]) % 4 : 1;
-    const isPrime = result[4] === '\'';
-    const direction = (reverse ? -1 : 1) * (isPrime ? -1 : 1) * rotationNumber;
+    const isPrime = result[4] === "'";
+    const direction = (isPrime ? -1 : 1) * rotationNumber;
 
     let axis = undefined;
     switch (movementType) {
@@ -92,7 +85,7 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
             axis = Axi.z;
             break;
         default:
-            console.error(`${outerBlockMovement} is invalid. Invalid movementType ${movementType}.`);
+            console.error(`${movement} is invalid. Invalid movementType ${movementType}.`);
     }
     if (axis == null) {
         return undefined;
@@ -115,19 +108,11 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
         }
         case 'Rw':
         case 'Uw':
-        case 'Fw': {
-            layerNumber = layerNumber ? layerNumber : 2;
-            let sliceLayers = layers.slice(layers.length - layerNumber);
-            if (layerRangeLower != null && layerRangeUpper != null) {
-                sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
-            }
-            return { axis, layers: sliceLayers, direction: -direction };
-        }
+        case 'Fw':
         case 'r':
         case 'u':
         case 'f': {
-            const defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
-            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            layerNumber = layerNumber ? layerNumber : 2;
             let sliceLayers = layers.slice(layers.length - layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
                 sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
@@ -136,19 +121,11 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
         }
         case 'Lw':
         case 'Dw':
-        case 'Bw': {
-            layerNumber = layerNumber ? layerNumber : 2;
-            let sliceLayers = layers.slice(0, layerNumber);
-            if (layerRangeLower != null && layerRangeUpper != null) {
-                sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
-            }
-            return { axis, layers: sliceLayers, direction };
-        }
+        case 'Bw':
         case 'l':
         case 'd':
         case 'b': {
-            const defaultLayerNumber = prioritiseStandardMovement ? layers.length - 1 : 2;
-            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            layerNumber = layerNumber ? layerNumber : 2;
             let sliceLayers = layers.slice(0, layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
                 sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
@@ -157,8 +134,7 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
         }
         case 'M':
         case 'E': {
-            const defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
-            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            layerNumber = layerNumber ? layerNumber : 1;
             const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
             const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
             const sliceLayers = layers.slice(lower, upper);
@@ -171,8 +147,7 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
             return { axis, layers: sliceLayers, direction };
         }
         case 'S': {
-            const defaultLayerNumber = prioritiseStandardMovement ? Math.floor(layers.length / 2) : 1;
-            layerNumber = layerNumber ? layerNumber : defaultLayerNumber;
+            layerNumber = layerNumber ? layerNumber : 1;
             const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
             const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
             const sliceLayers = layers.slice(lower, upper);
@@ -184,19 +159,17 @@ export function GetLayerSlice(outerBlockMovement, cubeType, options = null) {
             return { axis, layers: sliceLayers, direction: -direction };
         }
         default:
-            console.error(`${outerBlockMovement} is invalid. Invalid movementType ${movementType}.`);
+            console.error(`${movement} is invalid. Invalid movementType ${movementType}.`);
             return undefined;
     }
 }
 
 /**
  * @param {import('../core').Rotation} rotation
- * @param {import('../core').CubeType} cubeType
- * @param {import('../core').AnimationOptions?} options
+ * @param {number[]} layers
  * @returns {Slice | undefined}
  */
-export function GetRotationSlice(rotation, cubeType, options = null) {
-    const reverse = options?.reverse ?? false;
+export function GetRotationSlice(rotation, layers) {
     const result = RegExp(`^([xyz])(\\d)?(\')?$`).exec(rotation);
     if (result == null) {
         console.error(`Failed to parse rotation. invalid rotation: [${rotation}]`);
@@ -205,15 +178,15 @@ export function GetRotationSlice(rotation, cubeType, options = null) {
     const rotationType = result[1];
     const rotationNumber = result[2] ? parseInt(result[2]) : 1;
 
-    const isPrime = result[3] === '\'';
-    const direction = (reverse ? -1 : 1) * (isPrime ? 1 : -1) * (rotationNumber % 4);
+    const isPrime = result[3] === "'";
+    const direction = (isPrime ? 1 : -1) * (rotationNumber % 4);
     switch (rotationType) {
         case Rotations.x:
-            return { axis: Axi.x, layers: getAllLayers(cubeType), direction };
+            return { axis: Axi.x, layers: layers, direction };
         case Rotations.y:
-            return { axis: Axi.y, layers: getAllLayers(cubeType), direction };
+            return { axis: Axi.y, layers: layers, direction };
         case Rotations.z:
-            return { axis: Axi.z, layers: getAllLayers(cubeType), direction };
+            return { axis: Axi.z, layers: layers, direction };
         default:
             console.error(`Failed to get rotation slice. invalid rotationType: ${rotationType}`);
             return undefined;

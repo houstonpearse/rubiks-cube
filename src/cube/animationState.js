@@ -10,20 +10,20 @@ export const AnimationStatus = Object.freeze({
 
 export class AnimationState {
     /**
-     * @param {import('./animationSlice').Slice} slice
+     * @param {import('../state/slice').Slice} slice
      * @param {((state: string) => void )} completedCallback
      * @param {((reason: string) => void )} failedCallback
-     * @param {import('../core').AnimationOptions?} options
+     * @param {number} [animationSpeedMs]
      */
-    constructor(slice, completedCallback, failedCallback, options) {
+    constructor(slice, completedCallback, failedCallback, animationSpeedMs) {
         /** @type {((state: string) => void )} */
         this.completedCallback = completedCallback;
         /** @type {((reason: string) => void )} */
         this.failedCallback = failedCallback;
-        /** @type {import('./animationSlice').Slice} */
+        /** @type {import('../state/slice').Slice} */
         this.slice = slice;
         /** @type {number | undefined} */
-        this.overwriteAnimationSpeedMs = options?.animationSpeedMs;
+        this.overwriteAnimationSpeedMs = animationSpeedMs;
         /** @type {AnimationStatusType} */
         this.status = AnimationStatus.Pending;
         /** @type {number} */

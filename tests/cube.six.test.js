@@ -123,4 +123,96 @@ describe('6x6 Tests', () => {
         // Assert
         expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._cubeInfo.initialStickerState));
     });
+
+    it('reverseScramble', () => {
+        // Arrange
+        const cube = createTestCube(CubeTypes.Six);
+        const scramble =
+            "B' Rw' Lw2 3Rw2 Fw' 3Rw' 3Uw2 Lw2 3Lw' 3Rw B Rw2 U 3Bw' 3Fw2 U' Bw F' Uw R' Lw 3Fw' Fw2 R' 3Rw' 3Uw 3Rw' Fw' 3Lw' R2 B Uw' Rw2 Bw Uw' F2 R B Fw' Rw' Bw 3Bw 3Uw2 3Dw' L2 D2 R 3Rw 3Uw2 3Lw' 3Fw Fw2 B' Rw' 3Rw Lw R U' Rw' 3Bw' 3Rw2 3Bw2 Fw U2 Uw B2 Dw' Lw' Dw2 Rw2 Lw2 Dw Rw' D L' 3Bw 3Fw2 D 3Fw2 3Bw' Rw 3Fw2 Uw2 3Fw2 3Rw L' D 3Bw' 3Fw2 3Lw Rw 3Bw D2 3Uw U 3Dw2 3Rw Rw 3Lw2 3Uw'";
+        const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+
+        for (const move of scrambleMoves) {
+            cube.movement(
+                move,
+                () => {},
+                () => {
+                    throw new Error('Movement failed unexpectedly');
+                },
+            );
+            drainUpdates(cube);
+        }
+
+        // Act
+        let finalState = null;
+        for (const move of scrambleMoves.reverse()) {
+            cube.movement(
+                move,
+                (state) => {
+                    finalState = state;
+                },
+                () => {
+                    throw new Error('Movement failed unexpectedly');
+                },
+                { reverse: true },
+            );
+            drainUpdates(cube);
+            drainUpdates(cube);
+        }
+
+        // Assert
+        expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._cubeInfo.initialStickerState));
+    });
+
+    it('3x3 solve on 6x6 cube with translate', () => {
+        // Arrange
+        const cube = createTestCube(CubeTypes.Six);
+        const scramble = "U F2 R2 F' R2 B D2 B' F U R2 U2 F' R2 B R B F' L'";
+        const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+
+        for (const move of scrambleMoves) {
+            cube.movement(
+                move,
+                () => {},
+                () => {
+                    throw new Error('Movement failed unexpectedly');
+                },
+            );
+            drainUpdates(cube);
+        }
+
+        // Act
+        const solution =
+            "y' r U r R' U R' F' F' U R' U2' R U R' U' R y' U' U' R' U R U' R U R' z U' R U z' R' U R y' R U' U' R' R' F R F' U' U r x' U' z U' z' U' U' r x' U' U R U' z U' z' U R' U' x2 y'";
+        const solutionActions = /** @type {(import('../src/core.js').Movement | import('../src/core.js').Rotation)[]} */ (solution.split(' '));
+
+        let finalState = null;
+        for (const action of solutionActions) {
+            if (action.includes('x') || action.includes('y') || action.includes('z')) {
+                cube.rotate(
+                    /** @type {import('../src/core.js').Rotation} */ (action),
+                    (state) => {
+                        finalState = state;
+                    },
+                    () => {
+                        throw new Error('Rotation failed unexpectedly');
+                    },
+                );
+            } else {
+                cube.movement(
+                    /** @type {import('../src/core.js').Movement} */ (action),
+                    (state) => {
+                        finalState = state;
+                    },
+                    () => {
+                        throw new Error('Movement failed unexpectedly');
+                    },
+                    { translate: true },
+                );
+            }
+            drainUpdates(cube);
+        }
+
+        // Assert
+        expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._cubeInfo.initialStickerState));
+    });
 });
