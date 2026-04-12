@@ -1,7 +1,52 @@
 // @ts-check
-/** @typedef {{ up: import('../core').Face[][], down: import('../core').Face[][], front: import('../core').Face[][], back: import('../core').Face[][], left: import('../core').Face[][], right: import('../core').Face[][] }} StickerState*/
+/** @import {Face} from '../core' */
+/** @import {vector} from './state' */
+/**
+ * @typedef StickerState
+ * @property {Face[][]} Face.U
+ * @property {Face[][]} Face.D
+ * @property {Face[][]} Face.F
+ * @property {Face[][]} Face.B
+ * @property {Face[][]} Face.L
+ * @property {Face[][]} Face.R
+ * */
 
 import { CubeTypes, Faces } from '../core';
+
+const LayerCount = {
+    [CubeTypes.Two]: 2,
+    [CubeTypes.Three]: 3,
+    [CubeTypes.Four]: 4,
+    [CubeTypes.Five]: 5,
+    [CubeTypes.Six]: 6,
+    [CubeTypes.Seven]: 7,
+};
+
+/**
+ * @param {vector} stickerDirection
+ * @param {vector} piecePosition
+ * @param {number[]} layers
+ * @returns {{face: Face, i: number, j: number}}
+ */
+export function getStickerFaceIndex(stickerDirection, piecePosition, layers) {
+    const last = layers.length - 1;
+    /** @type {(val: number) => number} */
+    const layerIndex = (val) => {
+        for (let i = 0; i < layers.length; i++) {
+            if (Math.abs(val - layers[i]) < 0.0001) {
+                return i;
+            }
+        }
+        throw new Error(`Failed to get layer number. position ${val} not found in layers ${layers}`);
+    };
+    if (stickerDirection.x === 1) return { face: Faces.R, i: last - layerIndex(piecePosition.y), j: last - layerIndex(piecePosition.z) };
+    if (stickerDirection.x === -1) return { face: Faces.L, i: last - layerIndex(piecePosition.y), j: layerIndex(piecePosition.z) };
+    if (stickerDirection.y === 1) return { face: Faces.U, i: layerIndex(piecePosition.z), j: layerIndex(piecePosition.x) };
+    if (stickerDirection.y === -1) return { face: Faces.D, i: last - layerIndex(piecePosition.z), j: layerIndex(piecePosition.x) };
+    if (stickerDirection.z === 1) return { face: Faces.F, i: last - layerIndex(piecePosition.y), j: layerIndex(piecePosition.x) };
+    if (stickerDirection.z === -1) return { face: Faces.B, i: last - layerIndex(piecePosition.y), j: last - layerIndex(piecePosition.x) };
+    throw new Error(`StickerDirection is not a standard unit vector. vector: ${stickerDirection}`);
+}
 
 /**
  *
@@ -9,23 +54,11 @@ import { CubeTypes, Faces } from '../core';
  * @return {StickerState}
  */
 export const defaultStickerState = (cubeType) => {
-    const length = 0;
-    switch (cubeType) {
-        case CubeTypes.Two:
-            return initialStickerState(2);
-        case CubeTypes.Three:
-            return initialStickerState(3);
-        case CubeTypes.Four:
-            return initialStickerState(4);
-        case CubeTypes.Five:
-            return initialStickerState(5);
-        case CubeTypes.Six:
-            return initialStickerState(6);
-        case CubeTypes.Seven:
-            return initialStickerState(7);
-        default:
-            throw new Error(`Unsupported cube type: ${cubeType}`);
+    const n = LayerCount[cubeType];
+    if (n == null) {
+        throw new Error(`Invalid CubeType`);
     }
+    return initialStickerState(n);
 };
 
 /**
@@ -35,12 +68,12 @@ export const defaultStickerState = (cubeType) => {
  */
 const initialStickerState = (layerCount) => {
     const state = {
-        right: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.R)),
-        up: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.U)),
-        front: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.F)),
-        back: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.B)),
-        down: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.D)),
-        left: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.L)),
+        [Faces.R]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.R)),
+        [Faces.U]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.U)),
+        [Faces.F]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.F)),
+        [Faces.B]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.B)),
+        [Faces.D]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.D)),
+        [Faces.L]: Array.from({ length: layerCount }, () => Array.from({ length: layerCount }, () => Faces.L)),
     };
     return state;
 };
@@ -51,23 +84,11 @@ const initialStickerState = (layerCount) => {
  * @return {StickerState}
  */
 export const getEmptyStickerState = (cubeType) => {
-    const length = 0;
-    switch (cubeType) {
-        case CubeTypes.Two:
-            return emptyStickerState(2);
-        case CubeTypes.Three:
-            return emptyStickerState(3);
-        case CubeTypes.Four:
-            return emptyStickerState(4);
-        case CubeTypes.Five:
-            return emptyStickerState(5);
-        case CubeTypes.Six:
-            return emptyStickerState(6);
-        case CubeTypes.Seven:
-            return emptyStickerState(7);
-        default:
-            throw new Error(`Unsupported cube type: ${cubeType}`);
+    const n = LayerCount[cubeType];
+    if (n == null) {
+        throw new Error(`Invalid CubeType`);
     }
+    return emptyStickerState(n);
 };
 /**
  *
@@ -76,12 +97,12 @@ export const getEmptyStickerState = (cubeType) => {
  */
 const emptyStickerState = (layerCount) => {
     const state = {
-        right: Array.from({ length: layerCount }, () => []),
-        up: Array.from({ length: layerCount }, () => []),
-        front: Array.from({ length: layerCount }, () => []),
-        back: Array.from({ length: layerCount }, () => []),
-        down: Array.from({ length: layerCount }, () => []),
-        left: Array.from({ length: layerCount }, () => []),
+        [Faces.R]: Array.from({ length: layerCount }, () => []),
+        [Faces.U]: Array.from({ length: layerCount }, () => []),
+        [Faces.F]: Array.from({ length: layerCount }, () => []),
+        [Faces.B]: Array.from({ length: layerCount }, () => []),
+        [Faces.D]: Array.from({ length: layerCount }, () => []),
+        [Faces.L]: Array.from({ length: layerCount }, () => []),
     };
     return state;
 };
@@ -91,7 +112,7 @@ const emptyStickerState = (layerCount) => {
  * @returns {string}
  */
 export function toKociemba(stickerState) {
-    return `${stickerState.up.flat().join('')}${stickerState.right.flat().join('')}${stickerState.front.flat().join('')}${stickerState.down.flat().join('')}${stickerState.left.flat().join('')}${stickerState.back.flat().join('')}`;
+    return `${stickerState.U.flat().join('')}${stickerState.R.flat().join('')}${stickerState.F.flat().join('')}${stickerState.D.flat().join('')}${stickerState.L.flat().join('')}${stickerState.B.flat().join('')}`;
 }
 
 /**
@@ -100,47 +121,12 @@ export function toKociemba(stickerState) {
  * @returns {StickerState | undefined} stickerState
  */
 export function fromKociemba(kociembaString, cubeType) {
-    const length = kociembaString.length;
-    switch (cubeType) {
-        case CubeTypes.Two:
-            if (length != 6 * 2 ** 2) {
-                console.error('Invalid state string length. Length must be 24 for 2x2 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 2);
-        case CubeTypes.Three:
-            if (length != 6 * 3 ** 2) {
-                console.error('Invalid state string length. Length must be 54 for 3x3 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 3);
-        case CubeTypes.Four:
-            if (length != 6 * 4 ** 2) {
-                console.error('Invalid state string length. Length must be 96 for 4x4 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 4);
-        case CubeTypes.Five:
-            if (length != 6 * 5 ** 2) {
-                console.error('Invalid state string length. Length must be 150 for 5x5 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 5);
-        case CubeTypes.Six:
-            if (length != 6 * 6 ** 2) {
-                console.error('Invalid state string length. Length must be 216 for 6x6 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 6);
-        case CubeTypes.Seven:
-            if (length != 6 * 7 ** 2) {
-                console.error('Invalid state string length. Length must be 294 for 7x7 cubes.');
-                return;
-            }
-            return fromKociembaWithLayerCount(kociembaString, 7);
-        default:
-            undefined;
+    const n = LayerCount[cubeType];
+    if (kociembaString.length !== 6 * n * n) {
+        console.error(`Invalid state string length. Length must be ${6 * n * n} for ${cubeType} cubes.`);
+        return;
     }
+    return fromKociembaWithLayerCount(kociembaString, n);
 }
 
 /**
@@ -161,22 +147,22 @@ function fromKociembaWithLayerCount(kociembaString, layerCount) {
                 }
                 switch (i) {
                     case 0:
-                        stickerState.up[j][k] = face;
+                        stickerState.U[j][k] = face;
                         break;
                     case 1:
-                        stickerState.right[j][k] = face;
+                        stickerState.R[j][k] = face;
                         break;
                     case 2:
-                        stickerState.front[j][k] = face;
+                        stickerState.F[j][k] = face;
                         break;
                     case 3:
-                        stickerState.down[j][k] = face;
+                        stickerState.D[j][k] = face;
                         break;
                     case 4:
-                        stickerState.left[j][k] = face;
+                        stickerState.L[j][k] = face;
                         break;
                     case 5:
-                        stickerState.back[j][k] = face;
+                        stickerState.B[j][k] = face;
                         break;
                     default:
                         throw new Error(`Invalid value for i - [${i}]. i should be between [0,5] inclusive.`);

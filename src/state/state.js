@@ -3,7 +3,7 @@ import { Euler, Quaternion, Vector3 } from 'three';
 import { CubeTypes, FaceColours, Faces } from '../core';
 import { FaceColors } from '../cube/cubeConfig';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
-import { defaultStickerState, fromKociemba, getEmptyStickerState, toKociemba } from './stickerState';
+import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from './stickerState';
 
 /**
  *  @typedef {{corners: pieceState[], edges: pieceState[], centers: pieceState[]}} state
@@ -82,31 +82,8 @@ export class CubeState {
                 const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
                 stickerPosition.applyEuler(new Euler(piece.rotation.x, piece.rotation.y, piece.rotation.z));
                 stickerPosition.round();
-                if (stickerPosition.x === 1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = lastLayerNumber - this._getLayerNumber(piece.position.z);
-                    sticker.face = stickerState.right[i][j];
-                } else if (stickerPosition.x === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = this._getLayerNumber(piece.position.z);
-                    sticker.face = stickerState.left[i][j];
-                } else if (stickerPosition.y === 1) {
-                    const i = this._getLayerNumber(piece.position.z);
-                    const j = this._getLayerNumber(piece.position.x);
-                    sticker.face = stickerState.up[i][j];
-                } else if (stickerPosition.y === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.z);
-                    const j = this._getLayerNumber(piece.position.x);
-                    sticker.face = stickerState.down[i][j];
-                } else if (stickerPosition.z === 1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = this._getLayerNumber(piece.position.x);
-                    sticker.face = stickerState.front[i][j];
-                } else if (stickerPosition.z === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = lastLayerNumber - this._getLayerNumber(piece.position.x);
-                    sticker.face = stickerState.back[i][j];
-                }
+                const { face, i, j } = getStickerFaceIndex(stickerPosition, piece.position, this.layers);
+                sticker.face = stickerState[face][i][j];
             });
         });
     }
@@ -122,31 +99,8 @@ export class CubeState {
                 const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
                 stickerPosition.applyEuler(new Euler(piece.rotation.x, piece.rotation.y, piece.rotation.z));
                 stickerPosition.round();
-                if (stickerPosition.x === 1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = lastLayerNumber - this._getLayerNumber(piece.position.z);
-                    stickerState.right[i][j] = sticker.face;
-                } else if (stickerPosition.x === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = this._getLayerNumber(piece.position.z);
-                    stickerState.left[i][j] = sticker.face;
-                } else if (stickerPosition.y === 1) {
-                    const i = this._getLayerNumber(piece.position.z);
-                    const j = this._getLayerNumber(piece.position.x);
-                    stickerState.up[i][j] = sticker.face;
-                } else if (stickerPosition.y === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.z);
-                    const j = this._getLayerNumber(piece.position.x);
-                    stickerState.down[i][j] = sticker.face;
-                } else if (stickerPosition.z === 1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = this._getLayerNumber(piece.position.x);
-                    stickerState.front[i][j] = sticker.face;
-                } else if (stickerPosition.z === -1) {
-                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
-                    const j = lastLayerNumber - this._getLayerNumber(piece.position.x);
-                    stickerState.back[i][j] = sticker.face;
-                }
+                const { face, i, j } = getStickerFaceIndex(stickerPosition, piece.position, this.layers);
+                stickerState[face][i][j] = sticker.face;
             });
         });
         return stickerState;

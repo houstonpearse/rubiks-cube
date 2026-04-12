@@ -5,8 +5,8 @@ import CubeSettings from '../cube/cubeSettings';
 import { ColorToFace, FaceColors, getCubeConfig } from '../cube/cubeConfig';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
-import { defaultStickerState, fromKociemba, getEmptyStickerState, toKociemba } from '../state/stickerState';
-import { AnimationStyles, CubeTypes, Movements } from '../core';
+import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from '../state/stickerState';
+import { AnimationStyles, CubeTypes, Faces, Movements } from '../core';
 import { AnimationState, AnimationStatus } from '../cube/animationState';
 import { Axi, GetMovementSlice, GetRotationSlice } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
@@ -112,18 +112,39 @@ export default class RubiksCube3D extends Object3D {
     }
 
     /**
+     * @private
+     * @param {import('../core').CubeType} cubeType
+     **/
+    _rebuildCube(cubeType) {
+        this.stop();
+        this._cubeType = cubeType;
+        this._cubeConfig = getCubeConfig(cubeType);
+        this._initialStickerState = defaultStickerState(cubeType);
+        this._cubeState = new CubeState(cubeType, this._cubeConfig.layers);
+        this.remove(this._mainGroup);
+        this._mainGroup = this.createCubeGroup();
+        this.add(this._mainGroup);
+        this.setStickerState(this._initialStickerState);
+    }
+
+    /**
+     * @param {Group} group
+     * @returns {(CornerPiece | EdgePiece | CenterPiece)[]}
+     */
+    _getPieces(group = this._mainGroup) {
+        return group.children.filter((x) => x instanceof CornerPiece || x instanceof EdgePiece || x instanceof CenterPiece);
+    }
+
+    /**
      * Returns the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
      * @private
      * @returns {import('../state/stickerState').StickerState}
      */
     getStickerState() {
         let state = getEmptyStickerState(this._cubeType);
-        const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
-        [...corners, ...edges, ...centers].forEach((piece) => {
+        this._getPieces().forEach((piece) => {
             piece.stickers.forEach((sticker) => {
-                const face = ColorToFace(sticker.color);
+                const color = ColorToFace(sticker.color);
                 const piecepos = new Vector3();
                 piecepos.copy(piece.userData.position);
                 const stickerpos = new Vector3();
@@ -131,31 +152,8 @@ export default class RubiksCube3D extends Object3D {
                 stickerpos.sub(piecepos);
                 stickerpos.normalize();
                 stickerpos.round();
-                if (stickerpos.x === 1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 - piecepos.z) / this._cubeConfig.pieceSize);
-                    state.right[i][j] = face;
-                } else if (stickerpos.x === -1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.z) / this._cubeConfig.pieceSize);
-                    state.left[i][j] = face;
-                } else if (stickerpos.y === 1) {
-                    const i = Math.round((1 + piecepos.z) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    state.up[i][j] = face;
-                } else if (stickerpos.y === -1) {
-                    const i = Math.round((1 - piecepos.z) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    state.down[i][j] = face;
-                } else if (stickerpos.z === 1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    state.front[i][j] = face;
-                } else if (stickerpos.z === -1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 - piecepos.x) / this._cubeConfig.pieceSize);
-                    state.back[i][j] = face;
-                }
+                const { face, i, j } = getStickerFaceIndex(stickerpos, piece.userData.position, this._cubeConfig.layers);
+                state[face][i][j] = color;
             });
         });
         return state;
@@ -168,10 +166,7 @@ export default class RubiksCube3D extends Object3D {
      */
     setStickerState(stickerState) {
         this._cubeState.setState(stickerState);
-        const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
-        [...corners, ...edges, ...centers].forEach((piece) => {
+        this._getPieces().forEach((piece) => {
             piece.stickers.forEach((sticker) => {
                 const piecepos = new Vector3();
                 piecepos.copy(piece.userData.position);
@@ -180,37 +175,9 @@ export default class RubiksCube3D extends Object3D {
                 stickerpos.sub(piecepos);
                 stickerpos.normalize();
                 stickerpos.round();
-                if (stickerpos.x === 1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 - piecepos.z) / this._cubeConfig.pieceSize);
-                    const face = stickerState.right[i][j];
-                    sticker.color = FaceColors[face];
-                } else if (stickerpos.x === -1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.z) / this._cubeConfig.pieceSize);
-                    const face = stickerState.left[i][j];
-                    sticker.color = FaceColors[face];
-                } else if (stickerpos.y === 1) {
-                    const i = Math.round((1 + piecepos.z) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    const face = stickerState.up[i][j];
-                    sticker.color = FaceColors[face];
-                } else if (stickerpos.y === -1) {
-                    const i = Math.round((1 - piecepos.z) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    const face = stickerState.down[i][j];
-                    sticker.color = FaceColors[face];
-                } else if (stickerpos.z === 1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 + piecepos.x) / this._cubeConfig.pieceSize);
-                    const face = stickerState.front[i][j];
-                    sticker.color = FaceColors[face];
-                } else if (stickerpos.z === -1) {
-                    const i = Math.round((1 - piecepos.y) / this._cubeConfig.pieceSize);
-                    const j = Math.round((1 - piecepos.x) / this._cubeConfig.pieceSize);
-                    const face = stickerState.back[i][j];
-                    sticker.color = FaceColors[face];
-                }
+                const { face, i, j } = getStickerFaceIndex(stickerpos, piece.userData.position, this._cubeConfig.layers);
+                const stickerFaceValue = stickerState[face][i][j];
+                sticker.color = FaceColors[face];
             });
         });
     }
@@ -222,10 +189,7 @@ export default class RubiksCube3D extends Object3D {
      * @returns {Object3D[]}
      */
     getRotationLayer(slice) {
-        const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
-        return [...corners, ...edges, ...centers].filter((piece) => {
+        return this._getPieces().filter((piece) => {
             switch (slice.axis) {
                 case Axi.x:
                     return slice.layers.some((layer) => Math.abs(layer - piece.userData.position.x) < ERROR_MARGIN);
@@ -243,14 +207,11 @@ export default class RubiksCube3D extends Object3D {
      * @param {number} pieceGap
      * @returns {void}
      */
-    updateGap(pieceGap) {
+    _updateGap(pieceGap) {
         this._pieceGap = pieceGap;
         const outerLayerMultiplier = this._cubeConfig.outerLayerMultiplier;
         const outerLayerOffset = (this._cubeConfig.pieceSize * (outerLayerMultiplier - 1)) / 2;
-        const corners = this._mainGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._mainGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._mainGroup.children.filter((x) => x instanceof CenterPiece);
-        [...corners, ...edges, ...centers].forEach((piece) => {
+        this._getPieces().forEach((piece) => {
             let xOuterLayer = Math.abs(Math.abs(piece.userData.position.x) - 1) < ERROR_MARGIN;
             let yOuterLayer = Math.abs(Math.abs(piece.userData.position.y) - 1) < ERROR_MARGIN;
             let zOuterLayer = Math.abs(Math.abs(piece.userData.position.z) - 1) < ERROR_MARGIN;
@@ -260,19 +221,6 @@ export default class RubiksCube3D extends Object3D {
                 piece.userData.position.z * (pieceGap + (zOuterLayer ? outerLayerOffset : 0)),
             );
         });
-    }
-
-    /**
-     * @private
-     * @param {import('../core').CubeType} cubeType
-     */
-    updateCubeType(cubeType) {
-        this._cubeType = cubeType;
-        this._cubeConfig = getCubeConfig(cubeType);
-        this.remove(this._mainGroup);
-        this._mainGroup = this.createCubeGroup();
-        this.add(this._mainGroup);
-        this.setStickerState(this._initialStickerState);
     }
 
     /**
@@ -308,10 +256,7 @@ export default class RubiksCube3D extends Object3D {
         const outerLayerMultiplier = cubeInfo.outerLayerMultiplier;
         const outerLayerOffset = (cubeInfo.pieceSize * (outerLayerMultiplier - 1)) / 2;
         const middleLayers = cubeInfo.layers.slice(1, -1);
-        const corners = this._animationGroup.children.filter((x) => x instanceof CornerPiece);
-        const edges = this._animationGroup.children.filter((x) => x instanceof EdgePiece);
-        const centers = this._animationGroup.children.filter((x) => x instanceof CenterPiece);
-        [...centers, ...corners, ...edges].forEach((piece) => {
+        this._getPieces(this._animationGroup).forEach((piece) => {
             piece.getWorldPosition(piece.position);
             piece.getWorldQuaternion(piece.quaternion);
             if (middleLayers.some((layer) => Math.abs(layer - piece.position.x / pieceGap) < ERROR_MARGIN)) {
@@ -433,10 +378,10 @@ export default class RubiksCube3D extends Object3D {
     update() {
         if (this._currentAnimation === undefined) {
             if (this._pieceGap !== this._cubeSettings.pieceGap) {
-                this.updateGap(this._cubeSettings.pieceGap);
+                this._updateGap(this._cubeSettings.pieceGap);
             }
             if (this._cubeType !== this._cubeSettings.cubeType) {
-                this.updateCubeType(this._cubeSettings.cubeType);
+                this._rebuildCube(this._cubeSettings.cubeType);
             }
             this._currentAnimation = this._animationQueue.shift();
             if (this._currentAnimation === undefined) {
@@ -507,15 +452,7 @@ export default class RubiksCube3D extends Object3D {
         if (!Object.values(CubeTypes).includes(cubeType)) {
             failedCallback('Failed to set CubeType. Invalid CubeType.');
         }
-        this.stop();
-        this._cubeType = cubeType;
-        this._cubeConfig = getCubeConfig(cubeType);
-        this._initialStickerState = defaultStickerState(cubeType);
-        this._cubeState = new CubeState(this._cubeType, this._cubeConfig.layers);
-        this.remove(this._mainGroup);
-        this._mainGroup = this.createCubeGroup();
-        this.add(this._mainGroup);
-        this.setStickerState(this._initialStickerState);
+        this._rebuildCube(cubeType);
         completedCallback(toKociemba(this.getStickerState()));
     }
 

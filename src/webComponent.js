@@ -58,8 +58,6 @@ export class RubiksCubeElement extends HTMLElement {
         this.canvas = /** @type {HTMLCanvasElement} */ (root.getElementById('cube-canvas'));
         /** @private @type {Settings} */
         this.settings = new Settings();
-        /** @private @type {CubeSettings} */
-        this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle, this.settings.cubeType);
         /** @private @type {RubiksCube3D?} */
         this._rubiksCube3D = null;
     }
@@ -94,19 +92,15 @@ export class RubiksCubeElement extends HTMLElement {
         switch (name) {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
-                this.cubeSettings.cubeType = this.settings.cubeType;
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
-                this.cubeSettings.pieceGap = this.settings.pieceGap;
                 break;
             case AttributeNames.animationSpeed:
                 this.settings.setAnimationSpeed(newVal);
-                this.cubeSettings.animationSpeedMs = this.settings.animationSpeedMs;
                 break;
             case AttributeNames.animationStyle:
                 this.settings.setAnimationStyle(newVal);
-                this.cubeSettings.animationStyle = this.settings.animationStyle;
                 break;
             case AttributeNames.cameraSpeed:
                 this.settings.setCameraSpeed(newVal);
@@ -141,19 +135,15 @@ export class RubiksCubeElement extends HTMLElement {
     connectedCallback() {
         if (this.hasAttribute(AttributeNames.cubeType)) {
             this.settings.setCubeType(this.getAttribute(AttributeNames.cubeType));
-            this.cubeSettings.cubeType = this.settings.cubeType;
         }
         if (this.hasAttribute(AttributeNames.pieceGap)) {
             this.settings.setPieceGap(this.getAttribute(AttributeNames.pieceGap));
-            this.cubeSettings.pieceGap = this.settings.pieceGap;
         }
         if (this.hasAttribute(AttributeNames.animationSpeed)) {
             this.settings.setAnimationSpeed(this.getAttribute(AttributeNames.animationSpeed));
-            this.cubeSettings.animationSpeedMs = this.settings.animationSpeedMs;
         }
         if (this.hasAttribute(AttributeNames.animationStyle)) {
             this.settings.setAnimationStyle(this.getAttribute(AttributeNames.animationStyle));
-            this.cubeSettings.animationStyle = this.settings.animationStyle;
         }
         if (this.hasAttribute(AttributeNames.cameraSpeed)) {
             this.settings.setCameraSpeed(this.getAttribute(AttributeNames.cameraSpeed));
@@ -320,7 +310,7 @@ export class RubiksCubeElement extends HTMLElement {
 
     /** @private */
     init() {
-        this._rubiksCube3D = new RubiksCube3D(this.cubeSettings);
+        this._rubiksCube3D = new RubiksCube3D(this.settings.rubiksCube3DSettings);
 
         // defined core threejs objects
         const canvas = this.canvas;
