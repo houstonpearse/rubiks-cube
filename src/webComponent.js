@@ -8,31 +8,20 @@ import { gsap } from 'gsap';
 import Settings from './settings';
 import CubeSettings from './cube/cubeSettings';
 import { CameraState } from './camera/cameraState';
-import { PeekTypes, Rotations } from './core';
+import { PeekTypes } from './core';
+
+/** @import {Rotation} from './core' */
+/** @import {AnimationOptions} from './core' */
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
 const InternalEvents = Object.freeze({
-    rotation: 'rotation',
-    rotationComplete: 'rotationComplete',
-    rotationFailed: 'rotationFailed',
-    movement: 'movement',
-    movementComplete: 'movementComplete',
-    movementFailed: 'movementFailed',
-    reset: 'reset',
-    resetComplete: 'resetComplete',
     cameraRadiusChanged: 'cameraRadiusChanged',
     cameraSettingsChanged: 'cameraSettingsChanged',
     cameraFieldOfViewChanged: 'cameraFieldOfViewChanged',
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
-    setState: 'setState',
-    setStateComplete: 'setStateComplete',
-    setStateFailed: 'setStateFailed',
-    setType: 'setType',
-    setTypeComplete: 'setTypeComplete',
-    setTypeFailed: 'setTypeFailed',
 });
 
 /**
@@ -71,6 +60,8 @@ export class RubiksCubeElement extends HTMLElement {
         this.settings = new Settings();
         /** @private @type {CubeSettings} */
         this.cubeSettings = new CubeSettings(this.settings.pieceGap, this.settings.animationSpeedMs, this.settings.animationStyle, this.settings.cubeType);
+        /** @private @type {RubiksCube3D?} */
+        this._rubiksCube3D = null;
     }
 
     /**
@@ -198,141 +189,55 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     /** @import {Movement} from './core' */
-    /** @internal @typedef {{eventId: string, move: Movement, options: import('./core').AnimationOptions | undefined}} MovementEvent */
-    /** @internal @typedef {{eventId: string, move: Movement, state: string}} MovementCompleteEventData */
 
     /** @internal @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
-     * @param {import('./core').AnimationOptions} [options]
+     * @param {AnimationOptions} [options]
      * @returns {Promise<string>}
      */
     move(move, options) {
-        if (!RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).test(move)) {
-            return Promise.reject(`Invalid move - ${move}. Must match /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/ `);
-        }
-        /** @type {MovementEvent} */
-        const data = { eventId: crypto.randomUUID(), move, options };
         return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<MovementCompleteEventData> | Event} event */
-            const completedHandler = (event) => {
-                const customEvent = /** @type {CustomEvent<MovementCompleteEventData>} */ (event);
-                if (customEvent.detail.eventId === data.eventId) {
-                    cleanup();
-                    resolve(customEvent.detail.state);
-                }
-            };
-
-            /** @param {CustomEvent<MovementFailedEventData> | Event} event */
-            const failedHandler = (event) => {
-                const customEvent = /** @type {CustomEvent<MovementFailedEventData>} */ (event);
-                if (customEvent.detail.eventId === data.eventId) {
-                    cleanup();
-                    reject(customEvent.detail.reason);
-                }
-            };
-
-            const timeoutId = setTimeout(
-                () => {
-                    cleanup();
-                    reject('movement timed out');
-                },
-                Math.max((options?.animationSpeedMs ?? this.settings.animationSpeedMs) * 100, 100),
+            if (this._rubiksCube3D == null) {
+                return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            }
+            this._rubiksCube3D.movement(
+                move,
+                (state) => resolve(state),
+                (reason) => reject(reason),
+                options,
             );
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.movementComplete, completedHandler);
-                this.removeEventListener(InternalEvents.movementFailed, failedHandler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.movementComplete, completedHandler);
-            this.addEventListener(InternalEvents.movementFailed, failedHandler);
-            this.dispatchEvent(new CustomEvent(InternalEvents.movement, { detail: data }));
         });
     }
-
-    /** @import {Rotation} from './core' */
-    /** @internal @typedef {{eventId: string, rotation: Rotation, options: import('./core').AnimationOptions | undefined}} RotationEventData */
-    /** @internal @typedef {{eventId: string, rotation: Rotation, state: string, }} RotationCompleteEventData*/
-
-    /** @internal @typedef {{eventId: string, rotation: Rotation, reason: string, }} RotationFailedEventData*/
 
     /**
      * @param {Rotation} rotation
-     * @param {import('./core').AnimationOptions} [options]
+     * @param {AnimationOptions} [options]
      * @returns {Promise<string>}
      */
     rotate(rotation, options) {
-        if (!RegExp(`^([xyz])(\\d)?(\')?$`).test(rotation)) {
-            return Promise.reject(`Invalid move - [${rotation}]. Valid moves are ${Object.values(Rotations).join(', ')}`);
-        }
-        /** @type {RotationEventData} */
-        const data = { eventId: crypto.randomUUID(), rotation, options };
         return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<RotationCompleteEventData> | Event} event */
-            const completeHanlder = (event) => {
-                const customEvent = /** @type {CustomEvent<RotationCompleteEventData>} */ (event);
-                if (customEvent.detail.eventId === data.eventId) {
-                    cleanup();
-                    resolve(customEvent.detail.state);
-                }
-            };
-
-            /** @param {CustomEvent<RotationFailedEventData> | Event} event */
-            const failedHandler = (event) => {
-                const customEvent = /** @type {CustomEvent<RotationFailedEventData>} */ (event);
-                if (customEvent.detail.eventId === data.eventId) {
-                    cleanup();
-                    reject(customEvent.detail.reason);
-                }
-            };
-
-            const timeoutId = setTimeout(
-                () => {
-                    cleanup();
-                    reject('rotation timed out');
-                },
-                Math.max((options?.animationSpeedMs ?? this.settings.animationSpeedMs) * 100, 100),
+            if (this._rubiksCube3D == null) {
+                return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            }
+            this._rubiksCube3D.rotate(
+                rotation,
+                (state) => resolve(state),
+                (reason) => reject(reason),
+                options,
             );
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.rotationComplete, completeHanlder);
-                this.removeEventListener(InternalEvents.rotationFailed, failedHandler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.rotationComplete, completeHanlder);
-            this.addEventListener(InternalEvents.rotationFailed, failedHandler);
-            this.dispatchEvent(new CustomEvent(InternalEvents.rotation, { detail: data }));
         });
     }
 
-    /** @internal @typedef {{state: string }} ResetCompleteEventData */
     /**
      * @returns {Promise<string>}
      */
     reset() {
         return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<ResetCompleteEventData> | Event} event */
-            const handler = (event) => {
-                const customEvent = /** @type {CustomEvent<ResetCompleteEventData>} */ (event);
-                cleanup();
-                resolve(customEvent.detail.state);
-            };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject('reset timed out');
-            }, 1000);
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.resetComplete, handler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.resetComplete, handler);
-            this.dispatchEvent(new CustomEvent(InternalEvents.reset));
+            if (this._rubiksCube3D == null) {
+                return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            }
+            this._rubiksCube3D.reset((state) => resolve(state));
         });
     }
 
@@ -378,92 +283,45 @@ export class RubiksCubeElement extends HTMLElement {
         });
     }
 
-    /** @internal @typedef {{state: string }} SetStateEventData */
-    /** @internal @typedef {{state: string }} SetStateCompleteEventData */
-
-    /** @internal @typedef {{reason: string }} SetStateFailedEventData */
     /**
      * @param {string} kociembaState
      * @returns {Promise<string>}
      */
     setState(kociembaState) {
-        const data = /** @type {SetStateEventData} */ ({ state: kociembaState });
         return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<SetStateCompleteEventData> | Event} event */
-            const handler = (event) => {
-                const customEvent = /** @type {CustomEvent<SetStateCompleteEventData>} */ (event);
-                cleanup();
-                resolve(customEvent.detail.state);
-            };
-            /** @param {CustomEvent<SetStateFailedEventData> | Event} event */
-            const failedHandler = (event) => {
-                const customEvent = /** @type {CustomEvent<SetStateFailedEventData>} */ (event);
-                cleanup();
-                reject(customEvent.detail.reason);
-            };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject('SetState timed out');
-            }, 1000);
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.setStateComplete, handler);
-                this.removeEventListener(InternalEvents.setStateFailed, failedHandler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.setStateComplete, handler);
-            this.addEventListener(InternalEvents.setStateFailed, failedHandler);
-            this.dispatchEvent(new CustomEvent(InternalEvents.setState, { detail: data }));
+            if (this._rubiksCube3D == null) {
+                return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            }
+            this._rubiksCube3D.setState(
+                kociembaState,
+                (state) => resolve(state),
+                (reason) => reject(reason),
+            );
         });
     }
 
     /** @import {CubeType} from './core' */
-    /** @internal @typedef {{cubeType: CubeType}} SetTypeEventData */
-    /** @internal @typedef {{state: string }} SetTypeCompleteEventData */
-
-    /** @internal @typedef {{reason: string }} SetTypeFailedEventData */
     /**
      * @param {CubeType} cubeType
      * @returns {Promise<string>}
      */
     setType(cubeType) {
-        const data = /** @type {SetTypeEventData} */ ({ cubeType: cubeType });
         return new Promise((resolve, reject) => {
-            /** @param {CustomEvent<SetTypeCompleteEventData> | Event} event */
-            const handler = (event) => {
-                const customEvent = /** @type {CustomEvent<SetTypeCompleteEventData>} */ (event);
-                this.setAttribute(AttributeNames.cubeType, cubeType);
-                cleanup();
-                resolve(customEvent.detail.state);
-            };
-            /** @param {CustomEvent<SetTypeFailedEventData> | Event} event */
-            const failedHandler = (event) => {
-                const customEvent = /** @type {CustomEvent<SetTypeFailedEventData>} */ (event);
-                cleanup();
-                reject(customEvent.detail.reason);
-            };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject('setType timed out');
-            }, 1000);
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.setTypeComplete, handler);
-                this.removeEventListener(InternalEvents.setTypeFailed, failedHandler);
-                clearTimeout(timeoutId);
-            };
-
-            this.addEventListener(InternalEvents.setTypeComplete, handler);
-            this.addEventListener(InternalEvents.setTypeFailed, failedHandler);
-            this.dispatchEvent(new CustomEvent(InternalEvents.setType, { detail: data }));
+            if (this._rubiksCube3D == null) {
+                return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            }
+            this._rubiksCube3D.setType(
+                cubeType,
+                (state) => resolve(state),
+                (reason) => reject(reason),
+            );
         });
     }
 
     /** @private */
     init() {
+        this._rubiksCube3D = new RubiksCube3D(this.cubeSettings);
+
         // defined core threejs objects
         const canvas = this.canvas;
         const scene = new Scene();
@@ -522,8 +380,7 @@ export class RubiksCubeElement extends HTMLElement {
         scene.add(ambientLight, spotLight1, spotLight2, spotLight3, spotLight4);
 
         // create cube and add to scene
-        //const cube = new RubiksCube3D(this.cubeSettings);
-        const cube = new RubiksCube3D(this.cubeSettings);
+        const cube = this._rubiksCube3D;
         scene.add(cube);
 
         // animation loop
@@ -534,111 +391,6 @@ export class RubiksCubeElement extends HTMLElement {
         }
 
         renderer.setAnimationLoop(animate);
-
-        // Cube Events
-        this.addEventListener(InternalEvents.rotation, (event) => {
-            const customEvent = /** @type {CustomEvent<RotationEventData>} */ (event);
-            const completedCallback = (/** @type {string} */ state) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.rotationComplete, {
-                        detail: /** @type {RotationCompleteEventData} */ ({
-                            eventId: customEvent.detail.eventId,
-                            state: state,
-                            rotation: customEvent.detail.rotation,
-                        }),
-                    }),
-                );
-            const failedCallback = (/** @type {string} */ reason) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.rotationFailed, {
-                        detail: /** @type {RotationFailedEventData} */ ({
-                            eventId: customEvent.detail.eventId,
-                            reason: reason,
-                            rotation: customEvent.detail.rotation,
-                        }),
-                    }),
-                );
-            cube.rotate(customEvent.detail.rotation, completedCallback, failedCallback, customEvent.detail.options);
-        });
-
-        this.addEventListener(InternalEvents.movement, (event) => {
-            const customEvent = /** @type {CustomEvent<MovementEvent>} */ (event);
-            const completedCallback = (/** @type {string} */ state) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.movementComplete, {
-                        detail: /** @type {MovementCompleteEventData} */ ({
-                            eventId: customEvent.detail.eventId,
-                            state: state,
-                            move: customEvent.detail.move,
-                        }),
-                    }),
-                );
-            const failedCallback = (/** @type {string} */ reason) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.movementFailed, {
-                        detail: /** @type {MovementFailedEventData} */ ({
-                            eventId: customEvent.detail.eventId,
-                            reason: reason,
-                            move: customEvent.detail.move,
-                        }),
-                    }),
-                );
-            cube.movement(customEvent.detail.move, completedCallback, failedCallback, customEvent.detail.options);
-        });
-
-        this.addEventListener(InternalEvents.reset, () => {
-            const completedCallback = (/** @type {string} */ state) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.resetComplete, {
-                        detail: /** @type {ResetCompleteEventData} */ ({
-                            state: state,
-                        }),
-                    }),
-                );
-            cube.reset(completedCallback);
-        });
-
-        this.addEventListener(InternalEvents.setState, (event) => {
-            const customEvent = /** @type {CustomEvent<SetStateEventData>} */ (event);
-            const completedCallback = (/** @type {string} */ state) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setStateComplete, {
-                        detail: /** @type {SetStateCompleteEventData} */ ({
-                            state: state,
-                        }),
-                    }),
-                );
-            const failedCallback = (/** @type {string} */ reason) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setStateFailed, {
-                        detail: /** @type {SetStateFailedEventData} */ ({
-                            reason: reason,
-                        }),
-                    }),
-                );
-            cube.setState(customEvent.detail.state, completedCallback, failedCallback);
-        });
-
-        this.addEventListener(InternalEvents.setType, (event) => {
-            const customEvent = /** @type {CustomEvent<SetTypeEventData>} */ (event);
-            const completedCallback = (/** @type {string} */ state) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setTypeComplete, {
-                        detail: /** @type {SetTypeCompleteEventData} */ ({
-                            state: state,
-                        }),
-                    }),
-                );
-            const failedCallback = (/** @type {string} */ reason) =>
-                this.dispatchEvent(
-                    new CustomEvent(InternalEvents.setTypeFailed, {
-                        detail: /** @type {SetTypeFailedEventData} */ ({
-                            reason: reason,
-                        }),
-                    }),
-                );
-            cube.setType(customEvent.detail.cubeType, completedCallback, failedCallback);
-        });
 
         // Camera Events
 

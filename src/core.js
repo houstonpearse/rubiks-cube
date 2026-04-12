@@ -84,7 +84,7 @@ export const Movements = Object.freeze({
         u2: 'u2',
         uP: "u'",
         Dw: 'Dw',
-        Dw2: 'D2',
+        Dw2: 'Dw2',
         DwP: "Dw'",
         d: 'd',
         d2: 'd2',

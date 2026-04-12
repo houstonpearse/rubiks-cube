@@ -1,0 +1,455 @@
+/// @ts-check
+import { Euler, Quaternion, Vector3 } from 'three';
+import { CubeTypes, FaceColours, Faces } from '../core';
+import { FaceColors } from '../cube/cubeConfig';
+import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
+import { defaultStickerState, fromKociemba, getEmptyStickerState, toKociemba } from './stickerState';
+
+/**
+ *  @typedef {{corners: pieceState[], edges: pieceState[], centers: pieceState[]}} state
+ */
+
+/**
+ * @typedef {{position: vector, rotation: vector, stickers: {face: import('../core').Face, direction: vector}[]}} pieceState
+ */
+
+/**
+ * @typedef {{x: number,y: number,z: number}} vector
+ */
+
+export const Layers = {
+    [CubeTypes.Two]: [-1, 1],
+    [CubeTypes.Three]: [-1, 0, 1],
+    [CubeTypes.Four]: [-2, -1, 1, 2],
+    [CubeTypes.Five]: [-2, -1, 0, 1, 2],
+    [CubeTypes.Six]: [-3, -2, -1, 1, 2, 3],
+    [CubeTypes.Seven]: [-3, -2, -1, 0, 1, 2, 3],
+};
+
+const ERROR_MARGIN = 0.0001;
+export class CubeState {
+    /**
+     *
+     * @param {import('../core').CubeType} cubeType
+     * @param {number[]} [layers]
+     */
+    constructor(cubeType, layers = Layers[cubeType]) {
+        this.cubeType = cubeType;
+        this.layers = layers;
+        /** @type {pieceState[]} */
+        this.corners = corners(this.layers).map((corner) => {
+            return {
+                position: corner.position,
+                rotation: corner.rotation,
+                stickers: [
+                    { face: Faces.U, direction: { x: 0, y: 0, z: 1 } },
+                    { face: Faces.U, direction: { x: 0, y: 1, z: 0 } },
+                    { face: Faces.U, direction: { x: 1, y: 0, z: 0 } },
+                ],
+            };
+        });
+        /** @type {pieceState[]} */
+        this.edges = edges(this.layers).map((edge) => {
+            return {
+                position: edge.position,
+                rotation: edge.rotation,
+                stickers: [
+                    { face: Faces.U, direction: { x: 0, y: 0, z: 1 } },
+                    { face: Faces.U, direction: { x: 0, y: 1, z: 0 } },
+                ],
+            };
+        });
+        /** @type {pieceState[]} */
+        this.centers = centers(this.layers).map((center) => {
+            return {
+                position: center.position,
+                rotation: center.rotation,
+                stickers: [{ face: Faces.U, direction: { x: 0, y: 0, z: 1 } }],
+            };
+        });
+        this.stickerState = defaultStickerState(cubeType);
+        this.setState(this.stickerState);
+    }
+
+    /**
+     * @param {import('./stickerState').StickerState} stickerState
+     * @returns {void}
+     */
+    setState(stickerState) {
+        const lastLayerNumber = this.layers.length - 1;
+        [...this.corners, ...this.edges, ...this.centers].forEach((piece) => {
+            piece.stickers.forEach((sticker) => {
+                const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
+                stickerPosition.applyEuler(new Euler(piece.rotation.x, piece.rotation.y, piece.rotation.z));
+                stickerPosition.round();
+                if (stickerPosition.x === 1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = lastLayerNumber - this._getLayerNumber(piece.position.z);
+                    sticker.face = stickerState.right[i][j];
+                } else if (stickerPosition.x === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = this._getLayerNumber(piece.position.z);
+                    sticker.face = stickerState.left[i][j];
+                } else if (stickerPosition.y === 1) {
+                    const i = this._getLayerNumber(piece.position.z);
+                    const j = this._getLayerNumber(piece.position.x);
+                    sticker.face = stickerState.up[i][j];
+                } else if (stickerPosition.y === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.z);
+                    const j = this._getLayerNumber(piece.position.x);
+                    sticker.face = stickerState.down[i][j];
+                } else if (stickerPosition.z === 1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = this._getLayerNumber(piece.position.x);
+                    sticker.face = stickerState.front[i][j];
+                } else if (stickerPosition.z === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = lastLayerNumber - this._getLayerNumber(piece.position.x);
+                    sticker.face = stickerState.back[i][j];
+                }
+            });
+        });
+    }
+
+    /**
+     * @return {import('./stickerState').StickerState}
+     */
+    getState() {
+        const stickerState = getEmptyStickerState(this.cubeType);
+        const lastLayerNumber = this.layers.length - 1;
+        [...this.corners, ...this.edges, ...this.centers].forEach((piece) => {
+            piece.stickers.forEach((sticker) => {
+                const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
+                stickerPosition.applyEuler(new Euler(piece.rotation.x, piece.rotation.y, piece.rotation.z));
+                stickerPosition.round();
+                if (stickerPosition.x === 1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = lastLayerNumber - this._getLayerNumber(piece.position.z);
+                    stickerState.right[i][j] = sticker.face;
+                } else if (stickerPosition.x === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = this._getLayerNumber(piece.position.z);
+                    stickerState.left[i][j] = sticker.face;
+                } else if (stickerPosition.y === 1) {
+                    const i = this._getLayerNumber(piece.position.z);
+                    const j = this._getLayerNumber(piece.position.x);
+                    stickerState.up[i][j] = sticker.face;
+                } else if (stickerPosition.y === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.z);
+                    const j = this._getLayerNumber(piece.position.x);
+                    stickerState.down[i][j] = sticker.face;
+                } else if (stickerPosition.z === 1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = this._getLayerNumber(piece.position.x);
+                    stickerState.front[i][j] = sticker.face;
+                } else if (stickerPosition.z === -1) {
+                    const i = lastLayerNumber - this._getLayerNumber(piece.position.y);
+                    const j = lastLayerNumber - this._getLayerNumber(piece.position.x);
+                    stickerState.back[i][j] = sticker.face;
+                }
+            });
+        });
+        return stickerState;
+    }
+
+    /**
+     *
+     * @param {import('./slice').Slice} slice
+     */
+    slice(slice) {
+        const pieces = [...this.corners, ...this.edges, ...this.centers]
+            .filter((piece) => {
+                switch (slice.axis) {
+                    case Axi.x:
+                        return slice.layers.some((layer) => Math.abs(layer - piece.position.x) < ERROR_MARGIN);
+                    case Axi.y:
+                        return slice.layers.some((layer) => Math.abs(layer - piece.position.y) < ERROR_MARGIN);
+                    case Axi.z:
+                        return slice.layers.some((layer) => Math.abs(layer - piece.position.z) < ERROR_MARGIN);
+                }
+            })
+            .forEach((piece) => {
+                const position = new Vector3(piece.position.x, piece.position.y, piece.position.z);
+                const rotation = new Quaternion().setFromEuler(new Euler(piece.rotation.x, piece.rotation.y, piece.rotation.z));
+                const rotationAxis = new Vector3(
+                    slice.axis === Axi.x ? slice.direction : 0,
+                    slice.axis === Axi.y ? slice.direction : 0,
+                    slice.axis === Axi.z ? slice.direction : 0,
+                ).normalize();
+
+                const angle = (Math.abs(slice.direction) * Math.PI) / 2;
+
+                // Apply rotation
+                const rotationQuat = new Quaternion();
+                rotationQuat.setFromAxisAngle(rotationAxis, angle);
+                position.applyQuaternion(rotationQuat);
+                rotation.premultiply(rotationQuat);
+
+                // Update piece position
+                piece.position.x = this.layers[this._getLayerNumber(position.x)];
+                piece.position.y = this.layers[this._getLayerNumber(position.y)];
+                piece.position.z = this.layers[this._getLayerNumber(position.z)];
+
+                // Update rotation using quaternion multiplication
+                const newRotation = new Euler().setFromQuaternion(rotation);
+                piece.rotation.x = newRotation.x;
+                piece.rotation.y = newRotation.y;
+                piece.rotation.z = newRotation.z;
+            });
+    }
+
+    /**
+     * @param {import('../core').Movement} movement
+     * @returns {import('./stickerState').StickerState?}
+     */
+    move(movement) {
+        const slice = GetMovementSlice(movement, this.layers);
+        if (slice == null) {
+            console.error(`Failed to get movement slice. invalid movement: [${movement}]`);
+            return null;
+        }
+        this.slice(slice);
+        this.stickerState = this.getState();
+        return this.stickerState;
+    }
+
+    /**
+     * @param {import('../core').Rotation} rotation
+     * @returns {import('./stickerState').StickerState?}
+     */
+    rotate(rotation) {
+        const slice = GetRotationSlice(rotation, this.layers);
+        if (slice == null) {
+            console.error(`Failed to get rotation slice. invalid rotation: [${rotation}]`);
+            return null;
+        }
+        this.slice(slice);
+        this.stickerState = this.getState();
+        return this.stickerState;
+    }
+
+    /**
+     * @param {string} algorithm
+     * @returns {string}
+     */
+    do(algorithm) {
+        return '';
+    }
+
+    /**
+     * @private
+     * @param {number} position
+     * @returns {number}
+     */
+    _getLayerNumber(position) {
+        for (let i = 0; i < this.layers.length; i++) {
+            if (Math.abs(position - this.layers[i]) < ERROR_MARGIN) {
+                return i;
+            }
+        }
+        throw new Error(`Failed to get layer number. position ${position} not found in layers ${this.layers}`);
+    }
+}
+
+/**
+ * @param {number[]} layers
+ * @return {{position: vector, rotation: vector}[]}
+ */
+export const corners = (layers) => {
+    const lastLayer = layers[layers.length - 1];
+    const firstLayer = layers[0];
+    return [
+        {
+            position: { x: lastLayer, y: lastLayer, z: lastLayer },
+            rotation: { x: 0, y: 0, z: 0 },
+        },
+        {
+            position: { x: lastLayer, y: lastLayer, z: firstLayer },
+            rotation: { x: 0, y: Math.PI / 2, z: 0 },
+        },
+        {
+            position: { x: lastLayer, y: firstLayer, z: lastLayer },
+            rotation: { x: 0, y: Math.PI / 2, z: Math.PI },
+        },
+        {
+            position: { x: lastLayer, y: firstLayer, z: firstLayer },
+            rotation: { x: 0, y: Math.PI, z: Math.PI },
+        },
+        {
+            position: { x: firstLayer, y: lastLayer, z: lastLayer },
+            rotation: { x: 0, y: -Math.PI / 2, z: 0 },
+        },
+        {
+            position: { x: firstLayer, y: lastLayer, z: firstLayer },
+            rotation: { x: 0, y: Math.PI, z: 0 },
+        },
+        {
+            position: { x: firstLayer, y: firstLayer, z: lastLayer },
+            rotation: { x: 0, y: 0, z: Math.PI },
+        },
+        {
+            position: { x: firstLayer, y: firstLayer, z: firstLayer },
+            rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
+        },
+    ];
+};
+
+/**
+ * @param {number[]} layers
+ * @return {{position: vector, rotation: vector}[]}
+ */
+export const centers = (layers) => {
+    const lastLayer = layers[layers.length - 1];
+    const firstLayer = layers[0];
+    return [
+        //right
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: lastLayer, y: layer1, z: layer2 },
+                    rotation: { x: 0, y: Math.PI / 2, z: 0 },
+                };
+            }),
+        ),
+        //up
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: layer1, y: lastLayer, z: layer2 },
+                    rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+                };
+            }),
+        ),
+        //front
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: layer1, y: layer2, z: lastLayer },
+                    rotation: { x: 0, y: 0, z: 0 },
+                };
+            }),
+        ),
+        //back
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: layer1, y: layer2, z: firstLayer },
+                    rotation: { x: 0, y: Math.PI, z: 0 },
+                };
+            }),
+        ),
+        //down
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: layer1, y: firstLayer, z: layer2 },
+                    rotation: { x: Math.PI / 2, y: 0, z: 0 },
+                };
+            }),
+        ),
+        //left
+        ...layers.flatMap((layer1) =>
+            layers.map((layer2) => {
+                return {
+                    position: { x: firstLayer, y: layer1, z: layer2 },
+                    rotation: { x: 0, y: -Math.PI / 2, z: 0 },
+                };
+            }),
+        ),
+    ];
+};
+
+/**
+ * @param {number[]} layers
+ * @return {{position: vector, rotation: vector}[]}
+ */
+export const edges = (layers) => {
+    const lastLayer = layers[layers.length - 1];
+    const firstLayer = layers[0];
+    return [
+        // RU
+        ...layers.map((layer) => {
+            return {
+                position: { x: lastLayer, y: lastLayer, z: layer },
+                rotation: { x: 0, y: Math.PI / 2, z: 0 },
+            };
+        }),
+        // RF
+        ...layers.map((layer) => {
+            return {
+                position: { x: lastLayer, y: layer, z: lastLayer },
+                rotation: { x: 0, y: 0, z: -Math.PI / 2 },
+            };
+        }),
+        // RB
+        ...layers.map((layer) => {
+            return {
+                position: { x: lastLayer, y: layer, z: firstLayer },
+                rotation: { x: 0, y: Math.PI / 2, z: -Math.PI / 2 },
+            };
+        }),
+        // RD
+        ...layers.map((layer) => {
+            return {
+                position: { x: lastLayer, y: firstLayer, z: layer },
+                rotation: { x: Math.PI, y: Math.PI / 2, z: 0 },
+            };
+        }),
+        // UF
+        ...layers.map((layer) => {
+            return {
+                position: { x: layer, y: lastLayer, z: lastLayer },
+                rotation: { x: 0, y: 0, z: 0 },
+            };
+        }),
+        // UB
+        ...layers.map((layer) => {
+            return {
+                position: { x: layer, y: lastLayer, z: firstLayer },
+                rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+            };
+        }),
+        // DF
+        ...layers.map((layer) => {
+            return {
+                position: { x: layer, y: firstLayer, z: lastLayer },
+                rotation: { x: Math.PI / 2, y: 0, z: 0 },
+            };
+        }),
+        // DB
+        ...layers.map((layer) => {
+            return {
+                position: { x: layer, y: firstLayer, z: firstLayer },
+                rotation: { x: Math.PI, y: 0, z: 0 },
+            };
+        }),
+        // LU
+        ...layers.map((layer) => {
+            return {
+                position: { x: firstLayer, y: lastLayer, z: layer },
+                rotation: { x: 0, y: -Math.PI / 2, z: 0 },
+            };
+        }),
+        // LF
+        ...layers.map((layer) => {
+            return {
+                position: { x: firstLayer, y: layer, z: lastLayer },
+                rotation: { x: 0, y: 0, z: Math.PI / 2 },
+            };
+        }),
+        // LB
+        ...layers.map((layer) => {
+            return {
+                position: { x: firstLayer, y: layer, z: firstLayer },
+                rotation: { x: 0, y: -Math.PI / 2, z: Math.PI / 2 },
+            };
+        }),
+        // LD
+        ...layers.map((layer) => {
+            return {
+                position: { x: firstLayer, y: firstLayer, z: layer },
+                rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
+            };
+        }),
+    ];
+};
