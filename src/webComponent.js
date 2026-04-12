@@ -85,8 +85,8 @@ export class RubiksCubeElement extends HTMLElement {
 
     /**
      * @param {string} name
-     * @param {string} oldVal
-     * @param {string} newVal
+     * @param {string?} oldVal
+     * @param {string?} newVal
      *  */
     attributeChangedCallback(name, oldVal, newVal) {
         switch (name) {
@@ -133,32 +133,10 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     connectedCallback() {
-        if (this.hasAttribute(AttributeNames.cubeType)) {
-            this.settings.setCubeType(this.getAttribute(AttributeNames.cubeType));
-        }
-        if (this.hasAttribute(AttributeNames.pieceGap)) {
-            this.settings.setPieceGap(this.getAttribute(AttributeNames.pieceGap));
-        }
-        if (this.hasAttribute(AttributeNames.animationSpeed)) {
-            this.settings.setAnimationSpeed(this.getAttribute(AttributeNames.animationSpeed));
-        }
-        if (this.hasAttribute(AttributeNames.animationStyle)) {
-            this.settings.setAnimationStyle(this.getAttribute(AttributeNames.animationStyle));
-        }
-        if (this.hasAttribute(AttributeNames.cameraSpeed)) {
-            this.settings.setCameraSpeed(this.getAttribute(AttributeNames.cameraSpeed));
-        }
-        if (this.hasAttribute(AttributeNames.cameraRadius)) {
-            this.settings.setCameraRadius(this.getAttribute(AttributeNames.cameraRadius));
-        }
-        if (this.hasAttribute(AttributeNames.cameraFieldOfView)) {
-            this.settings.setCameraFieldOfView(this.getAttribute(AttributeNames.cameraFieldOfView));
-        }
-        if (this.hasAttribute(AttributeNames.cameraPeekAngleHorizontal)) {
-            this.settings.setCameraPeekAngleHorizontal(this.getAttribute(AttributeNames.cameraPeekAngleHorizontal));
-        }
-        if (this.hasAttribute(AttributeNames.cameraPeekAngleVertical)) {
-            this.settings.setCameraPeekAngleVertical(this.getAttribute(AttributeNames.cameraPeekAngleVertical));
+        for (const attr of RubiksCubeElement.observedAttributes) {
+            if (this.hasAttribute(attr)) {
+                this.attributeChangedCallback(attr, null, this.getAttribute(attr));
+            }
         }
         this.init();
     }

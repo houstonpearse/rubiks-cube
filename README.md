@@ -1,6 +1,6 @@
 # Rubiks Cube Web Component
 
-A Rubik's Cube web component built with Three.js, WebGPU, and GSAP. The cube renders into a shadow‑DOM canvas and
+A Rubik's Cube web component built with Three.js and GSAP. The cube renders into a shadow‑DOM canvas and
 exposes a small, promise‑based API for cube moves, rotations, reset, state setting, and camera "peek" positions.
 Supports 2x2, 3x3, 4x4, 5x5, 6x6, and 7x7 Rubik's cubes.
 
@@ -87,7 +87,7 @@ cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 | camera-radius                | greater than or equal to 4                                 | Sets the camera radius                                                                                                                                                   |
 | camera-peek-angle-horizontal | decimal between 0 and 1                                    | Sets the horizontal peek angle                                                                                                                                           |
 | camera-peek-angle-vertical   | decimal between 0 and 1                                    | Sets the vertical peek angle                                                                                                                                             |
-| camera-field-of-view         | integer between 40 and 100                                 | Sets the field of view of the camera                                                                                                                                     |
+| camera-field-of-view         | integer between 30 and 100                                 | Sets the field of view of the camera                                                                                                                                     |
 
 ## Programmatic control
 

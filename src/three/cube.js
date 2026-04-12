@@ -177,7 +177,7 @@ export default class RubiksCube3D extends Object3D {
                 stickerpos.round();
                 const { face, i, j } = getStickerFaceIndex(stickerpos, piece.userData.position, this._cubeConfig.layers);
                 const stickerFaceValue = stickerState[face][i][j];
-                sticker.color = FaceColors[face];
+                sticker.color = FaceColors[stickerFaceValue];
             });
         });
     }

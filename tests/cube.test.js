@@ -5,6 +5,7 @@ import { CubeTypes } from '../src/core.js';
 import { toKociemba } from '../src/state/stickerState.js';
 import { createTestCube, drainUpdates } from './common.js';
 import { scrambles } from './testScrambles.js';
+import { CubeState } from '../src/state/state.js';
 
 test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
@@ -64,32 +65,28 @@ test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramb
     // Arrange
     const cube = createTestCube(cubeType);
     const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+    const cubeState = new CubeState(cubeType);
 
-    let finalState = null;
+    let stickerState = null;
     for (const move of scrambleMoves) {
-        cube.movement(
-            move,
-            (state) => {
-                finalState = state;
-                return true;
-            },
-            () => {
-                throw new Error('Movement failed unexpectedly');
-            },
-        );
-        drainUpdates(cube);
+        stickerState = cubeState.move(move);
     }
-
-    expect(/** @type {string?} **/ (finalState)).not.toBe(toKociemba(cube._initialStickerState));
+    let stateString = toKociemba(/** @type {import('../src/state/stickerState.js').StickerState} **/ (stickerState));
+    expect().not.toBe(toKociemba(cube._initialStickerState));
 
     // Act
-    cube.reset((state) => {
-        finalState = state;
-        return true;
-    });
+    let finalState = null;
+    cube.setState(
+        stateString,
+        (state) => {
+            finalState = state;
+            return true;
+        },
+        () => {},
+    );
 
     // Assert
-    expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._initialStickerState));
+    expect(/** @type {string?} **/ (finalState)).toBe(stateString);
 });
 
 test.each(scrambles)('$cubeType reverse scramble = $scramble', ({ cubeType, scramble, solution }) => {
