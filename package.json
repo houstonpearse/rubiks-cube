@@ -21,6 +21,10 @@
         "./core": {
             "types": "./types/core.d.ts",
             "default": "./src/core.js"
+        },
+        "./state": {
+            "types": "./types/state.d.ts",
+            "default": "./src/state.js"
         }
     },
     "scripts": {
