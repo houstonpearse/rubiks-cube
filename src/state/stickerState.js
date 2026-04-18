@@ -1,6 +1,8 @@
 // @ts-check
+import { CubeTypes, Faces } from '../core';
 /** @import {Face} from '../core' */
 /** @import {vector} from './state' */
+
 /**
  * @typedef StickerState
  * @property {Face[][]} Face.U
@@ -9,10 +11,9 @@
  * @property {Face[][]} Face.B
  * @property {Face[][]} Face.L
  * @property {Face[][]} Face.R
- * */
+ **/
 
-import { CubeTypes, Faces } from '../core';
-
+const ERROR_MARGIN = 0.0001;
 const LayerCount = {
     [CubeTypes.Two]: 2,
     [CubeTypes.Three]: 3,

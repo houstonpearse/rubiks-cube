@@ -1,16 +1,18 @@
 /// @ts-check
 import { Euler, Quaternion, Vector3 } from 'three';
-import { CubeTypes, FaceColours, Faces } from '../core';
-import { FaceColors } from '../cube/cubeConfig';
+import { CubeTypes, Faces, isMovement, IsRotation } from '../core';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
-import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from './stickerState';
+import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from './stickerState';
+/** @import {StickerState} from './stickerState' */
+/** @import {Rotation, CubeType, Movement, Face} from '../core' */
+/** @import {Slice} from './slice' */
 
 /**
  *  @typedef {{corners: pieceState[], edges: pieceState[], centers: pieceState[]}} state
  */
 
 /**
- * @typedef {{position: vector, rotation: vector, stickers: {face: import('../core').Face, direction: vector}[]}} pieceState
+ * @typedef {{position: vector, rotation: vector, stickers: {face: Face, direction: vector}[]}} pieceState
  */
 
 /**
@@ -30,7 +32,7 @@ const ERROR_MARGIN = 0.0001;
 export class CubeState {
     /**
      *
-     * @param {import('../core').CubeType} cubeType
+     * @param {CubeType} cubeType
      * @param {number[]} [layers]
      */
     constructor(cubeType, layers = Layers[cubeType]) {
@@ -72,11 +74,11 @@ export class CubeState {
     }
 
     /**
-     * @param {import('./stickerState').StickerState} stickerState
+     * @param {StickerState} stickerState
      * @returns {void}
      */
     setState(stickerState) {
-        const lastLayerNumber = this.layers.length - 1;
+        this.stickerState = stickerState;
         [...this.corners, ...this.edges, ...this.centers].forEach((piece) => {
             piece.stickers.forEach((sticker) => {
                 const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
@@ -89,11 +91,10 @@ export class CubeState {
     }
 
     /**
-     * @return {import('./stickerState').StickerState}
+     * @return {StickerState}
      */
     getState() {
         const stickerState = getEmptyStickerState(this.cubeType);
-        const lastLayerNumber = this.layers.length - 1;
         [...this.corners, ...this.edges, ...this.centers].forEach((piece) => {
             piece.stickers.forEach((sticker) => {
                 const stickerPosition = new Vector3(sticker.direction.x, sticker.direction.y, sticker.direction.z);
@@ -108,7 +109,7 @@ export class CubeState {
 
     /**
      *
-     * @param {import('./slice').Slice} slice
+     * @param {Slice} slice
      */
     slice(slice) {
         const pieces = [...this.corners, ...this.edges, ...this.centers]
@@ -153,8 +154,8 @@ export class CubeState {
     }
 
     /**
-     * @param {import('../core').Movement} movement
-     * @returns {import('./stickerState').StickerState?}
+     * @param {Movement} movement
+     * @returns {StickerState?}
      */
     move(movement) {
         const slice = GetMovementSlice(movement, this.layers);
@@ -168,8 +169,8 @@ export class CubeState {
     }
 
     /**
-     * @param {import('../core').Rotation} rotation
-     * @returns {import('./stickerState').StickerState?}
+     * @param {Rotation} rotation
+     * @returns {StickerState?}
      */
     rotate(rotation) {
         const slice = GetRotationSlice(rotation, this.layers);
@@ -184,10 +185,20 @@ export class CubeState {
 
     /**
      * @param {string} algorithm
-     * @returns {string}
+     * @returns {StickerState}
      */
     do(algorithm) {
-        return '';
+        const actions = algorithm.split(' ');
+        for (let i = 0; i < actions.length; i++) {
+            if (isMovement(actions[i])) {
+                this.move(/** @type {Movement} */ (actions[i]));
+            } else if (IsRotation(actions[i])) {
+                this.rotate(/** @type  {Rotation} */ (actions[i]));
+            } else {
+                console.error(`Invalid Notation: ${actions[i]}`);
+            }
+        }
+        return this.stickerState;
     }
 
     /**

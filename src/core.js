@@ -459,3 +459,20 @@ export const PeekStates = Object.freeze({
     LeftUp: 'leftUp',
     LeftDown: 'leftDown',
 });
+
+/**
+ *
+ * @param {string} rotation
+ */
+export function IsRotation(rotation) {
+    return /^([xyz])(\d)?(\')?$/.test(rotation);
+}
+
+/**
+ *
+ * @param {string} movement
+ * @return {boolean}
+ */
+export function isMovement(movement) {
+    return /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/.test(movement);
+}

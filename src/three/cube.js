@@ -465,7 +465,7 @@ export default class RubiksCube3D extends Object3D {
      */
     rotate(rotation, completedCallback, failedCallback, options) {
         if (options?.reverse) {
-            if (rotation.charAt(-1) === "'") {
+            if (rotation.at(-1) === "'") {
                 rotation = /** @type {import('../core').Rotation} */ (rotation.slice(0, -1));
             } else {
                 rotation = rotation + "'";

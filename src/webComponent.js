@@ -83,6 +83,15 @@ export class RubiksCubeElement extends HTMLElement {
         ];
     }
 
+    connectedCallback() {
+        for (const attr of RubiksCubeElement.observedAttributes) {
+            if (this.hasAttribute(attr)) {
+                this.attributeChangedCallback(attr, null, this.getAttribute(attr));
+            }
+        }
+        this.init();
+    }
+
     /**
      * @param {string} name
      * @param {string?} oldVal
@@ -130,15 +139,6 @@ export class RubiksCubeElement extends HTMLElement {
                 }
                 break;
         }
-    }
-
-    connectedCallback() {
-        for (const attr of RubiksCubeElement.observedAttributes) {
-            if (this.hasAttribute(attr)) {
-                this.attributeChangedCallback(attr, null, this.getAttribute(attr));
-            }
-        }
-        this.init();
     }
 
     /** @private */
@@ -280,7 +280,10 @@ export class RubiksCubeElement extends HTMLElement {
             }
             this._rubiksCube3D.setType(
                 cubeType,
-                (state) => resolve(state),
+                (state) => {
+                    this.setAttribute(AttributeNames.cubeType, cubeType);
+                    resolve(state);
+                },
                 (reason) => reject(reason),
             );
         });
