@@ -12,26 +12,23 @@ test.each(scrambles)('CubeState solve on $cubeType with scramble = $scramble', (
     const initialKociembaState = toKociemba(initialState);
     const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
 
-    let stickerState = initialState;
     scrambleMoves.forEach((move) => {
-        stickerState = cube.move(move) ?? stickerState;
+        cube.move(move);
     });
-
-    expect(toKociemba(stickerState)).not.toBe(initialKociembaState);
+    const scrambleState = toKociemba(cube.stickerState);
 
     // Act
     const solutionActions = /** @type {(import('../src/core.js').Movement | import('../src/core.js').Rotation)[]} */ (solution.split(' '));
-
-    /** @type {import('../src/state/stickerState.js').StickerState} */
-    let finalState = initialState;
     for (const action of solutionActions) {
         if (action.includes('x') || action.includes('y') || action.includes('z')) {
-            finalState = cube.rotate(/** @type {import('../src/core.js').Rotation} */ (action)) ?? finalState;
+            cube.rotate(/** @type {import('../src/core.js').Rotation} */ (action));
         } else {
-            finalState = cube.move(/** @type {import('../src/core.js').Movement} */ (action)) ?? finalState;
+            cube.move(/** @type {import('../src/core.js').Movement} */ (action));
         }
     }
+    const solvedState = toKociemba(cube.stickerState);
 
     // Assert
-    expect(toKociemba(finalState)).toBe(initialKociembaState);
+    expect(scrambleState).not.toBe(initialKociembaState);
+    expect(solvedState).toBe(initialKociembaState);
 });

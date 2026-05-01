@@ -19,7 +19,7 @@ import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '
  * @typedef {{x: number,y: number,z: number}} vector
  */
 
-export const Layers = {
+const Layers = {
     [CubeTypes.Two]: [-1, 1],
     [CubeTypes.Three]: [-1, 0, 1],
     [CubeTypes.Four]: [-2, -1, 1, 2],
@@ -112,7 +112,7 @@ export class CubeState {
      * @param {Slice} slice
      */
     slice(slice) {
-        const pieces = [...this.corners, ...this.edges, ...this.centers]
+        [...this.corners, ...this.edges, ...this.centers]
             .filter((piece) => {
                 switch (slice.axis) {
                     case Axi.x:
@@ -151,11 +151,12 @@ export class CubeState {
                 piece.rotation.y = newRotation.y;
                 piece.rotation.z = newRotation.z;
             });
+        this.stickerState = this.getState();
     }
 
     /**
      * @param {Movement} movement
-     * @returns {StickerState?}
+     * @returns {Slice?}
      */
     move(movement) {
         const slice = GetMovementSlice(movement, this.layers);
@@ -164,13 +165,12 @@ export class CubeState {
             return null;
         }
         this.slice(slice);
-        this.stickerState = this.getState();
-        return this.stickerState;
+        return slice;
     }
 
     /**
      * @param {Rotation} rotation
-     * @returns {StickerState?}
+     * @returns {Slice?}
      */
     rotate(rotation) {
         const slice = GetRotationSlice(rotation, this.layers);
@@ -179,8 +179,7 @@ export class CubeState {
             return null;
         }
         this.slice(slice);
-        this.stickerState = this.getState();
-        return this.stickerState;
+        return slice;
     }
 
     /**

@@ -34,7 +34,7 @@ export function getStickerFaceIndex(stickerDirection, piecePosition, layers) {
     /** @type {(val: number) => number} */
     const layerIndex = (val) => {
         for (let i = 0; i < layers.length; i++) {
-            if (Math.abs(val - layers[i]) < 0.0001) {
+            if (Math.abs(val - layers[i]) < ERROR_MARGIN) {
                 return i;
             }
         }

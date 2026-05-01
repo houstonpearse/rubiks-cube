@@ -66,13 +66,10 @@ test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramb
     const cube = createTestCube(cubeType);
     const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
     const cubeState = new CubeState(cubeType);
-
-    let stickerState = null;
     for (const move of scrambleMoves) {
-        stickerState = cubeState.move(move);
+        cubeState.move(move);
     }
-    let stateString = toKociemba(/** @type {import('../src/state/stickerState.js').StickerState} **/ (stickerState));
-    expect().not.toBe(toKociemba(cube._initialStickerState));
+    let stateString = toKociemba(/** @type {import('../src/state/stickerState.js').StickerState} **/ (cubeState.stickerState));
 
     // Act
     let finalState = null;
@@ -80,12 +77,12 @@ test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramb
         stateString,
         (state) => {
             finalState = state;
-            return true;
         },
         () => {},
     );
 
     // Assert
+    expect(stateString).not.toBe(toKociemba(cube._initialStickerState));
     expect(/** @type {string?} **/ (finalState)).toBe(stateString);
 });
 

@@ -333,10 +333,6 @@ export class RubiksCubeElement extends HTMLElement {
         controls.enableZoom = false;
         controls.enablePan = false;
         controls.enableDamping = true;
-        // controls.maxAzimuthAngle = maxAzimuthAngle;
-        // controls.minAzimuthAngle = -maxAzimuthAngle;
-        // controls.maxPolarAngle = polarAngleOffset + maxPolarAngle;
-        // controls.minPolarAngle = polarAngleOffset - maxPolarAngle;
 
         // add lighting to scene
         const ambientLight = new AmbientLight('white', 0.4);
