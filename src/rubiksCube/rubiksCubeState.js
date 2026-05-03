@@ -1,7 +1,7 @@
 // @ts-check
-import { CubeState } from './state/state';
-import { fromKociemba, toKociemba } from './state/stickerState';
-/**  @import { CubeType, Movement, Rotation } from './core' */
+import { CubeState } from '../state/state';
+import { fromKociemba, toKociemba } from '../state/stickerState';
+/**  @import { CubeType, Movement, Rotation } from '../core' */
 export default class RubiksCubeState {
     /**
      *
@@ -12,10 +12,10 @@ export default class RubiksCubeState {
         /** @type {CubeState} */
         this.state = new CubeState(cubeType);
         /** @type {string} */
-        this.kociemba = toKociemba(this.state.stickerState);
+        this.kociemba = toKociemba(this.state.getState());
 
         if (kociembaState != null) {
-            const stickerState = fromKociemba(kociembaState, cubeType);
+            const stickerState = fromKociemba(kociembaState);
             if (stickerState != null) {
                 this.state.setState(stickerState);
                 this.kociemba = kociembaState;
@@ -24,12 +24,12 @@ export default class RubiksCubeState {
     }
 
     /**
-     * @param {string} algorithm
-     * @returns {string} state
+     * @param {(import('../core').Rotation | import('../core').Movement)[]} actions
+     * @returns {string}
      */
-    do(algorithm) {
-        this.state.do(algorithm);
-        return toKociemba(this.state.stickerState);
+    do(actions) {
+        this.state.do(actions);
+        return toKociemba(this.state.getState());
     }
 
     /**
@@ -38,7 +38,7 @@ export default class RubiksCubeState {
      */
     move(movement) {
         this.state.move(movement);
-        return toKociemba(this.state.stickerState);
+        return toKociemba(this.state.getState());
     }
 
     /**
@@ -47,6 +47,6 @@ export default class RubiksCubeState {
      */
     rotate(rotation) {
         this.state.rotate(rotation);
-        return toKociemba(this.state.stickerState);
+        return toKociemba(this.state.getState());
     }
 }

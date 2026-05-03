@@ -8,14 +8,20 @@ export const Axi = Object.freeze({
     z: 'z',
 });
 
-/** @typedef {{axis: Axis, layers: number[], direction: number}} Slice */
+/**
+ * A slice represents an action or movement of a 3D rubiks cube. layers
+ * @typedef  Slice
+ * @property {Axis} axis the axis that pieces rotate around
+ * @property {number[]} layerIds starting from 0 to the size of the cube. Layers represent what layers are included in the movement.
+ * @property {number} direction the direction and magnitude of the rotation
+ **/
 
 /**
  * @param {import('../core').Movement } movement
- * @param {number[]} layers
+ * @param {number} layerCount
  * @returns {Slice | undefined}
  */
-export function GetMovementSlice(movement, layers) {
+export function GetMovementSlice(movement, layerCount) {
     const result = RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).exec(movement);
     if (result == null) {
         console.error(`Failed to parse outerBlockMovement. invalid movement: ${movement}`);
@@ -35,15 +41,13 @@ export function GetMovementSlice(movement, layers) {
     }
 
     if (layerRangeLower != null && layerRangeUpper != null) {
-        if (layerRangeLower >= layerRangeUpper || layerRangeUpper > layers.length || layerRangeLower > layers.length - 1) {
-            console.error(
-                `${movement} is not valid for the current cubeType. For range inputs like x-yr it should follow that 1 <= x < y <= ${layers.length}.`,
-            );
+        if (layerRangeLower >= layerRangeUpper || layerRangeUpper > layerCount || layerRangeLower > layerCount - 1) {
+            console.error(`${movement} is not valid for the current cubeType. For range inputs like x-yr it should follow that 1 <= x < y <= ${layerCount}.`);
             return undefined;
         }
     }
-    if (layerNumber != null && layerNumber > layers.length) {
-        console.error(`${movement} is not valid for the current cubeType. For inputs like xR it should follow that x <= ${layers.length}.`);
+    if (layerNumber != null && layerNumber > layerCount) {
+        console.error(`${movement} is not valid for the current cubeType. For inputs like xR it should follow that x <= ${layerCount}.`);
         return undefined;
     }
 
@@ -96,15 +100,15 @@ export function GetMovementSlice(movement, layers) {
         case 'U':
         case 'F': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const layer = layers[layers.length - layerNumber];
-            return { axis, layers: [layer], direction: -direction };
+            const layerIndex = layerCount - layerNumber;
+            return { axis, layerIds: [layerIndex], direction: -direction };
         }
         case 'L':
         case 'D':
         case 'B': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const layer = layers[layerNumber - 1];
-            return { axis, layers: [layer], direction };
+            const layerIndex = layerNumber - 1;
+            return { axis, layerIds: [layerIndex], direction };
         }
         case 'Rw':
         case 'Uw':
@@ -113,11 +117,11 @@ export function GetMovementSlice(movement, layers) {
         case 'u':
         case 'f': {
             layerNumber = layerNumber ? layerNumber : 2;
-            let sliceLayers = layers.slice(layers.length - layerNumber);
+            let sliceLayers = range(layerCount - layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                sliceLayers = layers.slice(layers.length - layerRangeUpper, layers.length - (layerRangeLower - 1));
+                sliceLayers = range(layerCount - layerRangeUpper, layerCount - (layerRangeLower - 1));
             }
-            return { axis, layers: sliceLayers, direction: -direction };
+            return { axis, layerIds: sliceLayers, direction: -direction };
         }
         case 'Lw':
         case 'Dw':
@@ -126,37 +130,37 @@ export function GetMovementSlice(movement, layers) {
         case 'd':
         case 'b': {
             layerNumber = layerNumber ? layerNumber : 2;
-            let sliceLayers = layers.slice(0, layerNumber);
+            let sliceLayers = range(0, layerNumber);
             if (layerRangeLower != null && layerRangeUpper != null) {
-                sliceLayers = layers.slice(layerRangeLower - 1, layerRangeUpper);
+                sliceLayers = range(layerRangeLower - 1, layerRangeUpper);
             }
-            return { axis, layers: sliceLayers, direction };
+            return { axis, layerIds: sliceLayers, direction };
         }
         case 'M':
         case 'E': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
-            const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
-            const sliceLayers = layers.slice(lower, upper);
-            return { axis, layers: sliceLayers, direction };
+            const lower = Math.max(Math.floor(layerCount / 2) - (layerNumber - 1), 1);
+            const upper = Math.min(Math.ceil(layerCount / 2) + (layerNumber - 1), layerCount - 1);
+            const sliceLayers = range(lower, upper);
+            return { axis, layerIds: sliceLayers, direction };
         }
         case 'm':
         case 'e': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
-            return { axis, layers: sliceLayers, direction };
+            const sliceLayers = range(layerNumber, layerCount - layerNumber);
+            return { axis, layerIds: sliceLayers, direction };
         }
         case 'S': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const lower = Math.max(Math.floor(layers.length / 2) - (layerNumber - 1), 1);
-            const upper = Math.min(Math.ceil(layers.length / 2) + (layerNumber - 1), layers.length - 1);
-            const sliceLayers = layers.slice(lower, upper);
-            return { axis, layers: sliceLayers, direction: -direction };
+            const lower = Math.max(Math.floor(layerCount / 2) - (layerNumber - 1), 1);
+            const upper = Math.min(Math.ceil(layerCount / 2) + (layerNumber - 1), layerCount - 1);
+            const sliceLayers = range(lower, upper);
+            return { axis, layerIds: sliceLayers, direction: -direction };
         }
         case 's': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const sliceLayers = layers.slice(layerNumber, layers.length - layerNumber);
-            return { axis, layers: sliceLayers, direction: -direction };
+            const sliceLayers = range(layerNumber, layerCount - layerNumber);
+            return { axis, layerIds: sliceLayers, direction: -direction };
         }
         default:
             console.error(`${movement} is invalid. Invalid movementType ${movementType}.`);
@@ -166,10 +170,10 @@ export function GetMovementSlice(movement, layers) {
 
 /**
  * @param {import('../core').Rotation} rotation
- * @param {number[]} layers
+ * @param {number} layerCount
  * @returns {Slice | undefined}
  */
-export function GetRotationSlice(rotation, layers) {
+export function GetRotationSlice(rotation, layerCount) {
     const result = RegExp(`^([xyz])(\\d)?(\')?$`).exec(rotation);
     if (result == null) {
         console.error(`Failed to parse rotation. invalid rotation: [${rotation}]`);
@@ -182,13 +186,30 @@ export function GetRotationSlice(rotation, layers) {
     const direction = (isPrime ? 1 : -1) * (rotationNumber % 4);
     switch (rotationType) {
         case Rotations.x:
-            return { axis: Axi.x, layers: layers, direction };
+            return { axis: Axi.x, layerIds: range(layerCount), direction };
         case Rotations.y:
-            return { axis: Axi.y, layers: layers, direction };
+            return { axis: Axi.y, layerIds: range(layerCount), direction };
         case Rotations.z:
-            return { axis: Axi.z, layers: layers, direction };
+            return { axis: Axi.z, layerIds: range(layerCount), direction };
         default:
             console.error(`Failed to get rotation slice. invalid rotationType: ${rotationType}`);
             return undefined;
     }
 }
+
+/**
+ *
+ * @param {number} start
+ * @param {number} [stop]
+ * @param {number} [step=1]
+ * @returns {number[]}
+ */
+const range = (start, stop, step = 1) => {
+    if (stop === undefined) {
+        stop = start;
+        start = 0;
+    }
+
+    const length = Math.max(Math.ceil((stop - start) / step), 0);
+    return Array.from({ length }, (_, i) => start + i * step);
+};

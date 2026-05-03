@@ -1,19 +1,19 @@
 // @ts-check
-export default class CubeSettings {
+export default class RubiksCube3DSettings {
     /**
      * @param {import('../core').CubeType} cubeType
      * @param {number} pieceGap
      * @param {number} animationSpeed
-     * @param {import('../core').AnimationStyle} animationStyle
+     * @param {gsap.EaseString | gsap.EaseFunction | undefined} animationStyle
      */
-    constructor(pieceGap, animationSpeed, animationStyle, cubeType) {
+    constructor(pieceGap, animationSpeed, cubeType, animationStyle) {
         /** @type {number} pieceGap */
         this.pieceGap = pieceGap;
         /** @type {import("../core").CubeType} */
         this.cubeType = cubeType;
         /** @type {number} pieceGap */
         this.animationSpeedMs = animationSpeed;
-        /** @type {import('../core').AnimationStyle} pieceGap */
+        /** @type {gsap.EaseString | gsap.EaseFunction | undefined} pieceGap */
         this.animationStyle = animationStyle;
     }
 }

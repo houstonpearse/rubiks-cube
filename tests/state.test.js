@@ -10,23 +10,24 @@ test.each(scrambles)('CubeState solve on $cubeType with scramble = $scramble', (
     const cube = new CubeState(cubeType);
     const initialState = cube.getState();
     const initialKociembaState = toKociemba(initialState);
-    const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+    const scrambleMoves = /** @type {import('../src/core').Movement[]} */ (scramble.split(' '));
 
     scrambleMoves.forEach((move) => {
         cube.move(move);
     });
-    const scrambleState = toKociemba(cube.stickerState);
+    const scrambleState = toKociemba(cube.getState());
 
     // Act
-    const solutionActions = /** @type {(import('../src/core.js').Movement | import('../src/core.js').Rotation)[]} */ (solution.split(' '));
+
+    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
     for (const action of solutionActions) {
         if (action.includes('x') || action.includes('y') || action.includes('z')) {
-            cube.rotate(/** @type {import('../src/core.js').Rotation} */ (action));
+            cube.rotate(/** @type {import('../src/core').Rotation} */ (action));
         } else {
-            cube.move(/** @type {import('../src/core.js').Movement} */ (action));
+            cube.move(/** @type {import('../src/core').Movement} */ (action));
         }
     }
-    const solvedState = toKociemba(cube.stickerState);
+    const solvedState = toKociemba(cube.getState());
 
     // Assert
     expect(scrambleState).not.toBe(initialKociembaState);

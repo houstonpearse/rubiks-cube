@@ -1,132 +1,122 @@
 // @ts-check
 import './setup.js';
 import { expect, test } from 'bun:test';
-import { CubeTypes } from '../src/core.js';
+import { CubeTypes, IsRotation, reverse, translate } from '../src/core';
 import { toKociemba } from '../src/state/stickerState.js';
-import { createTestCube, drainUpdates } from './common.js';
+import { createTestCube } from './common.js';
 import { scrambles } from './testScrambles.js';
 import { CubeState } from '../src/state/state.js';
+import { GetMovementSlice, GetRotationSlice } from '../src/state/slice.js';
 
 test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
-    const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+    const initialState = toKociemba(cube.getStickerState());
+    const scrambleMoves = /** @type {import('../src/core').Movement[]} */ (scramble.split(' '));
 
-    let finalState = null;
     for (const move of scrambleMoves) {
-        cube.movement(
-            move,
-            (state) => {
-                finalState = state;
-                return true;
-            },
-            () => {
-                throw new Error('Movement failed unexpectedly');
-            },
-        );
-        drainUpdates(cube);
+        const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (move), cube._cubeConfig.layers);
+        if (slice) {
+            cube.slice(slice, { animationSpeedMs: 0 });
+        } else {
+            console.error('Invalid action', move);
+        }
     }
-    expect(/** @type {string?} **/ (finalState)).not.toBe(toKociemba(cube._initialStickerState));
+    expect(/** @type {string?} **/ (toKociemba(cube.getStickerState()))).not.toBe(initialState);
 
     // Act
-    const solutionActions = /** @type {(import('../src/core.js').Movement | import('../src/core.js').Rotation)[]} */ (solution.split(' '));
+    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
     for (const action of solutionActions) {
-        if (action.includes('x') || action.includes('y') || action.includes('z')) {
-            cube.rotate(
-                /** @type {import('../src/core.js').Rotation} */ (action),
-                (state) => {
-                    finalState = state;
-                    return true;
-                },
-                () => {
-                    throw new Error('Rotation failed unexpectedly');
-                },
-            );
+        if (IsRotation(action)) {
+            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
         } else {
-            cube.movement(
-                /** @type {import('../src/core.js').Movement} */ (action),
-                (state) => {
-                    finalState = state;
-                    return true;
-                },
-                () => {
-                    throw new Error('Movement failed unexpectedly');
-                },
-            );
+            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
         }
-        drainUpdates(cube);
     }
 
     // Assert
-    expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._initialStickerState));
+    expect(/** @type {string?} **/ (toKociemba(cube.getStickerState()))).toBe(initialState);
 });
 
 test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
-    const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+    const scrambleMoves = /** @type {import('../src/core').Movement[]} */ (scramble.split(' '));
     const cubeState = new CubeState(cubeType);
-    for (const move of scrambleMoves) {
-        cubeState.move(move);
-    }
-    let stateString = toKociemba(/** @type {import('../src/state/stickerState.js').StickerState} **/ (cubeState.stickerState));
+    let initialState = cubeState.getState();
+    cubeState.do(scrambleMoves);
+    let scrambleState = cubeState.getState();
 
     // Act
-    let finalState = null;
-    cube.setState(
-        stateString,
-        (state) => {
-            finalState = state;
-        },
-        () => {},
-    );
+    cube.setState(scrambleState);
+    let scramble3DState = cube.getStickerState();
+    cube.reset();
 
     // Assert
-    expect(stateString).not.toBe(toKociemba(cube._initialStickerState));
-    expect(/** @type {string?} **/ (finalState)).toBe(stateString);
+    expect(toKociemba(scrambleState)).not.toBe(toKociemba(initialState));
+    expect(toKociemba(scramble3DState)).toBe(toKociemba(scrambleState));
+    expect(toKociemba(cube.getStickerState())).toBe(toKociemba(initialState));
 });
 
 test.each(scrambles)('$cubeType reverse scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
-    const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
-
-    let finalState = null;
-    for (const move of scrambleMoves) {
-        cube.movement(
-            move,
-            (state) => {
-                finalState = state;
-                return true;
-            },
-            () => {
-                throw new Error('Movement failed unexpectedly');
-            },
-        );
-        drainUpdates(cube);
-    }
-
-    expect(/** @type {string?} **/ (finalState)).not.toBe(toKociemba(cube._initialStickerState));
+    const scrambleActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (scramble.split(' '));
+    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
+    const initialState = cube.getStickerState();
 
     // Act
-    for (const move of scrambleMoves.reverse()) {
-        cube.movement(
-            move,
-            (state) => {
-                finalState = state;
-                return true;
-            },
-            () => {
-                throw new Error('Movement failed unexpectedly');
-            },
-            { reverse: true },
-        );
-        drainUpdates(cube);
-        drainUpdates(cube);
+    for (const action of scrambleActions) {
+        if (IsRotation(action)) {
+            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        } else {
+            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        }
+    }
+    const scrambleState = cube.getStickerState();
+
+    // Act
+    for (const action of scrambleActions.reverse()) {
+        if (IsRotation(action)) {
+            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (reverse(action)), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        } else {
+            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (reverse(action)), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        }
     }
 
     // Assert
-    expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._initialStickerState));
+    expect(/** @type {string?} **/ (toKociemba(scrambleState))).not.toBe(toKociemba(initialState));
+    expect(/** @type {string?} **/ (toKociemba(cube.getStickerState()))).toBe(toKociemba(initialState));
 });
 
 const bigCubes = [CubeTypes.Four, CubeTypes.Five, CubeTypes.Six, CubeTypes.Seven];
@@ -139,54 +129,49 @@ const solves = bigCubes.flatMap((cubeType) =>
 test.each(solves)('3x3 solve on $bigCubeType with scramble = $scramble', ({ bigCubeType, cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(bigCubeType);
-    const scrambleMoves = /** @type {import('../src/core.js').Movement[]} */ (scramble.split(' '));
+    const scrambleActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (scramble.split(' '));
+    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
+    const initialState = cube.getStickerState();
 
-    let finalState = null;
-    for (const move of scrambleMoves) {
-        cube.movement(
-            move,
-            (state) => {
-                finalState = state;
-                return true;
-            },
-            () => {
-                throw new Error('Movement failed unexpectedly');
-            },
-        );
-        drainUpdates(cube);
-    }
-    expect(/** @type {string?} **/ (finalState)).not.toBe(toKociemba(cube._initialStickerState));
-
-    // Act
-    const solutionActions = /** @type {(import('../src/core.js').Movement | import('../src/core.js').Rotation)[]} */ (solution.split(' '));
-    for (const action of solutionActions) {
-        if (action.includes('x') || action.includes('y') || action.includes('z')) {
-            cube.rotate(
-                /** @type {import('../src/core.js').Rotation} */ (action),
-                (state) => {
-                    finalState = state;
-                    return true;
-                },
-                () => {
-                    throw new Error('Rotation failed unexpectedly');
-                },
-            );
+    for (const action of scrambleActions) {
+        if (IsRotation(action)) {
+            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
         } else {
-            cube.movement(
-                /** @type {import('../src/core.js').Movement} */ (action),
-                (state) => {
-                    finalState = state;
-                    return true;
-                },
-                () => {
-                    throw new Error('Movement failed unexpectedly');
-                },
-                { translate: true },
-            );
+            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (translate(action, bigCubeType)), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
         }
-        drainUpdates(cube);
     }
+    const scrambleState = cube.getStickerState();
+
+    for (const action of solutionActions) {
+        if (IsRotation(action)) {
+            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        } else {
+            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (translate(action, bigCubeType)), cube._cubeConfig.layers);
+            if (slice) {
+                cube.slice(slice, { animationSpeedMs: 0 });
+            } else {
+                console.error('Invalid action', action);
+            }
+        }
+    }
+    const solutionState = cube.getStickerState();
 
     // Assert
-    expect(/** @type {string?} **/ (finalState)).toBe(toKociemba(cube._initialStickerState));
+    expect(/** @type {string?} **/ (toKociemba(scrambleState))).not.toBe(toKociemba(initialState));
+    expect(/** @type {string?} **/ (toKociemba(solutionState))).toBe(toKociemba(initialState));
 });

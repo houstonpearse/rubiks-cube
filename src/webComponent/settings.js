@@ -1,13 +1,11 @@
 // @ts-check
-import { AnimationStyles, CubeTypes } from './core';
-import CubeSettings from './cube/cubeSettings';
-import RubiksCube3D from './three/cube';
+import { AnimationStyles, CubeTypes } from '../core';
+import RubiksCube3DSettings from '../rubiksCube3D/cubeSettings';
 
 const defaultCubeSettings = {
     cubeType: CubeTypes.Three,
     animationSpeedMs: 100,
-    /** @type {import('./core').AnimationStyle} */
-    animationStyle: 'fixed',
+    animationStyle: 'linear',
     pieceGap: 1.04,
 };
 
@@ -27,12 +25,12 @@ const maxFieldOfView = 100;
 
 export default class Settings {
     constructor() {
-        /** @type {CubeSettings} */
-        this.rubiksCube3DSettings = new CubeSettings(
+        /** @type {RubiksCube3DSettings} */
+        this.rubiksCube3DSettings = new RubiksCube3DSettings(
             defaultCubeSettings.pieceGap,
             defaultCubeSettings.animationSpeedMs,
-            defaultCubeSettings.animationStyle,
             defaultCubeSettings.cubeType,
+            defaultCubeSettings.animationStyle,
         );
         /** @type {number} */
         this.cameraSpeedMs = defaultSettings.cameraSpeedMs;
@@ -49,8 +47,8 @@ export default class Settings {
     /** @param {any} value */
     setCubeType(value) {
         if (value && Object.values(CubeTypes).includes(value)) {
-            const cubeType = /** @type {import('./core').CubeType} */ (value);
-            this.rubiksCube3DSettings.cubeType = cubeType;
+            const cubeType = /** @type {import('../core').CubeType} */ (value);
+            this.rubiksCube3DcubeType = cubeType;
             return;
         }
         console.warn(`Invalid cube type value. Accepted Values are [${Object.values(CubeTypes).join(', ')}] Value is ${value}`);
@@ -79,7 +77,7 @@ export default class Settings {
     /** @param {any} value */
     setAnimationStyle(value) {
         if (value && Object.values(AnimationStyles).includes(value)) {
-            const validStyle = /** @type {import("./core").AnimationStyle} */ (value);
+            const validStyle = /** @type {import("../core").AnimationStyle} */ (value);
             this.rubiksCube3DSettings.animationStyle = validStyle;
             return;
         }

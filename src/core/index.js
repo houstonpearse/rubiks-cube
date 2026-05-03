@@ -13,6 +13,34 @@
  */
 
 /**
+ *  @param {Movement | Rotation} action
+ * @returns {Movement | Rotation}
+ * */
+export function reverse(action) {
+    /** @type {Movement | Rotation} */
+    let reversedAction = action;
+    if (action.at(-1) === "'") {
+        reversedAction = /** @type {Movement | Rotation} */ (action.slice(0, -1));
+    } else {
+        const newAction = /** @type {Movement | Rotation} */ (action + "'");
+        reversedAction = newAction;
+    }
+    return reversedAction;
+}
+
+/**
+ * @param {Movement | Rotation } action
+ * @param {CubeType} cubeType
+ * @returns {Movement | Rotation}
+ * */
+export function translate(action, cubeType) {
+    if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (action))) {
+        return /** @type {Movement}  */ (LayerCount[cubeType] - 1 + action);
+    }
+    return action;
+}
+
+/**
  * @typedef {typeof Movements.Single[keyof typeof Movements.Single]} SingleMove
  * @typedef {typeof Movements.Wide[keyof typeof Movements.Wide]} WideMove
  * @typedef {typeof Movements.Two[keyof typeof Movements.Two]} TwoMove
@@ -409,6 +437,15 @@ export const CubeTypes = Object.freeze({
     Five: 'Five',
     Six: 'Six',
     Seven: 'Seven',
+});
+
+export const LayerCount = Object.freeze({
+    [CubeTypes.Two]: 2,
+    [CubeTypes.Three]: 3,
+    [CubeTypes.Four]: 4,
+    [CubeTypes.Five]: 5,
+    [CubeTypes.Six]: 6,
+    [CubeTypes.Seven]: 7,
 });
 
 /**

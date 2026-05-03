@@ -118,16 +118,26 @@ export function toKociemba(stickerState) {
 
 /**
  * @param {string} kociembaString
- * @param {import('../core').CubeType} cubeType
  * @returns {StickerState | undefined} stickerState
  */
-export function fromKociemba(kociembaString, cubeType) {
-    const n = LayerCount[cubeType];
-    if (kociembaString.length !== 6 * n * n) {
-        console.error(`Invalid state string length. Length must be ${6 * n * n} for ${cubeType} cubes.`);
-        return;
+export function fromKociemba(kociembaString) {
+    switch (kociembaString.length) {
+        case 6 * 2 * 2:
+            return fromKociembaWithLayerCount(kociembaString, 2);
+        case 6 * 3 * 3:
+            return fromKociembaWithLayerCount(kociembaString, 3);
+        case 6 * 4 * 4:
+            return fromKociembaWithLayerCount(kociembaString, 4);
+        case 6 * 5 * 5:
+            return fromKociembaWithLayerCount(kociembaString, 5);
+        case 6 * 6 * 6:
+            return fromKociembaWithLayerCount(kociembaString, 6);
+        case 6 * 7 * 7:
+            return fromKociembaWithLayerCount(kociembaString, 7);
+        default:
+            console.error(`Invalid state string length.`);
+            return;
     }
-    return fromKociembaWithLayerCount(kociembaString, n);
 }
 
 /**

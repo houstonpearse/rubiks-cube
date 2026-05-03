@@ -1,4 +1,5 @@
 import { CubeState } from './state';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
+import RubiksCubeState from '../rubiksCube/rubiksCubeState';
 
-export { CubeState, Axi, GetMovementSlice, GetRotationSlice };
+export { RubiksCubeState, CubeState, Axi, GetMovementSlice, GetRotationSlice };

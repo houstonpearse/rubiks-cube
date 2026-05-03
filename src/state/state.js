@@ -1,6 +1,6 @@
 /// @ts-check
 import { Euler, Quaternion, Vector3 } from 'three';
-import { CubeTypes, Faces, isMovement, IsRotation } from '../core';
+import { CubeTypes, Faces, isMovement, IsRotation, Movements } from '../core';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
 import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from './stickerState';
 /** @import {StickerState} from './stickerState' */
@@ -17,6 +17,14 @@ import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '
 
 /**
  * @typedef {{x: number,y: number,z: number}} vector
+ */
+
+/**
+ *  @typedef {{translate?: boolean | undefined, reverse?: boolean | undefined}} MoveOptions
+ */
+
+/**
+ *  @typedef {{reverse?: boolean | undefined}} RotationOptions
  */
 
 const Layers = {
@@ -37,6 +45,9 @@ export class CubeState {
      */
     constructor(cubeType, layers = Layers[cubeType]) {
         this.cubeType = cubeType;
+        /** @type {StickerState?} */
+        this.stickerState = null;
+        /** @type {number[]} */
         this.layers = layers;
         /** @type {pieceState[]} */
         this.corners = corners(this.layers).map((corner) => {
@@ -69,8 +80,14 @@ export class CubeState {
                 stickers: [{ face: Faces.U, direction: { x: 0, y: 0, z: 1 } }],
             };
         });
-        this.stickerState = defaultStickerState(cubeType);
-        this.setState(this.stickerState);
+        /** @type {StickerState?} */
+        this.stickerState = null;
+        this.setState(defaultStickerState(cubeType));
+    }
+
+    reset() {
+        this.stickerState = null;
+        this.setState(defaultStickerState(this.cubeType));
     }
 
     /**
@@ -94,6 +111,9 @@ export class CubeState {
      * @return {StickerState}
      */
     getState() {
+        if (this.stickerState) {
+            return this.stickerState;
+        }
         const stickerState = getEmptyStickerState(this.cubeType);
         [...this.corners, ...this.edges, ...this.centers].forEach((piece) => {
             piece.stickers.forEach((sticker) => {
@@ -104,7 +124,8 @@ export class CubeState {
                 stickerState[face][i][j] = sticker.face;
             });
         });
-        return stickerState;
+        this.stickerState = stickerState;
+        return this.stickerState;
     }
 
     /**
@@ -116,11 +137,11 @@ export class CubeState {
             .filter((piece) => {
                 switch (slice.axis) {
                     case Axi.x:
-                        return slice.layers.some((layer) => Math.abs(layer - piece.position.x) < ERROR_MARGIN);
+                        return slice.layerIds.map((id) => this.layers[id]).some((layer) => Math.abs(layer - piece.position.x) < ERROR_MARGIN);
                     case Axi.y:
-                        return slice.layers.some((layer) => Math.abs(layer - piece.position.y) < ERROR_MARGIN);
+                        return slice.layerIds.map((id) => this.layers[id]).some((layer) => Math.abs(layer - piece.position.y) < ERROR_MARGIN);
                     case Axi.z:
-                        return slice.layers.some((layer) => Math.abs(layer - piece.position.z) < ERROR_MARGIN);
+                        return slice.layerIds.map((id) => this.layers[id]).some((layer) => Math.abs(layer - piece.position.z) < ERROR_MARGIN);
                 }
             })
             .forEach((piece) => {
@@ -151,15 +172,28 @@ export class CubeState {
                 piece.rotation.y = newRotation.y;
                 piece.rotation.z = newRotation.z;
             });
-        this.stickerState = this.getState();
+        this.stickerState = null;
     }
 
     /**
      * @param {Movement} movement
+     * @param {MoveOptions} [options]
      * @returns {Slice?}
      */
-    move(movement) {
-        const slice = GetMovementSlice(movement, this.layers);
+    move(movement, options) {
+        if (options?.reverse) {
+            if (movement.at(-1) === "'") {
+                movement = /** @type {import('../core').Movement} */ (movement.slice(0, -1));
+            } else {
+                movement = movement + "'";
+            }
+        }
+        if (options?.translate) {
+            if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (movement))) {
+                movement = this.layers.length - 1 + movement;
+            }
+        }
+        const slice = GetMovementSlice(movement, this.layers.length);
         if (slice == null) {
             console.error(`Failed to get movement slice. invalid movement: [${movement}]`);
             return null;
@@ -170,10 +204,18 @@ export class CubeState {
 
     /**
      * @param {Rotation} rotation
+     * @param {RotationOptions} [options]
      * @returns {Slice?}
      */
-    rotate(rotation) {
-        const slice = GetRotationSlice(rotation, this.layers);
+    rotate(rotation, options) {
+        if (options?.reverse) {
+            if (rotation.at(-1) === "'") {
+                rotation = /** @type {import('../core').Rotation} */ (rotation.slice(0, -1));
+            } else {
+                rotation = rotation + "'";
+            }
+        }
+        const slice = GetRotationSlice(rotation, this.layers.length);
         if (slice == null) {
             console.error(`Failed to get rotation slice. invalid rotation: [${rotation}]`);
             return null;
@@ -183,21 +225,19 @@ export class CubeState {
     }
 
     /**
-     * @param {string} algorithm
-     * @returns {StickerState}
+     * @param {(import('../core').Rotation | import('../core').Movement)[]} actions
+     * @param {MoveOptions | RotationOptions } [options]
      */
-    do(algorithm) {
-        const actions = algorithm.split(' ');
-        for (let i = 0; i < actions.length; i++) {
-            if (isMovement(actions[i])) {
-                this.move(/** @type {Movement} */ (actions[i]));
-            } else if (IsRotation(actions[i])) {
-                this.rotate(/** @type  {Rotation} */ (actions[i]));
+    do(actions, options) {
+        actions.forEach((action) => {
+            if (isMovement(action)) {
+                this.move(/** @type {Movement} */ (action), options);
+            } else if (IsRotation(action)) {
+                this.rotate(/** @type  {Rotation} */ (action), options);
             } else {
-                console.error(`Invalid Notation: ${actions[i]}`);
+                console.error(`Invalid Notation: ${action}`);
             }
-        }
-        return this.stickerState;
+        });
     }
 
     /**
