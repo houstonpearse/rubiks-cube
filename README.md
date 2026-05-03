@@ -1,8 +1,11 @@
 # Rubiks Cube Web Component
 
-A Rubik's Cube web component built with Three.js and GSAP. The cube renders into a shadow‑DOM canvas and
-exposes a small, promise‑based API for cube moves, rotations, reset, state setting, and camera "peek" positions.
-Supports 2x2, 3x3, 4x4, 5x5, 6x6, and 7x7 Rubik's cubes.
+A Rubik's Cube web component built with Three.js and GSAP. The cube renders into a shadow‑DOM canvas and exposes a
+small, promise‑based API for cube moves, rotations, reset, state setting, and camera "peek" positions. Supports 2x2,
+3x3, 4x4, 5x5, 6x6, and 7x7 Rubik's cubes.
+
+The package also ships a headless cube state class, a standalone Three.js cube object, and the underlying movement
+parser, so you can use any layer of the stack on its own.
 
 ![cube](cube.png)
 
@@ -16,13 +19,28 @@ bun add @houstonp/rubiks-cube
 npm install @houstonp/rubiks-cube
 ```
 
+## Package layout
+
+The package exposes several subpath entry points so you only pull in the parts you need.
+
+| Subpath                          | Exports                                                                                                                |
+|----------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `@houstonp/rubiks-cube`          | `RubiksCube`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                                |
+| `@houstonp/rubiks-cube/view`     | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`                                                       |
+| `@houstonp/rubiks-cube/three`    | `RubiksCube3D`, `RubiksCube3DSettings`                                                                                 |
+| `@houstonp/rubiks-cube/core`     | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `AnimationStyles`, `isMovement`, `IsRotation`, `reverse`, `translate` |
+| `@houstonp/rubiks-cube/state`    | `RubiksCubeState`, `CubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                          |
+
+> **Breaking change from 2.x:** `RubiksCubeElement` is no longer re‑exported from the package root. Import it from
+> `@houstonp/rubiks-cube/view`.
+
 ## Adding the component
 
 Register the custom element and then use the tag in your HTML.
 
 ```js
 // index.js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
 
 // Registers <rubiks-cube> (you can pass a different tag name if you prefer)
 RubiksCubeElement.register();
@@ -53,11 +71,11 @@ RubiksCubeElement.register();
 
 ## Component attributes
 
-These attributes control animation, spacing, camera behavior, and cube type. The available attributes
-can be imported so that they can be get and set easily.
+These attributes control animation, spacing, camera behavior, and cube type. The available attributes can be imported
+so that they can be get and set easily.
 
 ```js
-import { RubiksCubeElement, AttributeNames } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement, AttributeNames } from '@houstonp/rubiks-cube/view';
 import { CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
@@ -77,36 +95,33 @@ cube.setAttribute(AttributeNames.cameraPeekAngleHorizontal, '0.7');
 cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 ```
 
-| attribute                    | accepted values                                            | Description                                                                                                                                                              |
-|------------------------------|------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                               |
-| animation-speed-ms           | integer greater than or equal to 0                         | Sets the duration of cube animations in milliseconds                                                                                                                     |
-| animation-style              | `"exponential"`, `"next"`, `"fixed"`, `"match"`            | `fixed`: fixed animation lengths, `next`: skips to next animation, `exponential`: speeds up successive animations, `match`: matches the speed to the frequency of events |
-| piece-gap                    | greater than 1                                             | Sets the gap between Rubik's Cube pieces                                                                                                                                 |
-| camera-speed-ms              | greater than or equal to 0                                 | Sets the duration of camera animations in milliseconds                                                                                                                   |
-| camera-radius                | greater than or equal to 4                                 | Sets the camera radius                                                                                                                                                   |
-| camera-peek-angle-horizontal | decimal between 0 and 1                                    | Sets the horizontal peek angle                                                                                                                                           |
-| camera-peek-angle-vertical   | decimal between 0 and 1                                    | Sets the vertical peek angle                                                                                                                                             |
-| camera-field-of-view         | integer between 30 and 100                                 | Sets the field of view of the camera                                                                                                                                     |
+| attribute                    | accepted values                                                | Description                                                                                                                                                                                       |
+|------------------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"`     | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                                                        |
+| animation-speed-ms           | number greater than or equal to 0                              | Sets the duration of cube animations in milliseconds. Default is `100`                                                                                                                            |
+| animation-style              | `"exponential"`, `"linear"`, `"next"`, `"fixed"`, `"match"`    | `fixed`: fixed animation lengths, `next`: skips to next animation, `linear`: ramps speed linearly with backlog, `exponential`: speeds up successive animations, `match`: matches event frequency. |
+| piece-gap                    | number between 1 and 1.1                                       | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                       |
+| camera-speed-ms              | number greater than or equal to 0                              | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                          |
+| camera-radius                | number greater than or equal to 4                              | Sets the camera radius. Default is `5`                                                                                                                                                            |
+| camera-peek-angle-horizontal | decimal between 0 and 1                                        | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                                  |
+| camera-peek-angle-vertical   | decimal between 0 and 1                                        | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                    |
+| camera-field-of-view         | integer between 30 and 100                                     | Sets the field of view of the camera. Default is `75`                                                                                                                                             |
 
 ## Programmatic control
 
-The `RubiksCubeElement` instance exposes async methods that return the cube state after the operation completes:
+The `RubiksCubeElement` instance exposes the methods below. `move`, `rotate`, and `peek` are async and resolve once the
+animation completes; `reset`, `setState`, `getState`, and `setType` are synchronous and apply to the cube immediately.
 
 ### Move
 
 Performs a cube movement and resolves with the new state string.
 
 ```ts
-move(move
-:
-Movement, options ? : AnimationOptions | null
-):
-Promise<string>
+move(move: Movement, options?: AnimationOptions): Promise<string>
 ```
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
 import { Movements } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
@@ -119,8 +134,8 @@ await cube.move(Movements.Single.U); // Upper face clockwise
 await cube.move(Movements.Single.FP); // Front face counter-clockwise
 
 // Wide moves
-await cube.move(Movements.Wide.Rw); // Wide right move
-await cube.move(Movements.Wide.r); // Right two layers
+await cube.move(Movements.Wide.Rw); // Right two layers (Rw)
+await cube.move(Movements.Wide.r); // Right two layers (r)
 
 // Layer-specific moves (for 4x4+ cubes)
 await cube.move(Movements.Two.R); // Second layer right
@@ -154,15 +169,11 @@ for (const move of moves) {
 Rotates the entire cube and resolves with the new state string.
 
 ```ts
-rotate(rotation
-:
-Rotation, options ? : AnimationOptions | null
-):
-Promise<string>
+rotate(rotation: Rotation, options?: AnimationOptions): Promise<string>
 ```
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
 import { Rotations } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
@@ -191,67 +202,90 @@ await cube.rotate(Rotations.y, { reverse: true });
 
 ### Reset
 
-Resets the cube to the solved state and resolves with the new state string.
+Resets the cube to the solved state and returns the new state string. Any in‑flight animation is snapped to its end
+position before the reset is applied.
+
+```ts
+reset(): string
+```
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
 import { Movements } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
 // Reset to solved state
-const solvedState = await cube.reset();
+const solvedState = cube.reset();
 console.log('Cube reset to solved state:', solvedState);
 
 // Reset after performing some moves
 await cube.move(Movements.Single.R);
 await cube.move(Movements.Single.U);
-const resetState = await cube.reset();
+const resetState = cube.reset();
 ```
 
-### SetState
+### SetState / GetState
 
-Sets the cube to a specific state using a Kociemba-format state string. This allows you to restore a previously saved
-state or set up specific cube configurations.
+Sets the cube to a specific state using a Kociemba‑format state string, or reads the current state. `setState` returns
+`true` on success and `false` if the input string is not valid for any supported cube type.
+
+```ts
+setState(kociembaState: string): boolean
+getState(): string
+```
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
 import { Movements } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
 // Save current state
-const currentState = await cube.move(Movements.Single.R);
+await cube.move(Movements.Single.R);
+const currentState = cube.getState();
 
 // Later, restore that state
-try {
-    const restoredState = await cube.setState(currentState);
-    console.log('State restored:', restoredState);
-} catch (error) {
-    console.error('Failed to set state:', error);
-    // Error occurs if the state string is invalid for the current cube type
+const ok = cube.setState(currentState);
+if (!ok) {
+    console.error('Failed to set state — string did not match a supported cube size');
 }
 
 // Set a specific scrambled state (example for 3x3)
 const scrambledState = 'UULUUFUUFRRUBRRURRFFDFFUFFFDDRDDDDDDBLLLLLLLLBRRBBBBBB';
-await cube.setState(scrambledState);
+cube.setState(scrambledState);
 ```
+
+### SetType
+
+Switches the cube to a different size at runtime. Returns the solved state string for the new cube type, or an empty
+string if the cube type is invalid.
+
+```ts
+setType(cubeType: CubeType): string
+```
+
+```js
+import { RubiksCubeElement } from '@houstonp/rubiks-cube/view';
+import { CubeTypes } from '@houstonp/rubiks-cube/core';
+
+const cube = document.querySelector('rubiks-cube');
+
+const newState = cube.setType(CubeTypes.Five); // Rebuild as a 5x5
+```
+
+`setType` also keeps the `cube-type` attribute in sync, so reflecting it back to the DOM is automatic.
 
 ### Peek
 
 Animates the camera to a new "peek" position and resolves with the new peek state.
 
 ```ts
-peek(peekType
-:
-PeekType, options ? : CameraOptions | null
-):
-Promise<PeekState>
+peek(peekType: PeekType, options?: CameraOptions | null): Promise<PeekState>
 ```
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
-import { PeekTypes, PeekStates } from '@houstonp/rubiks-cube/core';
+import { RubiksCubeElement, PeekTypes, PeekStates } from '@houstonp/rubiks-cube/view';
 
 const cube = document.querySelector('rubiks-cube');
 
@@ -264,12 +298,12 @@ await cube.peek(PeekTypes.RightUp); // Peek right and up
 await cube.peek(PeekTypes.RightDown); // Peek right and down
 await cube.peek(PeekTypes.LeftUp); // Peek left and up
 await cube.peek(PeekTypes.LeftDown); // Peek left and down
-await cube.peek(PeekTypes.Horizontal); // Reset horizontal peek
-await cube.peek(PeekTypes.Vertical); // Reset vertical peek
+await cube.peek(PeekTypes.Horizontal); // Toggle horizontal peek
+await cube.peek(PeekTypes.Vertical); // Toggle vertical peek
 
 // The peek method returns the current peek state
 const peekState = await cube.peek(PeekTypes.RightUp);
-console.log('Current peek state:', peekState); // e.g., 'rightUp'
+console.log('Current peek state:', peekState); // e.g., PeekStates.RightUp ('rightUp')
 
 // Override camera animation speed for a single peek
 await cube.peek(PeekTypes.Left, { cameraSpeedMs: 150 });
@@ -284,7 +318,7 @@ corresponding element attributes.
 |--------------------|-----------|-------------------------------------------------------------------------------------------------------------|
 | `animationSpeedMs` | `number`  | Duration of the animation in milliseconds. Overrides the `animation-speed-ms` attribute for this call only. |
 | `reverse`          | `boolean` | Reverses the direction of the move or rotation (e.g. `R` is treated as `R'`).                               |
-| `translate`        | `boolean` | Translates 3x3 notation to the equivalent big-cube notation (e.g. `r` on a 7x7 is treated as `6r`).         |
+| `translate`        | `boolean` | Translates 3x3 notation to the equivalent big-cube notation (e.g. `r` on a 7x7 is treated as `6r`). Movement only. |
 
 `CameraOptions` can be passed to `peek` to customise the camera animation.
 
@@ -295,8 +329,10 @@ corresponding element attributes.
 ### Complete Example
 
 ```js
-import { RubiksCubeElement, AttributeNames } from '@houstonp/rubiks-cube';
-import { Movements, Rotations, PeekTypes, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+import { RubiksCubeElement, AttributeNames, PeekTypes } from '@houstonp/rubiks-cube/view';
+import { Movements, Rotations, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+
+RubiksCubeElement.register();
 
 const cube = document.querySelector('rubiks-cube');
 
@@ -315,15 +351,73 @@ await cube.move(Movements.Wide.Rw);
 await cube.peek(PeekTypes.RightUp);
 
 // Save the current state
-const currentState = await cube.move(Movements.Single.F);
+await cube.move(Movements.Single.F);
+const currentState = cube.getState();
 
 // Reset and restore
-await cube.reset();
-await cube.setState(currentState);
+cube.reset();
+cube.setState(currentState);
 ```
 
-All methods return promises that resolve with the new state string (or peek state for `peek`). They reject if the
-operation fails or times out.
+## Headless cube state
+
+If you don't need rendering you can drive the cube state directly with `RubiksCubeState`. It tracks the cube using the
+same parser as the web component and returns Kociemba state strings.
+
+```js
+import { RubiksCubeState } from '@houstonp/rubiks-cube/state';
+import { CubeTypes, Movements, Rotations } from '@houstonp/rubiks-cube/core';
+
+const cube = new RubiksCubeState(CubeTypes.Three);
+
+cube.move(Movements.Single.R);
+cube.rotate(Rotations.y);
+
+// Apply a sequence in one call
+const state = cube.do([
+    Movements.Single.R,
+    Movements.Single.U,
+    Movements.Single.RP,
+    Movements.Single.UP,
+]);
+console.log(state); // Kociemba string
+
+// Initialise from an existing state string
+const restored = new RubiksCubeState(CubeTypes.Three, state);
+```
+
+For lower‑level access to slices and sticker arrays, the same subpath also exports `CubeState`, the slice helpers
+`GetMovementSlice` / `GetRotationSlice`, and the `Axi` enum.
+
+## Standalone 3D object
+
+`RubiksCube3D` is a `THREE.Object3D` you can drop into your own scene. The web component uses it internally; you can
+use it directly when you want full control over the renderer, camera, and animation loop.
+
+```js
+import { RubiksCube3D, RubiksCube3DSettings } from '@houstonp/rubiks-cube/three';
+import { CubeTypes, Movements } from '@houstonp/rubiks-cube/core';
+import { GetMovementSlice } from '@houstonp/rubiks-cube/state';
+import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
+
+// RubiksCube3DSettings(pieceGap, animationSpeedMs, cubeType, animationStyle)
+const settings = new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine');
+const cube = new RubiksCube3D(settings);
+
+const scene = new Scene();
+scene.add(cube);
+
+// Drive a slice manually
+const slice = GetMovementSlice(Movements.Single.R, 3);
+await cube.slice(slice, { animationSpeedMs: 200, ease: 'sine.inOut' });
+```
+
+The `animationStyle` argument accepts any GSAP ease (string or function), since each slice is animated by GSAP under the
+hood.
+
+If you want the higher‑level "movement / rotation" API but with a custom 3D view, the package root also exports
+`RubiksCube`, which composes a `CubeState` with any object implementing the small `RubiksCubeViewInterface`
+(`slice`, `setState`, `reset`).
 
 ## Rubiks Cube Notation
 
@@ -332,8 +426,8 @@ Notations can include the number of rotations of a face. For example, `U2` means
 Notations can also include a prime symbol `'` to indicate a counter‑clockwise rotation. For example, `U'` means rotate
 the upper face counter‑clockwise. The direction is always determined relative to the face being moved.
 
-Notations can also include a layer identifier for larger cubes. For example `3R2'` means rotate the Third layer from the
-right face counter-clockwise twice.
+Notations can also include a layer identifier for larger cubes. For example `3R2'` means rotate the third layer from the
+right face counter‑clockwise twice.
 
 When both a number and a prime symbol are included, the number is stated before the prime symbol. For example, `U2'`
 means rotate the upper face 180 degrees counter‑clockwise, and `U'2` is invalid.
@@ -345,8 +439,8 @@ Duplicate or equivalent notations are not provided in the `core` export. For exa
 only `R'` is provided in the export.
 
 ```js
-import { RubiksCubeElement } from '@houstonp/rubiks-cube';
-import { Rotations, Movements, PeekTypes, PeekStates, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+import { RubiksCubeElement, AttributeNames, PeekTypes } from '@houstonp/rubiks-cube/view';
+import { Rotations, Movements, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
@@ -365,16 +459,17 @@ cube.peek(PeekTypes.Right);
 cube.peek(PeekTypes.RightUp);
 
 // Use constants for cube types
-cube.setAttribute(AttributeNames.CubeType, CubeTypes.Four);
+cube.setAttribute(AttributeNames.cubeType, CubeTypes.Four);
 
 // Use constants for animation styles
-cube.setAttribute(AttributeNames.AnimationStyle, AnimationStyles.Exponential);
+cube.setAttribute(AttributeNames.animationStyle, AnimationStyles.Exponential);
 ```
 
 Notation must match the following Regex
 
 `/([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/`
-some notation may not work as intended as there is no known interpretation. eg `2M`
+
+Some notation may not work as intended as there is no known interpretation. e.g. `2M`.
 
 Standard Notation
 
@@ -400,9 +495,10 @@ Big Cube Notation. Not all listed for brevity.
 
 | Notation | Movement                                        |
 |----------|-------------------------------------------------|
-| NR       | Nth Right most layer                            |
-| NRw      | All Right layers up to the Nth Right most layer |
-| Nr       | All Right layers up to the Nth Right most layer |
+| NR       | Nth right‑most layer                            |
+| NRw      | All right layers up to the Nth right‑most layer |
+| Nr       | All right layers up to the Nth right‑most layer |
+| X-YRw    | Layers X through Y from the right face          |
 
 Rotation Notation
 
@@ -437,5 +533,5 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     ```
 
 The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the
-package. There is currently no dedicated demo app in this repository; you can import the component into your own app (
-e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.
+package. There is currently no dedicated demo app in this repository; you can import the component into your own app
+(e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.

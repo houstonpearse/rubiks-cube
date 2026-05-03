@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { debounce } from './debouncer';
 import { gsap } from 'gsap';
 import Settings from './settings';
-import { CameraState } from '../camera/cameraState';
+import { CameraState } from './cameraState';
 import { RubiksCube } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
 
