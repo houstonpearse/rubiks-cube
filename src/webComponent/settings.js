@@ -1,6 +1,7 @@
 // @ts-check
-import { AnimationStyles, CubeTypes } from '../core';
+import { CubeTypes } from '../core';
 import RubiksCube3DSettings from '../rubiksCube3D/cubeSettings';
+import { AnimationStyles } from './constants';
 
 const defaultCubeSettings = {
     cubeType: CubeTypes.Three,
@@ -77,7 +78,7 @@ export default class Settings {
     /** @param {any} value */
     setAnimationStyle(value) {
         if (value && Object.values(AnimationStyles).includes(value)) {
-            const validStyle = /** @type {import("../core").AnimationStyle} */ (value);
+            const validStyle = /** @type {import("./constants").AnimationStyle} */ (value);
             this.rubiksCube3DSettings.animationStyle = validStyle;
             return;
         }

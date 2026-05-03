@@ -1,18 +1,6 @@
 // @ts-check
 
 /**
- * @typedef AnimationOptions
- * @property {boolean} [translate] translates 3x3 algorithm notation to equivalent big cube notation eg. 7x7 r will be treated as 6r
- * @property {number} [animationSpeedMs]
- * @property {boolean} [reverse] reverses the direction of the animation e.g. R will be treated as R'
- */
-
-/**
- * @typedef CameraOptions
- * @property {number} [cameraSpeedMs]
- */
-
-/**
  * reverses the direction of a movement or rotation
  * @template {Movement | Rotation} T
  * @param {T} action
@@ -449,17 +437,6 @@ export const LayerCount = Object.freeze({
     [CubeTypes.Five]: 5,
     [CubeTypes.Six]: 6,
     [CubeTypes.Seven]: 7,
-});
-
-/**
- * @typedef {typeof AnimationStyles[keyof typeof AnimationStyles]} AnimationStyle
- */
-export const AnimationStyles = Object.freeze({
-    Exponential: 'exponential',
-    Linear: 'linear',
-    Next: 'next',
-    Fixed: 'fixed',
-    Match: 'match',
 });
 
 /**

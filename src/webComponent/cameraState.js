@@ -1,5 +1,5 @@
 // @ts-check
-import { PeekStates, PeekTypes } from './rubiksCubeElement';
+import { PeekStates, PeekTypes } from './constants';
 
 export class CameraState {
     /**

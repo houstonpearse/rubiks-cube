@@ -8,9 +8,10 @@ import Settings from './settings';
 import { CameraState } from './cameraState';
 import { RubiksCube } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
+import { AttributeNames, PeekTypes } from './constants';
 
 /** @import {Rotation} from '../core' */
-/** @import {AnimationOptions} from '../core' */
+/** @import {PeekType, PeekState, AnimationOptions} from './constants' */
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
@@ -22,56 +23,6 @@ const InternalEvents = Object.freeze({
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
 });
-
-/**
- * @typedef {typeof PeekStates [keyof typeof PeekStates]} PeekState
- */
-export const PeekStates = Object.freeze({
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
-});
-
-/**
- * @typedef {typeof PeekTypes [keyof typeof PeekTypes]} PeekType
- */
-export const PeekTypes = Object.freeze({
-    Horizontal: 'horizontal',
-    Vertical: 'vertical',
-    Right: 'right',
-    Left: 'left',
-    Up: 'up',
-    Down: 'down',
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
-});
-
-/**
- * @typedef {typeof AttributeNames[keyof typeof AttributeNames]} AttributeName
- */
-export const AttributeNames = {
-    /** @type {'cube-type'} */
-    cubeType: 'cube-type',
-    /** @type {'piece-gap'} */
-    pieceGap: 'piece-gap',
-    /** @type {'animation-speed-ms'} */
-    animationSpeed: 'animation-speed-ms',
-    /** @type {'animation-style'} */
-    animationStyle: 'animation-style',
-    /** @type {'camera-speed-ms'} */
-    cameraSpeed: 'camera-speed-ms',
-    /** @type {'camera-radius'} */
-    cameraRadius: 'camera-radius',
-    /** @type {'camera-field-of-view'} */
-    cameraFieldOfView: 'camera-field-of-view',
-    /** @type {'camera-peek-angle-horizontal'} */
-    cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
-    /** @type {'camera-peek-angle-vertical'} */
-    cameraPeekAngleVertical: 'camera-peek-angle-vertical',
-};
 
 export class RubiksCubeElement extends HTMLElement {
     constructor() {
@@ -264,13 +215,13 @@ export class RubiksCubeElement extends HTMLElement {
         return this._rubiksCube.getState();
     }
 
-    /** @internal @typedef {{eventId: string, peekType: PeekType, options: import('../core').CameraOptions?}} CameraPeekEventData */
+    /** @internal @typedef {{eventId: string, peekType: PeekType, options: import('./constants').CameraOptions?}} CameraPeekEventData */
     /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
      * This function changes the camera position to one of four states depending on the arguments passed.
      *
      * @param {PeekType} peekType
-     * @param {import('../core').CameraOptions?} options
+     * @param {import('./constants').CameraOptions?} options
      * @returns {Promise<PeekState>}
      */
     peek(peekType, options = null) {
