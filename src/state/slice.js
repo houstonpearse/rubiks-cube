@@ -117,7 +117,7 @@ export function GetMovementSlice(movement, layerCount) {
         case 'u':
         case 'f': {
             layerNumber = layerNumber ? layerNumber : 2;
-            let sliceLayers = range(layerCount - layerNumber);
+            let sliceLayers = range(layerCount - layerNumber, layerCount);
             if (layerRangeLower != null && layerRangeUpper != null) {
                 sliceLayers = range(layerCount - layerRangeUpper, layerCount - (layerRangeLower - 1));
             }
