@@ -1,2 +1,4 @@
 // @ts-check
-export { RubiksCubeElement, AttributeNames } from './rubiksCubeElement';
+/** @typedef {import("./rubiksCubeElement").PeekState} PeekState */
+/** @typedef {import("./rubiksCubeElement").PeekType} PeekType */
+export { RubiksCubeElement, AttributeNames, PeekStates, PeekTypes } from './rubiksCubeElement';

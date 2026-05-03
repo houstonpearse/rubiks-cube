@@ -13,11 +13,11 @@ import { fromKociemba, toKociemba } from '../state/stickerState';
 
 export default class RubiksCube {
     /**
-     * @param {CubeState} state
+     * @param {import('../core').CubeType} cubeType
      * @param {RubiksCubeViewInterface} view
      * */
-    constructor(state, view) {
-        this.state = state;
+    constructor(cubeType, view) {
+        this.state = new CubeState(cubeType);
         this.view = view;
     }
     /**
@@ -79,6 +79,7 @@ export default class RubiksCube {
         const state = fromKociemba(kociembaState);
         if (state) {
             this.state.setState(state);
+            this.view.setState(state);
             return true;
         }
         return false;

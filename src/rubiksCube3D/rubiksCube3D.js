@@ -5,8 +5,8 @@ import RubiksCube3DSettings from './cubeSettings';
 import { ColorToFace, FaceColors, getCubeConfig } from './cubeConfig';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
-import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from '../state/stickerState';
-import { CubeTypes, Movements } from '../core';
+import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '../state/stickerState';
+import { CubeTypes } from '../core';
 import { Axi } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 import { centers, corners, edges } from '../state/state';
@@ -15,12 +15,10 @@ import { gsap } from 'gsap';
 const ERROR_MARGIN = 0.0001;
 
 /**
- * 1. Alias the external interface to a local name
  * @typedef {import('../rubiksCube/rubiksCube').RubiksCubeViewInterface} RubiksCubeViewInterface
  */
 
 /**
- * 2. Use the local alias in the implements tag
  * @implements {RubiksCubeViewInterface}
  */
 export default class RubiksCube3D extends Object3D {

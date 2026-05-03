@@ -1,3 +1,3 @@
 import RubiksCube3D from './rubiksCube3D';
-import CubeSettings from './cubeSettings';
-export { RubiksCube3D, CubeSettings };
+import RubiksCube3DSettings from './cubeSettings';
+export { RubiksCube3D, RubiksCube3DSettings };

@@ -6,9 +6,7 @@ import { debounce } from './debouncer';
 import { gsap } from 'gsap';
 import Settings from './settings';
 import { CameraState } from '../camera/cameraState';
-import { PeekTypes } from '../core';
 import { RubiksCube } from '../rubiksCube';
-import { CubeState } from '../state';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
 
 /** @import {Rotation} from '../core' */
@@ -23,6 +21,32 @@ const InternalEvents = Object.freeze({
     cameraFieldOfViewChanged: 'cameraFieldOfViewChanged',
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
+});
+
+/**
+ * @typedef {typeof PeekStates [keyof typeof PeekStates]} PeekState
+ */
+export const PeekStates = Object.freeze({
+    RightUp: 'rightUp',
+    RightDown: 'rightDown',
+    LeftUp: 'leftUp',
+    LeftDown: 'leftDown',
+});
+
+/**
+ * @typedef {typeof PeekTypes [keyof typeof PeekTypes]} PeekType
+ */
+export const PeekTypes = Object.freeze({
+    Horizontal: 'horizontal',
+    Vertical: 'vertical',
+    Right: 'right',
+    Left: 'left',
+    Up: 'up',
+    Down: 'down',
+    RightUp: 'rightUp',
+    RightDown: 'rightDown',
+    LeftUp: 'leftUp',
+    LeftDown: 'leftDown',
 });
 
 /**
@@ -236,14 +260,11 @@ export class RubiksCubeElement extends HTMLElement {
             return '';
         }
         this.setAttribute(AttributeNames.cubeType, cubeType);
-        this._rubiksCube = new RubiksCube(new CubeState(cubeType), this._rubiksCube3D);
+        this._rubiksCube = new RubiksCube(cubeType, this._rubiksCube3D);
         return this._rubiksCube.getState();
     }
 
-    /** @import {PeekType} from '../core' */
     /** @internal @typedef {{eventId: string, peekType: PeekType, options: import('../core').CameraOptions?}} CameraPeekEventData */
-    /** @import {PeekState} from '../core' */
-
     /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
      * This function changes the camera position to one of four states depending on the arguments passed.
@@ -285,10 +306,7 @@ export class RubiksCubeElement extends HTMLElement {
     /** @private */
     init() {
         this._rubiksCube3D = new RubiksCube3D(this.settings.rubiksCube3DSettings);
-        this._rubiksCube = new RubiksCube(
-            new CubeState(this.settings.rubiksCube3DSettings.cubeType),
-            /** @type {import('../rubiksCube/rubiksCube').RubiksCubeViewInterface} */ (this._rubiksCube3D),
-        );
+        this._rubiksCube = new RubiksCube(this.settings.rubiksCube3DSettings.cubeType, this._rubiksCube3D);
 
         // defined core threejs objects
         const canvas = this.canvas;

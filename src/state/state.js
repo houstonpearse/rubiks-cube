@@ -1,6 +1,6 @@
 /// @ts-check
 import { Euler, Quaternion, Vector3 } from 'three';
-import { CubeTypes, Faces, isMovement, IsRotation, Movements } from '../core';
+import { CubeTypes, Faces, isMovement, IsRotation, Movements, reverse, translate } from '../core';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
 import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from './stickerState';
 /** @import {StickerState} from './stickerState' */
@@ -41,14 +41,13 @@ export class CubeState {
     /**
      *
      * @param {CubeType} cubeType
-     * @param {number[]} [layers]
      */
-    constructor(cubeType, layers = Layers[cubeType]) {
+    constructor(cubeType) {
         this.cubeType = cubeType;
         /** @type {StickerState?} */
         this.stickerState = null;
         /** @type {number[]} */
-        this.layers = layers;
+        this.layers = Layers[cubeType];
         /** @type {pieceState[]} */
         this.corners = corners(this.layers).map((corner) => {
             return {
@@ -181,17 +180,12 @@ export class CubeState {
      * @returns {Slice?}
      */
     move(movement, options) {
+        let action = movement;
         if (options?.reverse) {
-            if (movement.at(-1) === "'") {
-                movement = /** @type {import('../core').Movement} */ (movement.slice(0, -1));
-            } else {
-                movement = movement + "'";
-            }
+            action = reverse(movement);
         }
         if (options?.translate) {
-            if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (movement))) {
-                movement = this.layers.length - 1 + movement;
-            }
+            action = translate(movement, this.cubeType);
         }
         const slice = GetMovementSlice(movement, this.layers.length);
         if (slice == null) {
@@ -208,16 +202,13 @@ export class CubeState {
      * @returns {Slice?}
      */
     rotate(rotation, options) {
+        let action = rotation;
         if (options?.reverse) {
-            if (rotation.at(-1) === "'") {
-                rotation = /** @type {import('../core').Rotation} */ (rotation.slice(0, -1));
-            } else {
-                rotation = rotation + "'";
-            }
+            action = reverse(rotation);
         }
-        const slice = GetRotationSlice(rotation, this.layers.length);
+        const slice = GetRotationSlice(action, this.layers.length);
         if (slice == null) {
-            console.error(`Failed to get rotation slice. invalid rotation: [${rotation}]`);
+            console.error(`Failed to get rotation slice. invalid rotation: [${action}]`);
             return null;
         }
         this.slice(slice);

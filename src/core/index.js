@@ -13,29 +13,32 @@
  */
 
 /**
- *  @param {Movement | Rotation} action
- * @returns {Movement | Rotation}
+ * reverses the direction of a movement or rotation
+ * @template {Movement | Rotation} T
+ * @param {T} action
+ * @returns {T}
  * */
 export function reverse(action) {
-    /** @type {Movement | Rotation} */
     let reversedAction = action;
     if (action.at(-1) === "'") {
-        reversedAction = /** @type {Movement | Rotation} */ (action.slice(0, -1));
+        reversedAction = /** @type {T} */ (action.slice(0, -1));
     } else {
-        const newAction = /** @type {Movement | Rotation} */ (action + "'");
+        const newAction = /** @type {T} */ (action + "'");
         reversedAction = newAction;
     }
     return reversedAction;
 }
 
 /**
- * @param {Movement | Rotation } action
+ * Translates notation meant for a 3x3 into notation a big cube. This is so that 3x3 algorithms can be used on a big cube if desired. eg. for a 6x6 r -> 5r
+ * @template {Movement | Rotation} T
+ * @param {T} action
  * @param {CubeType} cubeType
- * @returns {Movement | Rotation}
+ * @returns {T}
  * */
 export function translate(action, cubeType) {
     if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (action))) {
-        return /** @type {Movement}  */ (LayerCount[cubeType] - 1 + action);
+        return /** @type {T}  */ (LayerCount[cubeType] - 1 + action);
     }
     return action;
 }
@@ -457,44 +460,6 @@ export const AnimationStyles = Object.freeze({
     Next: 'next',
     Fixed: 'fixed',
     Match: 'match',
-});
-
-/**
- * @typedef {typeof FaceColours [keyof typeof FaceColours]} FaceColour
- */
-export const FaceColours = Object.freeze({
-    U: 'white',
-    D: 'yellow',
-    L: '#fc9a05',
-    R: 'red',
-    F: '#2cbf13',
-    B: 'blue',
-});
-
-/**
- * @typedef {typeof PeekTypes [keyof typeof PeekTypes]} PeekType
- */
-export const PeekTypes = Object.freeze({
-    Horizontal: 'horizontal',
-    Vertical: 'vertical',
-    Right: 'right',
-    Left: 'left',
-    Up: 'up',
-    Down: 'down',
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
-});
-
-/**
- * @typedef {typeof PeekStates [keyof typeof PeekStates]} PeekState
- */
-export const PeekStates = Object.freeze({
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
 });
 
 /**
