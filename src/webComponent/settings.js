@@ -2,6 +2,8 @@
 import { CubeTypes } from '../core';
 import RubiksCube3DSettings from '../rubiksCube3D/cubeSettings';
 import { AnimationStyles } from './constants';
+/** @import {CubeType} from '../core' */
+/** @import {AnimationStyle} from './constants' */
 
 const defaultCubeSettings = {
     cubeType: CubeTypes.Three,
@@ -48,7 +50,7 @@ export default class Settings {
     /** @param {any} value */
     setCubeType(value) {
         if (value && Object.values(CubeTypes).includes(value)) {
-            const cubeType = /** @type {import('../core').CubeType} */ (value);
+            const cubeType = /** @type {CubeType} */ (value);
             this.rubiksCube3DcubeType = cubeType;
             return;
         }
@@ -78,7 +80,7 @@ export default class Settings {
     /** @param {any} value */
     setAnimationStyle(value) {
         if (value && Object.values(AnimationStyles).includes(value)) {
-            const validStyle = /** @type {import("./constants").AnimationStyle} */ (value);
+            const validStyle = /** @type {AnimationStyle} */ (value);
             this.rubiksCube3DSettings.animationStyle = validStyle;
             return;
         }

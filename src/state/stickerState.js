@@ -1,6 +1,6 @@
 // @ts-check
 import { CubeTypes, Faces } from '../core';
-/** @import {Face} from '../core' */
+/** @import {Face, CubeType} from '../core' */
 /** @import {vector} from './state' */
 
 /**
@@ -51,7 +51,7 @@ export function getStickerFaceIndex(stickerDirection, piecePosition, layers) {
 
 /**
  *
- * @param {import('../core').CubeType} cubeType
+ * @param {CubeType} cubeType
  * @return {StickerState}
  */
 export const defaultStickerState = (cubeType) => {
@@ -81,7 +81,7 @@ const initialStickerState = (layerCount) => {
 
 /**
  *
- * @param {import('../core').CubeType} cubeType
+ * @param {CubeType} cubeType
  * @return {StickerState}
  */
 export const getEmptyStickerState = (cubeType) => {

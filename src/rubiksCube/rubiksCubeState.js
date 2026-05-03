@@ -24,7 +24,7 @@ export default class RubiksCubeState {
     }
 
     /**
-     * @param {(import('../core').Rotation | import('../core').Movement)[]} actions
+     * @param {(Rotation | Movement)[]} actions
      * @returns {string}
      */
     do(actions) {

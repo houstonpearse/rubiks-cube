@@ -2,8 +2,9 @@
 import { BoxGeometry, ExtrudeGeometry, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
 import { Sticker } from './sticker';
+/** @import {Vector3Like} from 'three' */
 
-/** @typedef {{ positon: import('three').Vector3Like, rotation: import('three').Vector3Like }} CenterPieceUserData */
+/** @typedef {{ positon: Vector3Like, rotation: Vector3Like }} CenterPieceUserData */
 
 export class CenterPiece extends Object3D {
     constructor() {

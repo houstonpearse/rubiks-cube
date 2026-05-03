@@ -1,11 +1,4 @@
 /**
- * @typedef AnimationOptions
- * @property {boolean} [translate] translates 3x3 algorithm notation to equivalent big cube notation eg. 7x7 r will be treated as 6r
- * @property {number} [animationSpeedMs]
- * @property {boolean} [reverse] reverses the direction of the animation e.g. R will be treated as R'
- */
-
-/**
  * @typedef CameraOptions
  * @property {number} [cameraSpeedMs]
  */

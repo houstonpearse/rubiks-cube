@@ -11,12 +11,14 @@ import { Axi } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 import { centers, corners, edges } from '../state/state';
 import { gsap } from 'gsap';
+/** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCube' */
+/** @typedef {_RubiksCubeViewInterface} RubiksCubeViewInterface */
+/** @import {CubeType} from '../core' */
+/** @import {CubeConfig} from './cubeConfig' */
+/** @import {StickerState} from '../state/stickerState' */
+/** @import {Slice} from '../state/slice' */
 
 const ERROR_MARGIN = 0.0001;
-
-/**
- * @typedef {import('../rubiksCube/rubiksCube').RubiksCubeViewInterface} RubiksCubeViewInterface
- */
 
 /**
  * @implements {RubiksCubeViewInterface}
@@ -32,9 +34,9 @@ export default class RubiksCube3D extends Object3D {
         this._cubeSettings = cubeSettings ?? new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine');
         /** @type {number} */
         this._pieceGap = this._cubeSettings.pieceGap;
-        /** @type {import('../core').CubeType} */
+        /** @type {CubeType} */
         this._cubeType = this._cubeSettings.cubeType;
-        /** @type {import('./cubeConfig').CubeConfig} */
+        /** @type {CubeConfig} */
         this._cubeConfig = getCubeConfig(this._cubeType);
         /** @type {Group} */
         this._mainGroup = this.createCubeGroup();
@@ -120,7 +122,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Returns the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
-     * @returns {import('../state/stickerState').StickerState}
+     * @returns {StickerState}
      */
     getStickerState() {
         let state = getEmptyStickerState(this._cubeType);
@@ -144,7 +146,7 @@ export default class RubiksCube3D extends Object3D {
     /**
      * Sets the sticker state of the cube. Can only be called when an Animation is not in progress as not all pieces would be in the main group.
      * @private
-     * @param {import('../state/stickerState').StickerState} stickerState
+     * @param {StickerState} stickerState
      */
     setStickerState(stickerState) {
         this._getPieces().forEach((piece) => {
@@ -166,7 +168,7 @@ export default class RubiksCube3D extends Object3D {
     /**
      * Returns the pieces that should be rotated for a given slice. If the slice has no layers, all pieces will be returned. Should only be called before an Animation is started.
      * @private
-     * @param {import('../state/slice').Slice} slice
+     * @param {Slice} slice
      * @returns {Object3D[]}
      */
     getRotationLayer(slice) {
@@ -246,7 +248,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * @private
-     * @param {import('../state/slice').Slice} slice
+     * @param {Slice} slice
      */
     fillAnimationGroup(slice) {
         const pieces = this.getRotationLayer(slice);
@@ -271,7 +273,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * @public
-     * @param {import('../state/stickerState').StickerState} stickerState
+     * @param {StickerState} stickerState
      */
     setState(stickerState) {
         this._currentAnimation?.progress(1);
@@ -281,7 +283,7 @@ export default class RubiksCube3D extends Object3D {
     /**
      * sets the state of the cube
      * @public
-     * @param {import('../core').CubeType} cubeType
+     * @param {CubeType} cubeType
      * @returns {boolean}
      */
     setType(cubeType) {
@@ -301,7 +303,7 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * @public
-     * @param {import('../state/slice').Slice} slice
+     * @param {Slice} slice
      * @param {{animationSpeedMs: number?, ease: gsap.EaseString | gsap.EaseFunction | undefined}} [options]
      * @returns {Promise<void>}
      */

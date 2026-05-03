@@ -10,8 +10,9 @@ import { RubiksCube } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
 import { AttributeNames, PeekTypes } from './constants';
 
-/** @import {Rotation} from '../core' */
-/** @import {PeekType, PeekState, AnimationOptions} from './constants' */
+/** @import {Rotation, Movement, CubeType} from '../core' */
+/** @import {PeekType, PeekState, CameraOptions} from './constants' */
+/** @import {AnimationOptions} from '../rubiksCube' */
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
@@ -134,8 +135,6 @@ export class RubiksCubeElement extends HTMLElement {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraFieldOfViewChanged));
     }
 
-    /** @import {Movement} from '../core' */
-
     /** @internal @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
@@ -195,7 +194,6 @@ export class RubiksCubeElement extends HTMLElement {
         return this._rubiksCube?.getState();
     }
 
-    /** @import {CubeType} from '../core' */
     /**
      * @param {CubeType} cubeType
      * @returns {string}
@@ -215,13 +213,13 @@ export class RubiksCubeElement extends HTMLElement {
         return this._rubiksCube.getState();
     }
 
-    /** @internal @typedef {{eventId: string, peekType: PeekType, options: import('./constants').CameraOptions?}} CameraPeekEventData */
+    /** @internal @typedef {{eventId: string, peekType: PeekType, options: CameraOptions?}} CameraPeekEventData */
     /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
      * This function changes the camera position to one of four states depending on the arguments passed.
      *
      * @param {PeekType} peekType
-     * @param {import('./constants').CameraOptions?} options
+     * @param {CameraOptions?} options
      * @returns {Promise<PeekState>}
      */
     peek(peekType, options = null) {

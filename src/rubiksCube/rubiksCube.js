@@ -1,6 +1,13 @@
 // @ts-check
 /** @import {Slice} from '../state/slice' */
 /** @import {StickerState} from '../state/stickerState' */
+/** @import {CubeType, Movement, Rotation} from '../core' */
+/**
+ * @typedef AnimationOptions
+ * @property {boolean} [translate]
+ * @property {number} [animationSpeedMs]
+ * @property {boolean} [reverse]
+ */
 /**
  * @typedef {Object} RubiksCubeViewInterface
  * @property {function(Slice, any=): Promise<void>} slice
@@ -13,7 +20,7 @@ import { fromKociemba, toKociemba } from '../state/stickerState';
 
 export default class RubiksCube {
     /**
-     * @param {import('../core').CubeType} cubeType
+     * @param {CubeType} cubeType
      * @param {RubiksCubeViewInterface} view
      * */
     constructor(cubeType, view) {
@@ -21,8 +28,8 @@ export default class RubiksCube {
         this.view = view;
     }
     /**
-     * @param {import('../core').Movement} movement
-     * @param {import('../core').AnimationOptions} [options]
+     * @param {Movement} movement
+     * @param {AnimationOptions} [options]
      * @returns {Promise<string>}
      */
     movement(movement, options) {
@@ -37,8 +44,8 @@ export default class RubiksCube {
     }
 
     /**
-     * @param {import('../core').Rotation} rotation
-     * @param {import('../core').AnimationOptions} [options]
+     * @param {Rotation} rotation
+     * @param {AnimationOptions} [options]
      * @returns {Promise<string>}
      */
     rotation(rotation, options) {
@@ -52,8 +59,8 @@ export default class RubiksCube {
         });
     }
     /**
-     * @param {(import('../core').Rotation | import('../core').Movement)[]} actions
-     * @param {import('../core').AnimationOptions} [options]
+     * @param {(Rotation | Movement)[]} actions
+     * @param {AnimationOptions} [options]
      * @returns {string}
      */
     do(actions, options) {

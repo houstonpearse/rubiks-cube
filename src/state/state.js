@@ -216,7 +216,7 @@ export class CubeState {
     }
 
     /**
-     * @param {(import('../core').Rotation | import('../core').Movement)[]} actions
+     * @param {(Rotation | Movement)[]} actions
      * @param {MoveOptions | RotationOptions } [options]
      */
     do(actions, options) {

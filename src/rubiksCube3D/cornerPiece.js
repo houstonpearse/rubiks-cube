@@ -2,8 +2,9 @@
 import { BoxGeometry, ExtrudeGeometry, Material, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import { Sticker } from './sticker';
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
+/** @import {Vector3Like} from 'three' */
 
-/** @typedef {{ positon: import('three').Vector3Like, rotation: import('three').Vector3Like }} CornerPieceUserData */
+/** @typedef {{ positon: Vector3Like, rotation: Vector3Like }} CornerPieceUserData */
 /**
  * @param {Material} frontMaterial
  * @param {Material} rightMaterial

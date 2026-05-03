@@ -25,7 +25,7 @@ export function reverse(action) {
  * @returns {T}
  * */
 export function translate(action, cubeType) {
-    if (Object.values(Movements.Wide).includes(/** @type {import('../core').WideMove} **/ (action))) {
+    if (Object.values(Movements.Wide).includes(/** @type {WideMove} **/ (action))) {
         return /** @type {T}  */ (LayerCount[cubeType] - 1 + action);
     }
     return action;

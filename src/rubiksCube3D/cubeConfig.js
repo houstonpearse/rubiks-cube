@@ -1,5 +1,7 @@
 // @ts-check
 import { CubeTypes, Faces } from '../core';
+/** @import {CubeType, Face} from '../core' */
+/** @import {ColorRepresentation} from 'three' */
 
 /**
  * @typedef CubeConfig
@@ -10,7 +12,7 @@ import { CubeTypes, Faces } from '../core';
  */
 
 /**
- * @param {import('../core').CubeType} cubeType
+ * @param {CubeType} cubeType
  * @return {CubeConfig}
  */
 export function getCubeConfig(cubeType) {
@@ -73,8 +75,8 @@ export const FaceColors = {
 };
 
 /**
- * @param {import('three').ColorRepresentation} color
- * @return {import('../core').Face}
+ * @param {ColorRepresentation} color
+ * @return {Face}
  * */
 export const ColorToFace = (color) => {
     const face = Object.values(Faces).find((face) => FaceColors[face] === color);

@@ -1,5 +1,6 @@
 // @ts-check
 import { Rotations } from '../core';
+/** @import {Movement, Rotation} from '../core' */
 
 /** @typedef {typeof Axi[keyof typeof Axi]} Axis */
 export const Axi = Object.freeze({
@@ -17,7 +18,7 @@ export const Axi = Object.freeze({
  **/
 
 /**
- * @param {import('../core').Movement } movement
+ * @param {Movement} movement
  * @param {number} layerCount
  * @returns {Slice | undefined}
  */
@@ -169,7 +170,7 @@ export function GetMovementSlice(movement, layerCount) {
 }
 
 /**
- * @param {import('../core').Rotation} rotation
+ * @param {Rotation} rotation
  * @param {number} layerCount
  * @returns {Slice | undefined}
  */
