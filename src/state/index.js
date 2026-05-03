@@ -1,4 +1,4 @@
-import { CubeState } from './state';
+import { CubeState } from './cubeState';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
 import RubiksCubeState from '../rubiksCube/rubiksCubeState';
 

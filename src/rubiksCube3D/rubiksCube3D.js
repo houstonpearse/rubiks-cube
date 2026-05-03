@@ -9,7 +9,7 @@ import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '
 import { CubeTypes } from '../core';
 import { Axi } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
-import { centers, corners, edges } from '../state/state';
+import { centers, corners, edges } from '../state/cubeState';
 import { gsap } from 'gsap';
 /** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCube' */
 /** @typedef {_RubiksCubeViewInterface} RubiksCubeViewInterface */

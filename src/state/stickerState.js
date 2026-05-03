@@ -1,7 +1,7 @@
 // @ts-check
 import { CubeTypes, Faces } from '../core';
 /** @import {Face, CubeType} from '../core' */
-/** @import {vector} from './state' */
+/** @import {vector} from './cubeState' */
 
 /**
  * @typedef StickerState

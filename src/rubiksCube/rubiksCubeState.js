@@ -1,5 +1,5 @@
 // @ts-check
-import { CubeState } from '../state/state';
+import { CubeState } from '../state/cubeState';
 import { fromKociemba, toKociemba } from '../state/stickerState';
 /**  @import { CubeType, Movement, Rotation } from '../core' */
 export default class RubiksCubeState {

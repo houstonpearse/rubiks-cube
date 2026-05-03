@@ -1,21 +1,21 @@
 // @ts-check
 import './setup.js';
 import { expect, test } from 'bun:test';
-import { CubeTypes, IsRotation, reverse, translate } from '../src/core';
+import { CubeTypes, IsRotation, reverse, translate } from '../src/core/index.js';
 import { toKociemba } from '../src/state/stickerState.js';
 import { createTestCube } from './common.js';
 import { scrambles } from './testScrambles.js';
-import { CubeState } from '../src/state/state.js';
+import { CubeState } from '../src/state/cubeState.js';
 import { GetMovementSlice, GetRotationSlice } from '../src/state/slice.js';
 
 test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
     const initialState = toKociemba(cube.getStickerState());
-    const scrambleMoves = /** @type {import('../src/core').Movement[]} */ (scramble.split(' '));
+    const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));
 
     for (const move of scrambleMoves) {
-        const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (move), cube._cubeConfig.layers.length);
+        const slice = GetMovementSlice(/** @type {import('../src/core/index.js').Movement} */ (move), cube._cubeConfig.layers.length);
         if (slice) {
             cube.slice(slice);
         } else {
@@ -25,17 +25,17 @@ test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, s
     const scrambleState = toKociemba(cube.getStickerState());
 
     // Act
-    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
+    const solutionActions = /** @type {(import('../src/core/index.js').Movement | import('../src/core/index.js').Rotation)[]} */ (solution.split(' '));
     for (const action of solutionActions) {
         if (IsRotation(action)) {
-            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetRotationSlice(/** @type {import('../src/core/index.js').Rotation} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
                 console.error('Invalid action', action);
             }
         } else {
-            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetMovementSlice(/** @type {import('../src/core/index.js').Movement} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
@@ -53,7 +53,7 @@ test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, s
 test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
-    const scrambleMoves = /** @type {import('../src/core').Movement[]} */ (scramble.split(' '));
+    const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));
     const cubeState = new CubeState(cubeType);
     let initialState = cubeState.getState();
     cubeState.do(scrambleMoves);
@@ -73,21 +73,21 @@ test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramb
 test.each(scrambles)('$cubeType reverse scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(cubeType);
-    const scrambleActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (scramble.split(' '));
-    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
+    const scrambleActions = /** @type {(import('../src/core/index.js').Movement | import('../src/core/index.js').Rotation)[]} */ (scramble.split(' '));
+    const solutionActions = /** @type {(import('../src/core/index.js').Movement | import('../src/core/index.js').Rotation)[]} */ (solution.split(' '));
     const initialState = cube.getStickerState();
 
     // Act
     for (const action of scrambleActions) {
         if (IsRotation(action)) {
-            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetRotationSlice(/** @type {import('../src/core/index.js').Rotation} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
                 console.error('Invalid action', action);
             }
         } else {
-            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetMovementSlice(/** @type {import('../src/core/index.js').Movement} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
@@ -100,14 +100,14 @@ test.each(scrambles)('$cubeType reverse scramble = $scramble', ({ cubeType, scra
     // Act
     for (const action of scrambleActions.reverse()) {
         if (IsRotation(action)) {
-            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (reverse(action)), cube._cubeConfig.layers.length);
+            const slice = GetRotationSlice(/** @type {import('../src/core/index.js').Rotation} */ (reverse(action)), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
                 console.error('Invalid action', action);
             }
         } else {
-            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (reverse(action)), cube._cubeConfig.layers.length);
+            const slice = GetMovementSlice(/** @type {import('../src/core/index.js').Movement} */ (reverse(action)), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
@@ -131,20 +131,23 @@ const solves = bigCubes.flatMap((cubeType) =>
 test.each(solves)('3x3 solve on $bigCubeType with scramble = $scramble', ({ bigCubeType, cubeType, scramble, solution }) => {
     // Arrange
     const cube = createTestCube(bigCubeType);
-    const scrambleActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (scramble.split(' '));
-    const solutionActions = /** @type {(import('../src/core').Movement | import('../src/core').Rotation)[]} */ (solution.split(' '));
+    const scrambleActions = /** @type {(import('../src/core/index.js').Movement | import('../src/core/index.js').Rotation)[]} */ (scramble.split(' '));
+    const solutionActions = /** @type {(import('../src/core/index.js').Movement | import('../src/core/index.js').Rotation)[]} */ (solution.split(' '));
     const initialState = cube.getStickerState();
 
     for (const action of scrambleActions) {
         if (IsRotation(action)) {
-            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetRotationSlice(/** @type {import('../src/core/index.js').Rotation} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
                 console.error('Invalid action', action);
             }
         } else {
-            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (translate(action, bigCubeType)), cube._cubeConfig.layers.length);
+            const slice = GetMovementSlice(
+                /** @type {import('../src/core/index.js').Movement} */ (translate(action, bigCubeType)),
+                cube._cubeConfig.layers.length,
+            );
             if (slice) {
                 cube.slice(slice);
             } else {
@@ -156,14 +159,17 @@ test.each(solves)('3x3 solve on $bigCubeType with scramble = $scramble', ({ bigC
 
     for (const action of solutionActions) {
         if (IsRotation(action)) {
-            const slice = GetRotationSlice(/** @type {import('../src/core').Rotation} */ (action), cube._cubeConfig.layers.length);
+            const slice = GetRotationSlice(/** @type {import('../src/core/index.js').Rotation} */ (action), cube._cubeConfig.layers.length);
             if (slice) {
                 cube.slice(slice);
             } else {
                 console.error('Invalid action', action);
             }
         } else {
-            const slice = GetMovementSlice(/** @type {import('../src/core').Movement} */ (translate(action, bigCubeType)), cube._cubeConfig.layers.length);
+            const slice = GetMovementSlice(
+                /** @type {import('../src/core/index.js').Movement} */ (translate(action, bigCubeType)),
+                cube._cubeConfig.layers.length,
+            );
             if (slice) {
                 cube.slice(slice);
             } else {
