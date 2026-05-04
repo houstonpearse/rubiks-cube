@@ -6,47 +6,58 @@ export default class RubiksCubeState {
     /**
      *
      * @param {CubeType} cubeType
-     * @param {string} [kociembaState]
      */
-    constructor(cubeType, kociembaState) {
+    constructor(cubeType) {
         /** @type {CubeState} */
         this.state = new CubeState(cubeType);
-        /** @type {string} */
-        this.kociemba = toKociemba(this.state.getState());
+    }
 
-        if (kociembaState != null) {
-            const stickerState = fromKociemba(kociembaState);
-            if (stickerState != null) {
-                this.state.setState(stickerState);
-                this.kociemba = kociembaState;
-            }
+    /**
+     * @returns {void}
+     */
+    reset() {
+        this.state.reset();
+    }
+
+    /**
+     * @param {string} kociembaState
+     * @returns {boolean}
+     */
+    setState(kociembaState) {
+        const stickerState = fromKociemba(kociembaState);
+        if (stickerState != null) {
+            this.state.setState(stickerState);
+            this.kociemba = kociembaState;
+            return true;
         }
+        return false;
+    }
+
+    /**
+     * @returns {string} kociembaState
+     */
+    getState() {
+        return toKociemba(this.state.getState());
     }
 
     /**
      * @param {(Rotation | Movement)[]} actions
-     * @returns {string}
      */
     do(actions) {
         this.state.do(actions);
-        return toKociemba(this.state.getState());
     }
 
     /**
      * @param {Movement} movement
-     * @returns {string} state
      */
     move(movement) {
         this.state.move(movement);
-        return toKociemba(this.state.getState());
     }
 
     /**
      * @param {Rotation} rotation
-     * @returns {string} state
      */
     rotate(rotation) {
         this.state.rotate(rotation);
-        return toKociemba(this.state.getState());
     }
 }
