@@ -236,30 +236,22 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {Promise<PeekState>}
      */
     peek(peekType, options = null) {
+        if (this._rubiksCube3D == null) {
+            return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+        }
         if (!Object.values(PeekTypes).includes(peekType)) {
             return Promise.reject(`Invalid move - [${peekType}]. Valid moves are ${Object.values(PeekTypes).join(', ')}`);
         }
         /** @type {CameraPeekEventData} */
         const data = { eventId: crypto.randomUUID(), peekType, options };
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             /** @param {CustomEvent<CameraPeekCompleteEventData> | Event} event */ const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<CameraPeekCompleteEventData>} */ (event);
                 if (customEvent.detail.eventId === data.eventId) {
-                    cleanup();
+                    this.removeEventListener(InternalEvents.cameraPeekComplete, handler);
                     resolve(customEvent.detail.peekState);
                 }
             };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject('peek timed out');
-            }, 1000);
-
-            const cleanup = () => {
-                this.removeEventListener(InternalEvents.cameraPeekComplete, handler);
-                clearTimeout(timeoutId);
-            };
-
             this.addEventListener(InternalEvents.cameraPeekComplete, handler);
             this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeek, { detail: data }));
         });
