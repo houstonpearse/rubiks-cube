@@ -23,12 +23,12 @@ npm install @houstonp/rubiks-cube
 
 The package ships four primary classes; each plays a different role.
 
-| I want to...                                                          | Use                                                |
-|-----------------------------------------------------------------------|----------------------------------------------------|
-| Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`                   |
-| Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                       |
-| Drive cube state from my own renderer / view                          | `RubiksCubeController` from the package root       |
-| Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`                    |
+| I want to...                                                          | Use                                          |
+| --------------------------------------------------------------------- | -------------------------------------------- |
+| Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`             |
+| Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                 |
+| Drive cube state from my own renderer / view                          | `RubiksCubeController` from the package root |
+| Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`              |
 
 `RubiksCubeElement` is built on top of `RubiksCube3D` + `RubiksCubeController` + `RubiksCubeState`, so most users
 only need the first row.
@@ -37,22 +37,13 @@ only need the first row.
 
 The package exposes several subpath entry points so you only pull in the parts you need.
 
-| Subpath                          | Exports                                                                                                            |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `@houstonp/rubiks-cube`          | `RubiksCubeController`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                  |
-| `@houstonp/rubiks-cube/view`     | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                                |
-| `@houstonp/rubiks-cube/three`    | `RubiksCube3D`, `RubiksCube3DSettings`                                                                             |
-| `@houstonp/rubiks-cube/core`     | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate`   |
-| `@houstonp/rubiks-cube/state`    | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                   |
-
-> **Breaking changes from 2.x:**
-> - `RubiksCubeElement` is no longer re‑exported from the package root. Import it from `@houstonp/rubiks-cube/view`.
-> - `RubiksCube` is renamed to `RubiksCubeController`. It still composes a `RubiksCubeState` with any view; the
->   new name reflects its role.
-> - `CubeState` is removed; its functionality is folded into `RubiksCubeState`. The `getState()` / `setState()`
->   methods now work with sticker arrays (the old `CubeState` semantics). For Kociemba strings, use the new
->   `getKociemba()` / `setKociemba(str)` methods.
-> - `AnimationStyles` is exported from `/view`, not `/core`.
+| Subpath                       | Exports                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `@houstonp/rubiks-cube`       | `RubiksCubeController`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                |
+| `@houstonp/rubiks-cube/view`  | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                              |
+| `@houstonp/rubiks-cube/three` | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
+| `@houstonp/rubiks-cube/core`  | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate` |
+| `@houstonp/rubiks-cube/state` | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                 |
 
 ## Adding the component
 
@@ -69,23 +60,22 @@ RubiksCubeElement.register();
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <title>Rubiks Cube Demo</title>
-</head>
-<body>
-<!-- Create a 3x3 cube with custom settings -->
-<rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04"
-             camera-speed-ms="100"></rubiks-cube>
+    <head>
+        <meta charset="utf-8" />
+        <title>Rubiks Cube Demo</title>
+    </head>
+    <body>
+        <!-- Create a 3x3 cube with custom settings -->
+        <rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04" camera-speed-ms="100"></rubiks-cube>
 
-<!-- Or create a 2x2 cube -->
-<rubiks-cube cube-type="Two"></rubiks-cube>
+        <!-- Or create a 2x2 cube -->
+        <rubiks-cube cube-type="Two"></rubiks-cube>
 
-<!-- Or create a 7x7 cube -->
-<rubiks-cube cube-type="Seven"></rubiks-cube>
+        <!-- Or create a 7x7 cube -->
+        <rubiks-cube cube-type="Seven"></rubiks-cube>
 
-<script type="module" src="index.js"></script>
-</body>
+        <script type="module" src="index.js"></script>
+    </body>
 </html>
 ```
 
@@ -115,17 +105,17 @@ cube.setAttribute(AttributeNames.cameraPeekAngleHorizontal, '0.7');
 cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 ```
 
-| attribute                    | accepted values                                                | Description                                                                                                                                                                                       |
-|------------------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"`     | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                                                        |
-| animation-speed-ms           | number greater than or equal to 0                              | Sets the duration of cube animations in milliseconds. Default is `100`                                                                                                                            |
-| animation-style              | `"exponential"`, `"linear"`, `"next"`, `"fixed"`, `"match"`    | `fixed`: fixed animation lengths, `next`: skips to next animation, `linear`: ramps speed linearly with backlog, `exponential`: speeds up successive animations, `match`: matches event frequency. |
-| piece-gap                    | number between 1 and 1.1                                       | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                       |
-| camera-speed-ms              | number greater than or equal to 0                              | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                          |
-| camera-radius                | number greater than or equal to 4                              | Sets the camera radius. Default is `5`                                                                                                                                                            |
-| camera-peek-angle-horizontal | decimal between 0 and 1                                        | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                                  |
-| camera-peek-angle-vertical   | decimal between 0 and 1                                        | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                    |
-| camera-field-of-view         | integer between 30 and 100                                     | Sets the field of view of the camera. Default is `75`                                                                                                                                             |
+| attribute                    | accepted values                                             | Description                                                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"`  | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                                                        |
+| animation-speed-ms           | number greater than or equal to 0                           | Sets the duration of cube animations in milliseconds. Default is `100`                                                                                                                            |
+| animation-style              | `"exponential"`, `"linear"`, `"next"`, `"fixed"`, `"match"` | `fixed`: fixed animation lengths, `next`: skips to next animation, `linear`: ramps speed linearly with backlog, `exponential`: speeds up successive animations, `match`: matches event frequency. |
+| piece-gap                    | number between 1 and 1.1                                    | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                       |
+| camera-speed-ms              | number greater than or equal to 0                           | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                          |
+| camera-radius                | number greater than or equal to 4                           | Sets the camera radius. Default is `5`                                                                                                                                                            |
+| camera-peek-angle-horizontal | decimal between 0 and 1                                     | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                                  |
+| camera-peek-angle-vertical   | decimal between 0 and 1                                     | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                    |
+| camera-field-of-view         | integer between 30 and 100                                  | Sets the field of view of the camera. Default is `75`                                                                                                                                             |
 
 ## Programmatic control
 
@@ -334,16 +324,16 @@ await cube.peek(PeekTypes.Left, { cameraSpeedMs: 150 });
 `AnimationOptions` can be passed to `move` and `rotate` to customise individual operations, taking precedence over the
 corresponding element attributes.
 
-| Option             | Type      | Description                                                                                                 |
-|--------------------|-----------|-------------------------------------------------------------------------------------------------------------|
-| `animationSpeedMs` | `number`  | Duration of the animation in milliseconds. Overrides the `animation-speed-ms` attribute for this call only. |
-| `reverse`          | `boolean` | Reverses the direction of the move or rotation (e.g. `R` is treated as `R'`).                               |
+| Option             | Type      | Description                                                                                                        |
+| ------------------ | --------- | ------------------------------------------------------------------------------------------------------------------ |
+| `animationSpeedMs` | `number`  | Duration of the animation in milliseconds. Overrides the `animation-speed-ms` attribute for this call only.        |
+| `reverse`          | `boolean` | Reverses the direction of the move or rotation (e.g. `R` is treated as `R'`).                                      |
 | `translate`        | `boolean` | Translates 3x3 notation to the equivalent big-cube notation (e.g. `r` on a 7x7 is treated as `6r`). Movement only. |
 
 `CameraOptions` can be passed to `peek` to customise the camera animation.
 
 | Option          | Type     | Description                                                                                                     |
-|-----------------|----------|-----------------------------------------------------------------------------------------------------------------|
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
 | `cameraSpeedMs` | `number` | Duration of the camera animation in milliseconds. Overrides the `camera-speed-ms` attribute for this call only. |
 
 ### Complete Example
@@ -394,12 +384,7 @@ cube.move(Movements.Single.R);
 cube.rotate(Rotations.y);
 
 // Apply a sequence in one call
-cube.do([
-    Movements.Single.R,
-    Movements.Single.U,
-    Movements.Single.RP,
-    Movements.Single.UP,
-]);
+cube.do([Movements.Single.R, Movements.Single.U, Movements.Single.RP, Movements.Single.UP]);
 
 // Read the current state as a Kociemba string
 const kociemba = cube.getKociemba();
@@ -425,9 +410,15 @@ import { CubeTypes, Movements } from '@houstonp/rubiks-cube/core';
 import { GetMovementSlice } from '@houstonp/rubiks-cube/state';
 import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
 
-// RubiksCube3DSettings(pieceGap, animationSpeedMs, cubeType, animationStyle)
-const settings = new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine');
+const settings = new RubiksCube3DSettings({
+    cubeType: CubeTypes.Three,
+    pieceGap: 1.04,
+    animationSpeedMs: 150,
+    animationStyle: 'sine',
+});
 const cube = new RubiksCube3D(settings);
+// or, if the defaults are fine:
+// const cube = new RubiksCube3D(new RubiksCube3DSettings());
 
 const scene = new Scene();
 scene.add(cube);
@@ -499,7 +490,7 @@ Some notation may not work as intended as there is no known interpretation. e.g.
 Standard Notation
 
 | Notation | Movement                                   |
-|----------|--------------------------------------------|
+| -------- | ------------------------------------------ |
 | U        | Top face clockwise                         |
 | u        | Top two layers clockwise                   |
 | D        | Bottom face clockwise                      |
@@ -519,7 +510,7 @@ Standard Notation
 Big Cube Notation. Not all listed for brevity.
 
 | Notation | Movement                                        |
-|----------|-------------------------------------------------|
+| -------- | ----------------------------------------------- |
 | NR       | Nth right‑most layer                            |
 | NRw      | All right layers up to the Nth right‑most layer |
 | Nr       | All right layers up to the Nth right‑most layer |
@@ -528,7 +519,7 @@ Big Cube Notation. Not all listed for brevity.
 Rotation Notation
 
 | Notation | Rotation                                         |
-|----------|--------------------------------------------------|
+| -------- | ------------------------------------------------ |
 | x        | Rotate cube on x axis clockwise (direction of R) |
 | y        | Rotate cube on y axis clockwise (direction of U) |
 | z        | Rotate cube on z axis clockwise (direction of F) |

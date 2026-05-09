@@ -31,7 +31,7 @@ export default class RubiksCube3D extends Object3D {
     constructor(cubeSettings) {
         super();
         /** @type {RubiksCube3DSettings} */
-        this._cubeSettings = cubeSettings ?? new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine', null);
+        this._cubeSettings = cubeSettings ?? new RubiksCube3DSettings();
         /** @type {number} */
         this._pieceGap = this._cubeSettings.pieceGap;
         /** @type {CubeType} */

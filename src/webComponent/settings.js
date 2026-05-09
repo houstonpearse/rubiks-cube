@@ -29,13 +29,12 @@ const maxFieldOfView = 100;
 export default class Settings {
     constructor() {
         /** @type {RubiksCube3DSettings} */
-        this.rubiksCube3DSettings = new RubiksCube3DSettings(
-            defaultCubeSettings.pieceGap,
-            defaultCubeSettings.animationSpeedMs,
-            defaultCubeSettings.cubeType,
-            defaultCubeSettings.animationStyle,
-            null,
-        );
+        this.rubiksCube3DSettings = new RubiksCube3DSettings({
+            pieceGap: defaultCubeSettings.pieceGap,
+            animationSpeedMs: defaultCubeSettings.animationSpeedMs,
+            cubeType: defaultCubeSettings.cubeType,
+            animationStyle: defaultCubeSettings.animationStyle,
+        });
         /** @type {number} */
         this.cameraSpeedMs = defaultSettings.cameraSpeedMs;
         /** @type {number} */

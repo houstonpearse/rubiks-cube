@@ -9,6 +9,7 @@ import { CameraState } from './cameraState';
 import { RubiksCubeController } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
 import { AttributeNames, PeekTypes } from './constants';
+import { CubeTypes } from '../core';
 
 /** @import {Rotation, Movement, CubeType} from '../core' */
 /** @import {PeekType, PeekState, CameraOptions} from './constants' */
@@ -81,6 +82,7 @@ export class RubiksCubeElement extends HTMLElement {
         switch (name) {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
+                this.rebuild(/** @type {CubeType} */ (newVal));
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
@@ -202,16 +204,24 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {string}
      */
     setType(cubeType) {
+        this.setAttribute(AttributeNames.cubeType, cubeType);
+        return this.rebuild(cubeType);
+    }
+
+    /**
+     * @param {CubeType} cubeType
+     * @returns {string}
+     */
+    rebuild(cubeType) {
+        if (!Object.values(CubeTypes).includes(cubeType)) {
+            console.error('Failed to set CubeType. Invalid CubeType.');
+            return '';
+        }
         if (this._rubiksCube == null || this._rubiksCube3D == null) {
             console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
             return '';
         }
-        const success = this._rubiksCube3D.setType(cubeType);
-        if (!success) {
-            console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
-            return '';
-        }
-        this.setAttribute(AttributeNames.cubeType, cubeType);
+        this._rubiksCube3D.setType(cubeType);
         this._rubiksCube = new RubiksCubeController(cubeType, this._rubiksCube3D);
         return this._rubiksCube.getState();
     }

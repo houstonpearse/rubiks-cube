@@ -1,24 +1,30 @@
 // @ts-check
+import { CubeTypes } from '../core';
 /** @import {CubeType} from '../core' */
+
+/**
+ * @typedef RubiksCube3DSettingsOptions
+ * @property {CubeType} [cubeType]
+ * @property {number} [pieceGap]
+ * @property {number} [animationSpeedMs]
+ * @property {gsap.EaseString | gsap.EaseFunction} [animationStyle]
+ * @property {string | null} [logo]
+ */
 
 export default class RubiksCube3DSettings {
     /**
-     * @param {CubeType} cubeType
-     * @param {number} pieceGap
-     * @param {number} animationSpeed
-     * @param {gsap.EaseString | gsap.EaseFunction | undefined} animationStyle
-     * @param {string?} logo
+     * @param {RubiksCube3DSettingsOptions} [options]
      */
-    constructor(pieceGap, animationSpeed, cubeType, animationStyle, logo) {
-        /** @type {number} pieceGap */
-        this.pieceGap = pieceGap;
+    constructor(options = {}) {
         /** @type {CubeType} */
-        this.cubeType = cubeType;
-        /** @type {number} pieceGap */
-        this.animationSpeedMs = animationSpeed;
-        /** @type {gsap.EaseString | gsap.EaseFunction | undefined} pieceGap */
-        this.animationStyle = animationStyle;
-        /** @type {string?} */
-        this.logo = logo;
+        this.cubeType = options.cubeType ?? CubeTypes.Three;
+        /** @type {number} */
+        this.pieceGap = options.pieceGap ?? 1.04;
+        /** @type {number} */
+        this.animationSpeedMs = options.animationSpeedMs ?? 150;
+        /** @type {gsap.EaseString | gsap.EaseFunction} */
+        this.animationStyle = options.animationStyle ?? 'sine';
+        /** @type {string | null} */
+        this.logo = options.logo ?? null;
     }
 }

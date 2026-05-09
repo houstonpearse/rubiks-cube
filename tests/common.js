@@ -5,6 +5,6 @@ import RubiksCube3D from '../src/rubiksCube3D/rubiksCube3D.js';
  * @returns {RubiksCube3D}
  **/
 export function createTestCube(cubeType) {
-    const settings = new RubiksCube3DSettings(1.04, 0, cubeType, 'sine');
+    const settings = new RubiksCube3DSettings({ pieceGap: 1.04, animationSpeedMs: 0, cubeType, animationStyle: 'sine' });
     return new RubiksCube3D(settings);
 }

@@ -10,7 +10,7 @@ import { IsRotation } from '../src/core/index.js';
 
 test.each(scrambles)('RubiksCube with 3D view $cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
-    const cube3D = new RubiksCube3D(new RubiksCube3DSettings(1, 0, cubeType, 'sine', null));
+    const cube3D = new RubiksCube3D(new RubiksCube3DSettings({ pieceGap: 1, animationSpeedMs: 0, cubeType, animationStyle: 'sine' }));
     const cube = new RubiksCubeController(cubeType, cube3D);
     const initialState = cube.getState();
     const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));
