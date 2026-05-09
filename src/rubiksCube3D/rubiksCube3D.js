@@ -6,9 +6,9 @@ import { ColorToFace, FaceColors, getCubeConfig } from './cubeConfig';
 import { EdgePiece } from './edgePiece';
 import { CenterPiece } from './centerPiece';
 import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '../state/stickerState';
-import { CubeTypes } from '../core';
+import { CubeTypes, Faces } from '../core';
 import { Axi } from '../state/slice';
-import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
+import { Face, RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 import { centers, corners, edges } from '../state/cubeState';
 import { gsap } from 'gsap';
 /** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCube' */
@@ -31,7 +31,7 @@ export default class RubiksCube3D extends Object3D {
     constructor(cubeSettings) {
         super();
         /** @type {RubiksCube3DSettings} */
-        this._cubeSettings = cubeSettings ?? new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine');
+        this._cubeSettings = cubeSettings ?? new RubiksCube3DSettings(1.04, 150, CubeTypes.Three, 'sine', null);
         /** @type {number} */
         this._pieceGap = this._cubeSettings.pieceGap;
         /** @type {CubeType} */
@@ -163,6 +163,51 @@ export default class RubiksCube3D extends Object3D {
                 sticker.color = FaceColors[stickerFaceValue];
             });
         });
+        if (this._cubeSettings.logo) {
+            this.addLogo(this._cubeSettings.logo);
+        }
+    }
+    /**
+     *
+     * @param {string} logo
+     */
+    addLogo(logo) {
+        this._mainGroup.children.filter((x) => x instanceof CornerPiece || x instanceof CenterPiece).forEach((x) => x.removeLogo());
+
+        if (this._cubeType === CubeTypes.Two) {
+            const corner = this._mainGroup.children
+                .filter((x) => x instanceof CornerPiece)
+                .filter((x) => x.frontSticker.color === FaceColors.U || x.topSticker.color === FaceColors.U || x.rightSticker.color === FaceColors.U)
+                .at(-1);
+            if (corner?.frontSticker.color === FaceColors.U) {
+                corner.addLogo(Faces.F, logo);
+            }
+            if (corner?.topSticker.color === FaceColors.U) {
+                corner.addLogo(Faces.U, logo);
+            }
+            if (corner?.rightSticker.color === FaceColors.U) {
+                corner.addLogo(Faces.R, logo);
+            }
+            return;
+        }
+        const center = this._mainGroup.children
+            .filter((x) => x instanceof CenterPiece)
+            .filter((x) => x.frontSticker.color === FaceColors.U)
+            .filter((x) => {
+                const layerCount = this._cubeConfig.layers.length;
+                const outerLayers = [this._cubeConfig.layers.at(0), this._cubeConfig.layers.at(layerCount - 1)];
+                let centerLayers = [];
+                if (layerCount % 2 === 1) {
+                    centerLayers = [this._cubeConfig.layers.at(Math.floor(layerCount / 2))];
+                } else {
+                    centerLayers = this._cubeConfig.layers.slice(layerCount / 2 - 1, layerCount / 2 + 1);
+                }
+                return [x.userData.position.x, x.userData.position.y, x.userData.position.z].every(
+                    (layerValue) => centerLayers.includes(layerValue) || outerLayers.includes(layerValue),
+                );
+            })
+            .at(0);
+        center?.addLogo(logo);
     }
 
     /**

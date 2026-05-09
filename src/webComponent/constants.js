@@ -62,4 +62,6 @@ export const AttributeNames = {
     cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
     /** @type {'camera-peek-angle-vertical'} */
     cameraPeekAngleVertical: 'camera-peek-angle-vertical',
+    /** @type {'logo'} */
+    logo: 'logo',
 };

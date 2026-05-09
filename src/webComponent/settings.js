@@ -34,6 +34,7 @@ export default class Settings {
             defaultCubeSettings.animationSpeedMs,
             defaultCubeSettings.cubeType,
             defaultCubeSettings.animationStyle,
+            null,
         );
         /** @type {number} */
         this.cameraSpeedMs = defaultSettings.cameraSpeedMs;
@@ -142,5 +143,10 @@ export default class Settings {
             console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value}.`);
         }
         this.cameraFieldOfView = fov;
+    }
+
+    /** @param {string | null} value in ms */
+    setLogo(value) {
+        this.rubiksCube3DSettings.logo = value;
     }
 }

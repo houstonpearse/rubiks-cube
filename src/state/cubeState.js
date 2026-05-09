@@ -296,10 +296,11 @@ export const corners = (layers) => {
 export const centers = (layers) => {
     const lastLayer = layers[layers.length - 1];
     const firstLayer = layers[0];
+    const innerLayers = layers.slice(1, -1);
     return [
         //right
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: lastLayer, y: layer1, z: layer2 },
                     rotation: { x: 0, y: Math.PI / 2, z: 0 },
@@ -307,8 +308,8 @@ export const centers = (layers) => {
             }),
         ),
         //up
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: layer1, y: lastLayer, z: layer2 },
                     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
@@ -316,8 +317,8 @@ export const centers = (layers) => {
             }),
         ),
         //front
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: layer1, y: layer2, z: lastLayer },
                     rotation: { x: 0, y: 0, z: 0 },
@@ -325,8 +326,8 @@ export const centers = (layers) => {
             }),
         ),
         //back
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: layer1, y: layer2, z: firstLayer },
                     rotation: { x: 0, y: Math.PI, z: 0 },
@@ -334,8 +335,8 @@ export const centers = (layers) => {
             }),
         ),
         //down
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: layer1, y: firstLayer, z: layer2 },
                     rotation: { x: Math.PI / 2, y: 0, z: 0 },
@@ -343,8 +344,8 @@ export const centers = (layers) => {
             }),
         ),
         //left
-        ...layers.flatMap((layer1) =>
-            layers.map((layer2) => {
+        ...innerLayers.flatMap((layer1) =>
+            innerLayers.map((layer2) => {
                 return {
                     position: { x: firstLayer, y: layer1, z: layer2 },
                     rotation: { x: 0, y: -Math.PI / 2, z: 0 },

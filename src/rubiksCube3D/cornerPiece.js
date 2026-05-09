@@ -1,8 +1,21 @@
 /// @ts-check
-import { BoxGeometry, ExtrudeGeometry, Material, Mesh, MeshBasicMaterial, Object3D } from 'three';
+import {
+    BoxGeometry,
+    ExtrudeGeometry,
+    Material,
+    Mesh,
+    MeshBasicMaterial,
+    MeshStandardMaterial,
+    Object3D,
+    PlaneGeometry,
+    SRGBColorSpace,
+    TextureLoader,
+} from 'three';
 import { Sticker } from './sticker';
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
+import { Faces } from '../core';
 /** @import {Vector3Like} from 'three' */
+/** @import {Face} from "../core" */
 
 /** @typedef {{ positon: Vector3Like, rotation: Vector3Like }} CornerPieceUserData */
 /**
@@ -39,6 +52,46 @@ export class CornerPiece extends Object3D {
 
     get stickers() {
         return [this.frontSticker, this.rightSticker, this.topSticker];
+    }
+
+    /**
+     * @param {Face} face
+     * @param {string} logoPath
+     */
+    addLogo(face, logoPath) {
+        this.removeLogo();
+        const material = new MeshStandardMaterial({
+            transparent: true,
+            color: 'white',
+            metalness: 0,
+            roughness: 0.4,
+        });
+        const mesh = new Mesh(new PlaneGeometry(0.9, 0.9), material);
+        if (face === Faces.U) {
+            mesh.position.set(0, 0.54, 0);
+            mesh.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
+        } else if (face === Faces.F) {
+            mesh.position.set(0, 0, 0.54);
+        } else if (face === Faces.R) {
+            mesh.position.set(0.54, 0, 0);
+            mesh.rotation.set(Math.PI / 2, Math.PI / 2, 0);
+        }
+        this.logo = mesh;
+        this.add(mesh);
+        const texture = new TextureLoader().load(logoPath, (texture) => {
+            texture.colorSpace = SRGBColorSpace;
+            material.map = texture;
+            material.needsUpdate = true;
+            texture.anisotropy = 16;
+        });
+    }
+
+    removeLogo() {
+        if (!this.logo) return;
+        this.remove(this.logo);
+        this.logo.material.map?.dispose();
+        this.logo.material.dispose();
+        this.logo = null;
     }
 }
 

@@ -59,6 +59,7 @@ export class RubiksCubeElement extends HTMLElement {
             AttributeNames.cameraFieldOfView,
             AttributeNames.cameraPeekAngleHorizontal,
             AttributeNames.cameraPeekAngleVertical,
+            AttributeNames.logo,
         ];
     }
 
@@ -117,6 +118,8 @@ export class RubiksCubeElement extends HTMLElement {
                     this.animateCameraSetting();
                 }
                 break;
+            case AttributeNames.logo:
+                this.settings.setLogo(newVal);
         }
     }
 

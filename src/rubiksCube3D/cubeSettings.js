@@ -7,8 +7,9 @@ export default class RubiksCube3DSettings {
      * @param {number} pieceGap
      * @param {number} animationSpeed
      * @param {gsap.EaseString | gsap.EaseFunction | undefined} animationStyle
+     * @param {string?} logo
      */
-    constructor(pieceGap, animationSpeed, cubeType, animationStyle) {
+    constructor(pieceGap, animationSpeed, cubeType, animationStyle, logo) {
         /** @type {number} pieceGap */
         this.pieceGap = pieceGap;
         /** @type {CubeType} */
@@ -17,5 +18,7 @@ export default class RubiksCube3DSettings {
         this.animationSpeedMs = animationSpeed;
         /** @type {gsap.EaseString | gsap.EaseFunction | undefined} pieceGap */
         this.animationStyle = animationStyle;
+        /** @type {string?} */
+        this.logo = logo;
     }
 }
