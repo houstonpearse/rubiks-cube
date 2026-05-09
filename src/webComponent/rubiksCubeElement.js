@@ -6,7 +6,7 @@ import { debounce } from './debouncer';
 import { gsap } from 'gsap';
 import Settings from './settings';
 import { CameraState } from './cameraState';
-import { RubiksCube } from '../rubiksCube';
+import { RubiksCubeController } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
 import { AttributeNames, PeekTypes } from './constants';
 
@@ -37,7 +37,7 @@ export class RubiksCubeElement extends HTMLElement {
         this.settings = new Settings();
         /** @private @type {RubiksCube3D?} */
         this._rubiksCube3D = null;
-        /** @private @type {RubiksCube?} */
+        /** @private @type {RubiksCubeController?} */
         this._rubiksCube = null;
     }
 
@@ -212,7 +212,7 @@ export class RubiksCubeElement extends HTMLElement {
             return '';
         }
         this.setAttribute(AttributeNames.cubeType, cubeType);
-        this._rubiksCube = new RubiksCube(cubeType, this._rubiksCube3D);
+        this._rubiksCube = new RubiksCubeController(cubeType, this._rubiksCube3D);
         return this._rubiksCube.getState();
     }
 
@@ -258,7 +258,7 @@ export class RubiksCubeElement extends HTMLElement {
     /** @private */
     init() {
         this._rubiksCube3D = new RubiksCube3D(this.settings.rubiksCube3DSettings);
-        this._rubiksCube = new RubiksCube(this.settings.rubiksCube3DSettings.cubeType, this._rubiksCube3D);
+        this._rubiksCube = new RubiksCubeController(this.settings.rubiksCube3DSettings.cubeType, this._rubiksCube3D);
 
         // defined core threejs objects
         const canvas = this.canvas;

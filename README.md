@@ -19,20 +19,40 @@ bun add @houstonp/rubiks-cube
 npm install @houstonp/rubiks-cube
 ```
 
+## Which one do I want?
+
+The package ships four primary classes; each plays a different role.
+
+| I want to...                                                          | Use                                                |
+|-----------------------------------------------------------------------|----------------------------------------------------|
+| Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`                   |
+| Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                       |
+| Drive cube state from my own renderer / view                          | `RubiksCubeController` from the package root       |
+| Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`                    |
+
+`RubiksCubeElement` is built on top of `RubiksCube3D` + `RubiksCubeController` + `RubiksCubeState`, so most users
+only need the first row.
+
 ## Package layout
 
 The package exposes several subpath entry points so you only pull in the parts you need.
 
-| Subpath                          | Exports                                                                                                                |
-|----------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `@houstonp/rubiks-cube`          | `RubiksCube`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                                |
-| `@houstonp/rubiks-cube/view`     | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`                                                       |
-| `@houstonp/rubiks-cube/three`    | `RubiksCube3D`, `RubiksCube3DSettings`                                                                                 |
-| `@houstonp/rubiks-cube/core`     | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `AnimationStyles`, `isMovement`, `IsRotation`, `reverse`, `translate` |
-| `@houstonp/rubiks-cube/state`    | `RubiksCubeState`, `CubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                          |
+| Subpath                          | Exports                                                                                                            |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `@houstonp/rubiks-cube`          | `RubiksCubeController`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                  |
+| `@houstonp/rubiks-cube/view`     | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                                |
+| `@houstonp/rubiks-cube/three`    | `RubiksCube3D`, `RubiksCube3DSettings`                                                                             |
+| `@houstonp/rubiks-cube/core`     | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate`   |
+| `@houstonp/rubiks-cube/state`    | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                   |
 
-> **Breaking change from 2.x:** `RubiksCubeElement` is no longer re‑exported from the package root. Import it from
-> `@houstonp/rubiks-cube/view`.
+> **Breaking changes from 2.x:**
+> - `RubiksCubeElement` is no longer re‑exported from the package root. Import it from `@houstonp/rubiks-cube/view`.
+> - `RubiksCube` is renamed to `RubiksCubeController`. It still composes a `RubiksCubeState` with any view; the
+>   new name reflects its role.
+> - `CubeState` is removed; its functionality is folded into `RubiksCubeState`. The `getState()` / `setState()`
+>   methods now work with sticker arrays (the old `CubeState` semantics). For Kociemba strings, use the new
+>   `getKociemba()` / `setKociemba(str)` methods.
+> - `AnimationStyles` is exported from `/view`, not `/core`.
 
 ## Adding the component
 
@@ -361,8 +381,8 @@ cube.setState(currentState);
 
 ## Headless cube state
 
-If you don't need rendering you can drive the cube state directly with `RubiksCubeState`. It tracks the cube using the
-same parser as the web component and returns Kociemba state strings.
+If you don't need rendering you can drive the cube state directly with `RubiksCubeState`. It tracks the cube using
+the same parser as the web component and exposes both raw sticker state and Kociemba string helpers.
 
 ```js
 import { RubiksCubeState } from '@houstonp/rubiks-cube/state';
@@ -374,20 +394,25 @@ cube.move(Movements.Single.R);
 cube.rotate(Rotations.y);
 
 // Apply a sequence in one call
-const state = cube.do([
+cube.do([
     Movements.Single.R,
     Movements.Single.U,
     Movements.Single.RP,
     Movements.Single.UP,
 ]);
-console.log(state); // Kociemba string
 
-// Initialise from an existing state string
-const restored = new RubiksCubeState(CubeTypes.Three, state);
+// Read the current state as a Kociemba string
+const kociemba = cube.getKociemba();
+console.log(kociemba);
+
+// Restore from a Kociemba string
+const restored = new RubiksCubeState(CubeTypes.Three);
+const ok = restored.setKociemba(kociemba); // false if the string is not valid for this cube size
 ```
 
-For lower‑level access to slices and sticker arrays, the same subpath also exports `CubeState`, the slice helpers
-`GetMovementSlice` / `GetRotationSlice`, and the `Axi` enum.
+`getState()` / `setState()` round‑trip the raw sticker array if you want to skip the Kociemba encoding. For
+lower‑level access to slices, the same subpath also exports `GetMovementSlice`, `GetRotationSlice`, and the `Axi`
+enum.
 
 ## Standalone 3D object
 
@@ -416,8 +441,8 @@ The `animationStyle` argument accepts any GSAP ease (string or function), since 
 hood.
 
 If you want the higher‑level "movement / rotation" API but with a custom 3D view, the package root also exports
-`RubiksCube`, which composes a `CubeState` with any object implementing the small `RubiksCubeViewInterface`
-(`slice`, `setState`, `reset`).
+`RubiksCubeController`, which composes a `RubiksCubeState` with any object implementing the small
+`RubiksCubeViewInterface` (`slice`, `setState`, `reset`).
 
 ## Rubiks Cube Notation
 
