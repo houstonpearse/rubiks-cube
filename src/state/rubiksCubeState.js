@@ -2,7 +2,7 @@
 import { Euler, Quaternion, Vector3 } from 'three';
 import { CubeTypes, Faces, isMovement, IsRotation, Movements, reverse, translate } from '../core';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
-import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from './stickerState';
+import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from './stickerState';
 /** @import {StickerState} from './stickerState' */
 /** @import {Rotation, CubeType, Movement, Face} from '../core' */
 /** @import {Slice} from './slice' */
@@ -37,7 +37,7 @@ const Layers = {
 };
 
 const ERROR_MARGIN = 0.0001;
-export class CubeState {
+export class RubiksCubeState {
     /**
      *
      * @param {CubeType} cubeType
@@ -125,6 +125,26 @@ export class CubeState {
         });
         this.stickerState = stickerState;
         return this.stickerState;
+    }
+
+    /**
+     * @returns {string}
+     */
+    getKociemba() {
+        return toKociemba(this.getState());
+    }
+
+    /**
+     * @param {string} kociembaString
+     * @returns {boolean}
+     */
+    setKociemba(kociembaString) {
+        const stickerState = fromKociemba(kociembaString);
+        if (stickerState == null) {
+            return false;
+        }
+        this.setState(stickerState);
+        return true;
     }
 
     /**

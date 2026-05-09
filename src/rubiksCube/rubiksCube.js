@@ -15,7 +15,7 @@
  * @property {function(): void} reset
  **/
 
-import { CubeState } from '../state';
+import { RubiksCubeState } from '../state';
 import { fromKociemba, toKociemba } from '../state/stickerState';
 
 export default class RubiksCube {
@@ -24,7 +24,7 @@ export default class RubiksCube {
      * @param {RubiksCubeViewInterface} view
      * */
     constructor(cubeType, view) {
-        this.state = new CubeState(cubeType);
+        this.state = new RubiksCubeState(cubeType);
         this.view = view;
     }
     /**

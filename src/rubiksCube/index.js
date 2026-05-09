@@ -1,4 +1,3 @@
 import RubiksCube from './rubiksCube';
-import RubiksCubeState from './rubiksCubeState';
-export { RubiksCube, RubiksCubeState };
+export { RubiksCube };
 /** @typedef {import('./rubiksCube').AnimationOptions} AnimationOptions */

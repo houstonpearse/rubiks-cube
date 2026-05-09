@@ -3,11 +3,11 @@ import './setup.js';
 import { expect, test } from 'bun:test';
 import { toKociemba } from '../src/state/stickerState.js';
 import { scrambles } from './testScrambles.js';
-import { CubeState } from '../src/state/cubeState.js';
+import { RubiksCubeState } from '../src/state/rubiksCubeState.js';
 
-test.each(scrambles)('CubeState solve on $cubeType with scramble = $scramble', ({ cubeType, scramble, solution }) => {
+test.each(scrambles)('RubiksCubeState solve on $cubeType with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
-    const cube = new CubeState(cubeType);
+    const cube = new RubiksCubeState(cubeType);
     const initialState = cube.getState();
     const initialKociembaState = toKociemba(initialState);
     const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));

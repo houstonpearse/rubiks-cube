@@ -5,7 +5,7 @@ import { CubeTypes, IsRotation, reverse, translate } from '../src/core/index.js'
 import { toKociemba } from '../src/state/stickerState.js';
 import { createTestCube } from './common.js';
 import { scrambles } from './testScrambles.js';
-import { CubeState } from '../src/state/cubeState.js';
+import { RubiksCubeState } from '../src/state/rubiksCubeState.js';
 import { GetMovementSlice, GetRotationSlice } from '../src/state/slice.js';
 
 test.each(scrambles)('$cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
@@ -54,7 +54,7 @@ test.each(scrambles)('$cubeType reset scramble = $scramble', ({ cubeType, scramb
     // Arrange
     const cube = createTestCube(cubeType);
     const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));
-    const cubeState = new CubeState(cubeType);
+    const cubeState = new RubiksCubeState(cubeType);
     let initialState = cubeState.getState();
     cubeState.do(scrambleMoves);
     let scrambleState = cubeState.getState();

@@ -8,8 +8,8 @@ import { CenterPiece } from './centerPiece';
 import { defaultStickerState, getEmptyStickerState, getStickerFaceIndex } from '../state/stickerState';
 import { CubeTypes, Faces } from '../core';
 import { Axi } from '../state/slice';
-import { Face, RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
-import { centers, corners, edges } from '../state/cubeState';
+import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
+import { centers, corners, edges } from '../state/rubiksCubeState';
 import { gsap } from 'gsap';
 /** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCube' */
 /** @typedef {_RubiksCubeViewInterface} RubiksCubeViewInterface */
