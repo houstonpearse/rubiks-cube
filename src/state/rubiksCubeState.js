@@ -209,7 +209,7 @@ export class RubiksCubeState {
         }
         const slice = GetMovementSlice(movement, this.layers.length);
         if (slice == null) {
-            console.error(`Failed to get movement slice. invalid movement: [${movement}]`);
+            console.error(`Failed to get movement slice. Invalid movement: [${movement}]`);
             return null;
         }
         this.slice(slice);

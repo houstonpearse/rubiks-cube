@@ -25,7 +25,7 @@ export const Axi = Object.freeze({
 export function GetMovementSlice(movement, layerCount) {
     const result = RegExp(`^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$`).exec(movement);
     if (result == null) {
-        console.error(`Failed to parse outerBlockMovement. invalid movement: ${movement}`);
+        console.error(`Failed to parse movement. Invalid movement: ${movement}`);
         return undefined;
     }
     /** @type {number | undefined} */

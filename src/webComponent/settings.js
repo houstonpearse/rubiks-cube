@@ -135,7 +135,7 @@ export default class Settings {
             return;
         }
         if (fov > maxFieldOfView && value != null) {
-            console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value} which is aboe the maximum.`);
+            console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value} which is above the maximum.`);
             return;
         }
         if (value == null) {
