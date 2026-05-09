@@ -11,13 +11,7 @@
         "renderer",
         "threejs"
     ],
-    "main": "./src/index.js",
-    "types": "./types/index.d.ts",
     "exports": {
-        ".": {
-            "types": "./types/index.d.ts",
-            "default": "./src/index.js"
-        },
         "./view": {
             "types": "./types/webComponent/index.d.ts",
             "default": "./src/webComponent/index.js"
@@ -25,6 +19,10 @@
         "./three": {
             "types": "./types/rubiksCube3D/index.d.ts",
             "default": "./src/rubiksCube3D/index.js"
+        },
+        "./controller": {
+            "types": "./types/rubiksCube/index.d.ts",
+            "default": "./src/rubiksCube/index.js"
         },
         "./core": {
             "types": "./types/core/index.d.ts",

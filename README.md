@@ -27,7 +27,7 @@ The package ships four primary classes; each plays a different role.
 | --------------------------------------------------------------------- | -------------------------------------------- |
 | Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`             |
 | Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                 |
-| Drive cube state from my own renderer / view                          | `RubiksCubeController` from the package root |
+| Drive cube state from my own renderer / view                          | `RubiksCubeController` from `/controller`    |
 | Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`              |
 
 `RubiksCubeElement` is built on top of `RubiksCube3D` + `RubiksCubeController` + `RubiksCubeState`, so most users
@@ -37,13 +37,15 @@ only need the first row.
 
 The package exposes several subpath entry points so you only pull in the parts you need.
 
-| Subpath                       | Exports                                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@houstonp/rubiks-cube`       | `RubiksCubeController`, `RubiksCubeState`, `RubiksCube3D`, `RubiksCube3DSettings`                                |
-| `@houstonp/rubiks-cube/view`  | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                              |
-| `@houstonp/rubiks-cube/three` | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
-| `@houstonp/rubiks-cube/core`  | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate` |
-| `@houstonp/rubiks-cube/state` | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                 |
+| Subpath                            | Exports                                                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                              |
+| `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
+| `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                           |
+| `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate` |
+| `@houstonp/rubiks-cube/state`      | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                 |
+
+There is no bare-package root export — every class lives on a subpath that names its layer.
 
 ## Adding the component
 
@@ -431,8 +433,8 @@ await cube.slice(slice, { animationSpeedMs: 200, ease: 'sine.inOut' });
 The `animationStyle` argument accepts any GSAP ease (string or function), since each slice is animated by GSAP under the
 hood.
 
-If you want the higher‑level "movement / rotation" API but with a custom 3D view, the package root also exports
-`RubiksCubeController`, which composes a `RubiksCubeState` with any object implementing the small
+If you want the higher‑level "movement / rotation" API but with a custom 3D view, import `RubiksCubeController`
+from `@houstonp/rubiks-cube/controller`. It composes a `RubiksCubeState` with any object implementing the small
 `RubiksCubeViewInterface` (`slice`, `setState`, `reset`).
 
 ## Rubiks Cube Notation
