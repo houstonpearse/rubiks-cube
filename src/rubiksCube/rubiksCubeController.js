@@ -18,7 +18,7 @@
 import { RubiksCubeState } from '../state';
 import { fromKociemba, toKociemba } from '../state/stickerState';
 
-export default class RubiksCube {
+export default class RubiksCubeController {
     /**
      * @param {CubeType} cubeType
      * @param {RubiksCubeViewInterface} view

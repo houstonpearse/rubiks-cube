@@ -11,7 +11,7 @@ import { Axi } from '../state/slice';
 import { RoundedBoxGeometry } from 'three/examples/jsm/Addons.js';
 import { centers, corners, edges } from '../state/rubiksCubeState';
 import { gsap } from 'gsap';
-/** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCube' */
+/** @import {RubiksCubeViewInterface as _RubiksCubeViewInterface} from '../rubiksCube/rubiksCubeController' */
 /** @typedef {_RubiksCubeViewInterface} RubiksCubeViewInterface */
 /** @import {CubeType} from '../core' */
 /** @import {CubeConfig} from './cubeConfig' */
