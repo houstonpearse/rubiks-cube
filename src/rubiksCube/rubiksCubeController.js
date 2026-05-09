@@ -13,8 +13,10 @@
  * @property {function(Slice, any=): Promise<void>} slice
  * @property {function(StickerState): void} setState
  * @property {function(): void} reset
+ * @property {function(CubeType): void} setType
  **/
 
+import { CubeTypes } from '../core';
 import { RubiksCubeState } from '../state';
 import { fromKociemba, toKociemba } from '../state/stickerState';
 
@@ -35,12 +37,9 @@ export default class RubiksCubeController {
     movement(movement, options) {
         const slice = this.state.move(movement, { reverse: options?.reverse, translate: options?.translate });
         if (slice == null) {
-            return Promise.reject('Invalid Movement');
+            return Promise.reject(new Error(`Invalid movement: ${movement}`));
         }
-        return new Promise(async (resolve, reject) => {
-            await this.view.slice(slice, { animationSpeedMs: options?.animationSpeedMs });
-            resolve(toKociemba(this.state.getState()));
-        });
+        return this.view.slice(slice, { animationSpeedMs: options?.animationSpeedMs }).then(() => toKociemba(this.state.getState()));
     }
 
     /**
@@ -51,13 +50,11 @@ export default class RubiksCubeController {
     rotation(rotation, options) {
         const slice = this.state.rotate(rotation, { reverse: options?.reverse });
         if (slice == null) {
-            return Promise.reject('Invalid Movement');
+            return Promise.reject(new Error(`Invalid rotation: ${rotation}`));
         }
-        return new Promise(async (resolve, reject) => {
-            await this.view.slice(slice, { animationSpeedMs: options?.animationSpeedMs });
-            resolve(toKociemba(this.state.getState()));
-        });
+        return this.view.slice(slice, { animationSpeedMs: options?.animationSpeedMs }).then(() => toKociemba(this.state.getState()));
     }
+
     /**
      * @param {(Rotation | Movement)[]} actions
      * @param {AnimationOptions} [options]
@@ -96,6 +93,19 @@ export default class RubiksCubeController {
      * @returns {string}
      */
     getState() {
+        return toKociemba(this.state.getState());
+    }
+
+    /**
+     * @param {CubeType} cubeType
+     * @returns {string}
+     */
+    setType(cubeType) {
+        if (!Object.values(CubeTypes).includes(cubeType)) {
+            throw new Error(`Invalid cube type: ${cubeType}`);
+        }
+        this.state = new RubiksCubeState(cubeType);
+        this.view.setType(cubeType);
         return toKociemba(this.state.getState());
     }
 }

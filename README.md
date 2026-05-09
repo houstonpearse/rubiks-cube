@@ -39,7 +39,7 @@ The package exposes several subpath entry points so you only pull in the parts y
 
 | Subpath                            | Exports                                                                                                          |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekTypes`, `PeekStates`, `AnimationStyles`                              |
+| `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekActions`, `PeekStates`, `AnimationStyles`                            |
 | `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
 | `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                           |
 | `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate` |
@@ -293,32 +293,45 @@ const newState = cube.setType(CubeTypes.Five); // Rebuild as a 5x5
 Animates the camera to a new "peek" position and resolves with the new peek state.
 
 ```ts
-peek(peekType: PeekType, options?: CameraOptions | null): Promise<PeekState>
+peek(action: PeekAction, options?: CameraOptions | null): Promise<PeekState>
 ```
 
+The camera tracks **two independent boolean axes** — horizontal (Right / Left) and vertical (Up / Down) — giving
+**four reachable positions** (the `PeekState`s: `RightUp`, `RightDown`, `LeftUp`, `LeftDown`). The 10 `PeekAction`
+values are inputs that operate on this state machine, in three categories:
+
+| Category               | Actions                                        | Effect                                                       |
+| ---------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
+| Set both axes          | `RightUp`, `RightDown`, `LeftUp`, `LeftDown`   | Move directly to that position                               |
+| Set one axis           | `Right`, `Left`, `Up`, `Down`                  | Set that axis only; the other axis keeps its current value   |
+| Toggle one axis        | `Horizontal`, `Vertical`                       | Flip that axis relative to its current value                 |
+
+Because the second and third categories only affect one axis, the result of e.g. `peek(Up)` depends on the prior
+peek state. The promise always resolves with the new full `PeekState`.
+
 ```js
-import { RubiksCubeElement, PeekTypes, PeekStates } from '@houstonp/rubiks-cube/view';
+import { RubiksCubeElement, PeekActions, PeekStates } from '@houstonp/rubiks-cube/view';
 
 const cube = document.querySelector('rubiks-cube');
 
-// Peek in different directions
-await cube.peek(PeekTypes.Right); // Peek right
-await cube.peek(PeekTypes.Left); // Peek left
-await cube.peek(PeekTypes.Up); // Peek up
-await cube.peek(PeekTypes.Down); // Peek down
-await cube.peek(PeekTypes.RightUp); // Peek right and up
-await cube.peek(PeekTypes.RightDown); // Peek right and down
-await cube.peek(PeekTypes.LeftUp); // Peek left and up
-await cube.peek(PeekTypes.LeftDown); // Peek left and down
-await cube.peek(PeekTypes.Horizontal); // Toggle horizontal peek
-await cube.peek(PeekTypes.Vertical); // Toggle vertical peek
+// Move directly to a position (sets both axes)
+await cube.peek(PeekActions.RightUp); // → PeekStates.RightUp
+await cube.peek(PeekActions.LeftDown); // → PeekStates.LeftDown
 
-// The peek method returns the current peek state
-const peekState = await cube.peek(PeekTypes.RightUp);
-console.log('Current peek state:', peekState); // e.g., PeekStates.RightUp ('rightUp')
+// Set one axis, leave the other untouched
+await cube.peek(PeekActions.Right); // sets horizontal to Right; vertical unchanged
+await cube.peek(PeekActions.Up);    // sets vertical to Up; horizontal unchanged
+
+// Toggle one axis relative to its current value
+await cube.peek(PeekActions.Horizontal); // flips horizontal
+await cube.peek(PeekActions.Vertical);   // flips vertical
+
+// The promise resolves with the new full peek state
+const peekState = await cube.peek(PeekActions.RightUp);
+console.log('Current peek state:', peekState); // 'rightUp'
 
 // Override camera animation speed for a single peek
-await cube.peek(PeekTypes.Left, { cameraSpeedMs: 150 });
+await cube.peek(PeekActions.Left, { cameraSpeedMs: 150 });
 ```
 
 ### Options
@@ -341,7 +354,7 @@ corresponding element attributes.
 ### Complete Example
 
 ```js
-import { RubiksCubeElement, AttributeNames, PeekTypes } from '@houstonp/rubiks-cube/view';
+import { RubiksCubeElement, AttributeNames, PeekActions } from '@houstonp/rubiks-cube/view';
 import { Movements, Rotations, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
 
 RubiksCubeElement.register();
@@ -360,7 +373,7 @@ await cube.rotate(Rotations.y);
 await cube.move(Movements.Wide.Rw);
 
 // Peek to see a different angle
-await cube.peek(PeekTypes.RightUp);
+await cube.peek(PeekActions.RightUp);
 
 // Save the current state
 await cube.move(Movements.Single.F);
@@ -457,7 +470,7 @@ Duplicate or equivalent notations are not provided in the `core` export. For exa
 only `R'` is provided in the export.
 
 ```js
-import { RubiksCubeElement, AttributeNames, PeekTypes } from '@houstonp/rubiks-cube/view';
+import { RubiksCubeElement, AttributeNames, PeekActions } from '@houstonp/rubiks-cube/view';
 import { Rotations, Movements, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
@@ -472,9 +485,9 @@ cube.rotate(Rotations.x);
 cube.rotate(Rotations.y2);
 cube.rotate(Rotations.zP);
 
-// Use constants for peek types
-cube.peek(PeekTypes.Right);
-cube.peek(PeekTypes.RightUp);
+// Use constants for peek actions
+cube.peek(PeekActions.Right);
+cube.peek(PeekActions.RightUp);
 
 // Use constants for cube types
 cube.setAttribute(AttributeNames.cubeType, CubeTypes.Four);

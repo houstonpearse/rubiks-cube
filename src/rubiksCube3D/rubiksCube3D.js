@@ -329,12 +329,11 @@ export default class RubiksCube3D extends Object3D {
      * sets the state of the cube
      * @public
      * @param {CubeType} cubeType
-     * @returns {boolean}
+     * @returns {void}
      */
     setType(cubeType) {
         if (!Object.values(CubeTypes).includes(cubeType)) {
-            console.error('Failed to set CubeType. Invalid CubeType.');
-            return false;
+            throw new Error(`Invalid cube type: ${cubeType}`);
         }
         this._currentAnimation?.progress(1);
         this._cubeType = cubeType;
@@ -343,7 +342,6 @@ export default class RubiksCube3D extends Object3D {
         this._mainGroup = this.createCubeGroup();
         this.add(this._mainGroup);
         this.setStickerState(defaultStickerState(cubeType));
-        return true;
     }
 
     /**

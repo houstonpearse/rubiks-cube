@@ -8,16 +8,16 @@ import Settings from './settings';
 import { CameraState } from './cameraState';
 import { RubiksCubeController } from '../rubiksCube';
 import RubiksCube3D from '../rubiksCube3D/rubiksCube3D';
-import { AttributeNames, PeekTypes } from './constants';
-import { CubeTypes } from '../core';
+import { AttributeNames, PeekActions } from './constants';
 
 /** @import {Rotation, Movement, CubeType} from '../core' */
-/** @import {PeekType, PeekState, CameraOptions} from './constants' */
+/** @import {PeekAction, PeekState, CameraOptions} from './constants' */
 /** @import {AnimationOptions} from '../rubiksCube' */
 
 const maxAzimuthAngle = (5 * Math.PI) / 16;
 const polarAngleOffset = Math.PI / 2;
 const maxPolarAngle = (5 * Math.PI) / 16;
+const notInitialisedMessage = 'RubiksCubeElement is not initialised — element must be connected to the DOM before calling this method.';
 const InternalEvents = Object.freeze({
     cameraRadiusChanged: 'cameraRadiusChanged',
     cameraSettingsChanged: 'cameraSettingsChanged',
@@ -82,7 +82,9 @@ export class RubiksCubeElement extends HTMLElement {
         switch (name) {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
-                this.rebuild(/** @type {CubeType} */ (newVal));
+                if (this._rubiksCube !== null) {
+                    this.rebuild(/** @type {CubeType} */ (newVal));
+                }
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
@@ -148,7 +150,7 @@ export class RubiksCubeElement extends HTMLElement {
      */
     move(move, options) {
         if (this._rubiksCube == null) {
-            return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            return Promise.reject(new Error(notInitialisedMessage));
         }
         return this._rubiksCube.movement(move, options);
     }
@@ -160,7 +162,7 @@ export class RubiksCubeElement extends HTMLElement {
      */
     rotate(rotation, options) {
         if (this._rubiksCube == null) {
-            return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            return Promise.reject(new Error(notInitialisedMessage));
         }
         return this._rubiksCube.rotation(rotation, options);
     }
@@ -170,10 +172,9 @@ export class RubiksCubeElement extends HTMLElement {
      */
     reset() {
         if (this._rubiksCube == null) {
-            console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
-            return '';
+            throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube?.reset();
+        return this._rubiksCube.reset();
     }
 
     /**
@@ -182,10 +183,9 @@ export class RubiksCubeElement extends HTMLElement {
      */
     setState(kociembaState) {
         if (this._rubiksCube == null) {
-            console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
-            return false;
+            throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube?.setState(kociembaState);
+        return this._rubiksCube.setState(kociembaState);
     }
 
     /**
@@ -193,10 +193,9 @@ export class RubiksCubeElement extends HTMLElement {
      */
     getState() {
         if (this._rubiksCube == null) {
-            console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
-            return '';
+            throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube?.getState();
+        return this._rubiksCube.getState();
     }
 
     /**
@@ -213,37 +212,36 @@ export class RubiksCubeElement extends HTMLElement {
      * @returns {string}
      */
     rebuild(cubeType) {
-        if (!Object.values(CubeTypes).includes(cubeType)) {
-            console.error('Failed to set CubeType. Invalid CubeType.');
-            return '';
+        if (this._rubiksCube == null) {
+            throw new Error(notInitialisedMessage);
         }
-        if (this._rubiksCube == null || this._rubiksCube3D == null) {
-            console.error('WebComponent is not initiialised. Please call the .register() method before sending events.');
-            return '';
-        }
-        this._rubiksCube3D.setType(cubeType);
-        this._rubiksCube = new RubiksCubeController(cubeType, this._rubiksCube3D);
-        return this._rubiksCube.getState();
+        return this._rubiksCube.setType(cubeType);
     }
 
-    /** @internal @typedef {{eventId: string, peekType: PeekType, options: CameraOptions?}} CameraPeekEventData */
+    /** @internal @typedef {{eventId: string, action: PeekAction, options: CameraOptions?}} CameraPeekEventData */
     /** @internal @typedef {{eventId: string, peekState: PeekState }} CameraPeekCompleteEventData */
     /**
-     * This function changes the camera position to one of four states depending on the arguments passed.
+     * Animates the camera to a new "peek" position.
      *
-     * @param {PeekType} peekType
+     * The camera tracks two independent boolean axes (horizontal: Right/Left, vertical: Up/Down), giving four
+     * reachable positions (the {@link PeekState}s). Each `PeekAction` operates on this state machine: actions like
+     * `RightUp` set both axes; `Up`/`Right`/`Left`/`Down` set one axis and leave the other untouched;
+     * `Horizontal`/`Vertical` toggle one axis relative to its current value. The result of a partial action
+     * therefore depends on the current peek state.
+     *
+     * @param {PeekAction} action
      * @param {CameraOptions?} options
      * @returns {Promise<PeekState>}
      */
-    peek(peekType, options = null) {
+    peek(action, options = null) {
         if (this._rubiksCube3D == null) {
-            return Promise.reject('WebComponent is not initiialised. Please call the .register() method before sending events.');
+            return Promise.reject(new Error(notInitialisedMessage));
         }
-        if (!Object.values(PeekTypes).includes(peekType)) {
-            return Promise.reject(`Invalid move - [${peekType}]. Valid moves are ${Object.values(PeekTypes).join(', ')}`);
+        if (!Object.values(PeekActions).includes(action)) {
+            return Promise.reject(new Error(`Invalid peek action: ${action}. Valid actions are ${Object.values(PeekActions).join(', ')}`));
         }
         /** @type {CameraPeekEventData} */
-        const data = { eventId: crypto.randomUUID(), peekType, options };
+        const data = { eventId: crypto.randomUUID(), action, options };
         return new Promise((resolve) => {
             /** @param {CustomEvent<CameraPeekCompleteEventData> | Event} event */ const handler = (event) => {
                 const customEvent = /** @type {CustomEvent<CameraPeekCompleteEventData>} */ (event);
@@ -355,7 +353,7 @@ export class RubiksCubeElement extends HTMLElement {
 
         this.addEventListener(InternalEvents.cameraPeek, (event) => {
             const customEvent = /** @type {CustomEvent<CameraPeekEventData>} */ (event);
-            cameraState.peekCamera(customEvent.detail.peekType);
+            cameraState.peekCamera(customEvent.detail.action);
             /** @type {CameraPeekCompleteEventData} */
             const data = { eventId: customEvent.detail.eventId, peekState: cameraState.toPeekState() };
             const completedCallback = () => this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeekComplete, { detail: data }));

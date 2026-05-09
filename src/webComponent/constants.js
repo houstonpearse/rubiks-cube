@@ -25,9 +25,9 @@ export const PeekStates = Object.freeze({
 });
 
 /**
- * @typedef {typeof PeekTypes [keyof typeof PeekTypes]} PeekType
+ * @typedef {typeof PeekActions [keyof typeof PeekActions]} PeekAction
  */
-export const PeekTypes = Object.freeze({
+export const PeekActions = Object.freeze({
     Horizontal: 'horizontal',
     Vertical: 'vertical',
     Right: 'right',
