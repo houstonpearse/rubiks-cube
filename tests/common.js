@@ -1,27 +1,10 @@
-import CubeSettings from '../src/cube/cubeSettings.js';
-import RubiksCube3D from '../src/three/cube.js';
+import RubiksCube3DSettings from '../src/rubiksCube3D/cubeSettings.js';
+import RubiksCube3D from '../src/rubiksCube3D/rubiksCube3D.js';
 /**
  * @param {import('../src/core.js').CubeType} cubeType
  * @returns {RubiksCube3D}
  **/
 export function createTestCube(cubeType) {
-    // Use a fixed animation style and zero duration so rotations complete deterministically in tests.
-    const settings = new CubeSettings(1.04, 0, 'fixed', cubeType);
+    const settings = new RubiksCube3DSettings({ pieceGap: 1.04, animationSpeedMs: 0, cubeType, animationStyle: 'sine' });
     return new RubiksCube3D(settings);
-}
-
-/**
- *
- * @param {RubiksCube3D} cube
- * @param {number} maxIterations
- */
-export function drainUpdates(cube, maxIterations = 20) {
-    // Step the cube until the current rotation and queue are empty, or until we hit a safety cap.
-    for (let i = 0; i < maxIterations; i++) {
-        cube.update();
-        if (!cube._currentRotation && cube._rotationQueue.length === 0) {
-            return;
-        }
-    }
-    throw new Error('Animation Queue not empty');
 }

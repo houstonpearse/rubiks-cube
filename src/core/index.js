@@ -1,4 +1,36 @@
 // @ts-check
+
+/**
+ * reverses the direction of a movement or rotation
+ * @template {Movement | Rotation} T
+ * @param {T} action
+ * @returns {T}
+ * */
+export function reverse(action) {
+    let reversedAction = action;
+    if (action.at(-1) === "'") {
+        reversedAction = /** @type {T} */ (action.slice(0, -1));
+    } else {
+        const newAction = /** @type {T} */ (action + "'");
+        reversedAction = newAction;
+    }
+    return reversedAction;
+}
+
+/**
+ * Translates notation meant for a 3x3 into notation a big cube. This is so that 3x3 algorithms can be used on a big cube if desired. eg. for a 6x6 r -> 5r
+ * @template {Movement | Rotation} T
+ * @param {T} action
+ * @param {CubeType} cubeType
+ * @returns {T}
+ * */
+export function translate(action, cubeType) {
+    if (Object.values(Movements.Wide).includes(/** @type {WideMove} **/ (action))) {
+        return /** @type {T}  */ (LayerCount[cubeType] - 1 + action);
+    }
+    return action;
+}
+
 /**
  * @typedef {typeof Movements.Single[keyof typeof Movements.Single]} SingleMove
  * @typedef {typeof Movements.Wide[keyof typeof Movements.Wide]} WideMove
@@ -71,7 +103,7 @@ export const Movements = Object.freeze({
         u2: 'u2',
         uP: "u'",
         Dw: 'Dw',
-        Dw2: 'D2',
+        Dw2: 'Dw2',
         DwP: "Dw'",
         d: 'd',
         d2: 'd2',
@@ -357,6 +389,27 @@ export const Movements = Object.freeze({
         D2: '6D2',
         DP: "6D'",
     }),
+    /**
+     * Build a layer-range move for big-cube notation. e.g. Movements.Range(2, 4, Movements.Wide.Rw) returns '2-4Rw',
+     * meaning "rotate layers 2 through 4 from the right face." Accepts wide moves (`Movements.Wide.*`), face
+     * moves (`Movements.Single.{R,L,U,D,F,B}` and modifiers), and slice moves (`Movements.Single.{M,E,S}` and
+     * modifiers). Already-prefixed moves (`2R`, `2-4Rw`) are rejected.
+     * @param {number} lower
+     * @param {number} upper
+     * @param {WideMove | SingleMove} baseMove
+     * @returns {Movement}
+     */
+    Range: (lower, upper, baseMove) => {
+        if (!Number.isInteger(lower) || !Number.isInteger(upper) || lower < 1 || lower >= upper || upper > 7) {
+            throw new Error(`Invalid layer range [${lower}-${upper}]: require integers with 1 <= lower < upper <= 7`);
+        }
+        const move = /** @type {Movement} */ (`${lower}-${upper}${baseMove}`);
+        if (!isMovement(move)) {
+            throw new Error(`Invalid range movement: ${move}`);
+        }
+
+        return move;
+    },
 });
 
 /**
@@ -398,50 +451,28 @@ export const CubeTypes = Object.freeze({
     Seven: 'Seven',
 });
 
-/**
- * @typedef {typeof AnimationStyles[keyof typeof AnimationStyles]} AnimationStyle
- */
-export const AnimationStyles = Object.freeze({
-    Exponential: 'exponential',
-    Next: 'next',
-    Fixed: 'fixed',
-    Match: 'match',
+export const LayerCount = Object.freeze({
+    [CubeTypes.Two]: 2,
+    [CubeTypes.Three]: 3,
+    [CubeTypes.Four]: 4,
+    [CubeTypes.Five]: 5,
+    [CubeTypes.Six]: 6,
+    [CubeTypes.Seven]: 7,
 });
 
 /**
- * @typedef {typeof FaceColours [keyof typeof FaceColours]} FaceColour
+ *
+ * @param {string} rotation
  */
-export const FaceColours = Object.freeze({
-    U: 'white',
-    D: 'yellow',
-    L: '#fc9a05',
-    R: 'red',
-    F: '#2cbf13',
-    B: 'blue',
-});
+export function IsRotation(rotation) {
+    return /^([xyz])(\d)?(\')?$/.test(rotation);
+}
 
 /**
- * @typedef {typeof PeekTypes [keyof typeof PeekTypes]} PeekType
+ *
+ * @param {string} movement
+ * @return {boolean}
  */
-export const PeekTypes = Object.freeze({
-    Horizontal: 'horizontal',
-    Vertical: 'vertical',
-    Right: 'right',
-    Left: 'left',
-    Up: 'up',
-    Down: 'down',
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
-});
-
-/**
- * @typedef {typeof PeekStates [keyof typeof PeekStates]} PeekState
- */
-export const PeekStates = Object.freeze({
-    RightUp: 'rightUp',
-    RightDown: 'rightDown',
-    LeftUp: 'leftUp',
-    LeftDown: 'leftDown',
-});
+export function isMovement(movement) {
+    return /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/.test(movement);
+}

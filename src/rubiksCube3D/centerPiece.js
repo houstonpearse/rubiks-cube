@@ -1,9 +1,10 @@
 // @ts-check
-import { BoxGeometry, ExtrudeGeometry, Mesh, MeshBasicMaterial, Object3D } from 'three';
+import { BoxGeometry, ExtrudeGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PlaneGeometry, SRGBColorSpace, TextureLoader } from 'three';
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
 import { Sticker } from './sticker';
+/** @import {Vector3Like} from 'three' */
 
-/** @typedef {{ positon: import('three').Vector3Like, rotation: import('three').Vector3Like }} CenterPieceUserData */
+/** @typedef {{ positon: Vector3Like, rotation: Vector3Like }} CenterPieceUserData */
 
 export class CenterPiece extends Object3D {
     constructor() {
@@ -18,10 +19,44 @@ export class CenterPiece extends Object3D {
         this.frontSticker.position.set(0, 0, 0.5);
         this.frontSticker.rotation.set(0, 0, 0);
         this.add(this.frontSticker);
+
+        /** @type {Mesh<PlaneGeometry, MeshStandardMaterial> | null} */
+        this.logo = null;
     }
 
     get stickers() {
         return [this.frontSticker];
+    }
+
+    /**
+     * @param {string} logoPath
+     */
+    addLogo(logoPath) {
+        this.removeLogo();
+        const material = new MeshStandardMaterial({
+            transparent: true,
+            color: 'white',
+            metalness: 0,
+            roughness: 0.4,
+        });
+        const mesh = new Mesh(new PlaneGeometry(0.9, 0.9), material);
+        mesh.position.set(0, 0, 0.54);
+        this.logo = mesh;
+        this.add(mesh);
+        const texture = new TextureLoader().load(logoPath, (texture) => {
+            texture.colorSpace = SRGBColorSpace;
+            material.map = texture;
+            material.needsUpdate = true;
+            texture.anisotropy = 16;
+        });
+    }
+
+    removeLogo() {
+        if (!this.logo) return;
+        this.remove(this.logo);
+        this.logo.material.map?.dispose();
+        this.logo.material.dispose();
+        this.logo = null;
     }
 }
 

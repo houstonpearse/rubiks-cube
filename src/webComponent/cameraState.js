@@ -1,5 +1,6 @@
 // @ts-check
-import { PeekStates, PeekTypes } from '../core';
+import { PeekActions, PeekStates } from './constants';
+/** @import {PeekAction, PeekState} from './constants' */
 
 export class CameraState {
     /**
@@ -14,51 +15,48 @@ export class CameraState {
     }
 
     /**
-     * @param {import("../core").PeekType} peekType
+     * @param {PeekAction} action
      */
-    peekCamera(peekType) {
-        switch (peekType) {
-            case PeekTypes.Horizontal:
+    peekCamera(action) {
+        switch (action) {
+            case PeekActions.Horizontal:
                 this.Right = !this.Right;
                 break;
-            case PeekTypes.Vertical:
+            case PeekActions.Vertical:
                 this.Up = !this.Up;
                 break;
-            case PeekTypes.Right:
+            case PeekActions.Right:
                 this.Right = true;
                 break;
-            case PeekTypes.Left:
+            case PeekActions.Left:
                 this.Right = false;
                 break;
-            case PeekTypes.Up:
+            case PeekActions.Up:
                 this.Up = true;
                 break;
-            case PeekTypes.Down:
+            case PeekActions.Down:
                 this.Up = false;
                 break;
-            case PeekTypes.RightUp:
+            case PeekActions.RightUp:
                 this.Right = true;
                 this.Up = true;
                 break;
-            case PeekTypes.RightDown:
+            case PeekActions.RightDown:
                 this.Right = true;
                 this.Up = false;
                 break;
-            case PeekTypes.LeftUp:
+            case PeekActions.LeftUp:
                 this.Right = false;
                 this.Up = true;
                 break;
-            case PeekTypes.LeftDown:
+            case PeekActions.LeftDown:
                 this.Right = false;
                 this.Up = false;
-                break;
-            default:
-                console.error(`Invalid peekType:[${peekType}]. valid values are [${Object.values(PeekTypes)}] `);
                 break;
         }
     }
     /**
-     * @returns {import("../core").PeekState}
+     * @returns {PeekState}
      */
     toPeekState() {
         if (this.Right && this.Up) {
@@ -70,12 +68,6 @@ export class CameraState {
         if (this.Right && !this.Up) {
             return PeekStates.RightDown;
         }
-        if (!this.Right && !this.Up) {
-            return PeekStates.LeftDown;
-        }
-        console.error(
-            `Invalid CameraState right and up values must be true or false. Actual values: right[${this.Right}] up[${this.Up}]. Default RightUp returned`,
-        );
-        return PeekStates.RightUp;
+        return PeekStates.LeftDown;
     }
 }

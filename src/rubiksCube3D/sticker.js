@@ -1,9 +1,10 @@
 // @ts-check
 import { Mesh, MeshStandardMaterial } from 'three';
+/** @import {BufferGeometry, ColorRepresentation} from 'three' */
 
 export class Sticker extends Mesh {
     /**
-     * @param {import("three").BufferGeometry} geometry
+     * @param {BufferGeometry} geometry
      */
     constructor(geometry) {
         super(
@@ -14,12 +15,12 @@ export class Sticker extends Mesh {
                 roughness: 0.4,
             }),
         );
-        /** @type {{ color: import('three').ColorRepresentation }} */
+        /** @type {{ color: ColorRepresentation }} */
         this.userData = { color: 'white' };
     }
 
     /**
-     * @param {import('three').ColorRepresentation} color
+     * @param {ColorRepresentation} color
      */
     set color(color) {
         const material = /** @type {MeshStandardMaterial} */ (this.material);
@@ -28,7 +29,7 @@ export class Sticker extends Mesh {
     }
 
     /**
-     * @returns {import('three').ColorRepresentation} color
+     * @returns {ColorRepresentation} color
      */
     get color() {
         const material = /** @type {MeshStandardMaterial} */ (this.material);

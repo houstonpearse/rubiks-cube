@@ -1,32 +1,40 @@
 // @ts-check
-import { AnimationStyles, CubeTypes } from './core';
-const defaultSettings = {
-    cubeType: CubeTypes.Seven,
+import { CubeTypes } from '../core';
+import RubiksCube3DSettings from '../rubiksCube3D/cubeSettings';
+import { AnimationStyles } from './constants';
+/** @import {CubeType} from '../core' */
+/** @import {AnimationStyle} from './constants' */
+
+const defaultCubeSettings = {
+    cubeType: CubeTypes.Three,
     animationSpeedMs: 100,
-    /** @type {import('./core').AnimationStyle} */
-    animationStyle: 'fixed',
+    animationStyle: 'linear',
     pieceGap: 1.04,
+};
+
+const defaultSettings = {
     cameraSpeedMs: 100,
     cameraRadius: 5,
     cameraPeekAngleHorizontal: 0.6,
     cameraPeekAngleVertical: 0.6,
     cameraFieldOfView: 75,
 };
+
 const minGap = 1;
+const maxGap = 1.1;
 const minRadius = 4;
 const minFieldOfView = 30;
 const maxFieldOfView = 100;
 
 export default class Settings {
     constructor() {
-        /** @type {import("./core").CubeType} */
-        this.cubeType = defaultSettings.cubeType;
-        /** @type {number} */
-        this.pieceGap = defaultSettings.pieceGap;
-        /** @type {number} */
-        this.animationSpeedMs = defaultSettings.animationSpeedMs;
-        /** @type {import("./core").AnimationStyle} */
-        this.animationStyle = defaultSettings.animationStyle;
+        /** @type {RubiksCube3DSettings} */
+        this.rubiksCube3DSettings = new RubiksCube3DSettings({
+            pieceGap: defaultCubeSettings.pieceGap,
+            animationSpeedMs: defaultCubeSettings.animationSpeedMs,
+            cubeType: defaultCubeSettings.cubeType,
+            animationStyle: defaultCubeSettings.animationStyle,
+        });
         /** @type {number} */
         this.cameraSpeedMs = defaultSettings.cameraSpeedMs;
         /** @type {number} */
@@ -42,8 +50,8 @@ export default class Settings {
     /** @param {any} value */
     setCubeType(value) {
         if (value && Object.values(CubeTypes).includes(value)) {
-            const cubeType = /** @type {import('./core').CubeType} */ (value);
-            this.cubeType = cubeType;
+            const cubeType = /** @type {CubeType} */ (value);
+            this.rubiksCube3DSettings.cubeType = cubeType;
             return;
         }
         console.warn(`Invalid cube type value. Accepted Values are [${Object.values(CubeTypes).join(', ')}] Value is ${value}`);
@@ -52,18 +60,18 @@ export default class Settings {
     /** @param {string | null} value*/
     setPieceGap(value) {
         const gap = Number(value);
-        if (gap >= minGap && value != null) {
-            this.pieceGap = gap;
+        if (gap >= minGap && gap <= maxGap && value != null) {
+            this.rubiksCube3DSettings.pieceGap = gap;
             return;
         }
-        console.warn(`Invalid pieceGap value. Min is ${minGap}. Value is ${value}`);
+        console.warn(`Invalid pieceGap value. Min is ${minGap}. Max is ${maxGap}. Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */
     setAnimationSpeed(value) {
         var speed = Number(value);
         if (speed >= 0 && value != null) {
-            this.animationSpeedMs = speed;
+            this.rubiksCube3DSettings.animationSpeedMs = speed;
             return;
         }
         console.warn(`Invalid animation speed value. Min is 0. Value is ${value}`);
@@ -72,8 +80,8 @@ export default class Settings {
     /** @param {any} value */
     setAnimationStyle(value) {
         if (value && Object.values(AnimationStyles).includes(value)) {
-            const validStyle = /** @type {import("./core").AnimationStyle} */ (value);
-            this.animationStyle = validStyle;
+            const validStyle = /** @type {AnimationStyle} */ (value);
+            this.rubiksCube3DSettings.animationStyle = validStyle;
             return;
         }
         console.warn(`Invalid animation style value. Accepted Values are [${Object.values(AnimationStyles).join(', ')}] Value is ${value}`);
@@ -96,7 +104,7 @@ export default class Settings {
             this.cameraRadius = radius;
             return;
         }
-        console.warn(`Invalid camera radius value. Min is ${radius}. Value is ${value}`);
+        console.warn(`Invalid camera radius value. Min is ${minRadius}. Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */
@@ -127,12 +135,17 @@ export default class Settings {
             return;
         }
         if (fov > maxFieldOfView && value != null) {
-            console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value} which is aboe the maximum.`);
+            console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value} which is above the maximum.`);
             return;
         }
         if (value == null) {
             console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value}.`);
         }
         this.cameraFieldOfView = fov;
+    }
+
+    /** @param {string | null} value in ms */
+    setLogo(value) {
+        this.rubiksCube3DSettings.logo = value;
     }
 }

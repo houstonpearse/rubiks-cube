@@ -2,8 +2,9 @@
 import { BoxGeometry, ExtrudeGeometry, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import { SVGLoader } from 'three/examples/jsm/Addons.js';
 import { Sticker } from './sticker';
+/** @import {Vector3Like} from 'three' */
 
-/** @typedef {{ positon: import('three').Vector3Like, rotation: import('three').Vector3Like }} EdgePieceUserData*/
+/** @typedef {{ positon: Vector3Like, rotation: Vector3Like }} EdgePieceUserData*/
 
 export class EdgePiece extends Object3D {
     constructor() {
