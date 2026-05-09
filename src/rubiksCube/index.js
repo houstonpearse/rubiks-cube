@@ -1,3 +1,3 @@
 import RubiksCubeController from './rubiksCubeController';
-export { RubiksCubeController as RubiksCube };
+export { RubiksCubeController };
 /** @typedef {import('./rubiksCubeController').AnimationOptions} AnimationOptions */

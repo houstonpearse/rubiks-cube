@@ -2,7 +2,7 @@
 import './setup.js';
 import { expect, test } from 'bun:test';
 import { scrambles } from './testScrambles.js';
-import RubiksCube from '../src/rubiksCube/rubiksCube.js';
+import { RubiksCubeController } from '../src/rubiksCube';
 import RubiksCube3D from '../src/rubiksCube3D/rubiksCube3D.js';
 import RubiksCube3DSettings from '../src/rubiksCube3D/cubeSettings.js';
 import { toKociemba } from '../src/state/stickerState.js';
@@ -10,8 +10,8 @@ import { IsRotation } from '../src/core/index.js';
 
 test.each(scrambles)('RubiksCube with 3D view $cubeType solve with scramble = $scramble', ({ cubeType, scramble, solution }) => {
     // Arrange
-    const cube3D = new RubiksCube3D(new RubiksCube3DSettings(1, 0, cubeType, 'sine'));
-    const cube = new RubiksCube(cubeType, cube3D);
+    const cube3D = new RubiksCube3D(new RubiksCube3DSettings(1, 0, cubeType, 'sine', null));
+    const cube = new RubiksCubeController(cubeType, cube3D);
     const initialState = cube.getState();
     const scrambleMoves = /** @type {import('../src/core/index.js').Movement[]} */ (scramble.split(' '));
 
