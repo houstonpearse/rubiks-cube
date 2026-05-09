@@ -51,7 +51,7 @@ export default class Settings {
     setCubeType(value) {
         if (value && Object.values(CubeTypes).includes(value)) {
             const cubeType = /** @type {CubeType} */ (value);
-            this.rubiksCube3DcubeType = cubeType;
+            this.rubiksCube3DSettings.cubeType = cubeType;
             return;
         }
         console.warn(`Invalid cube type value. Accepted Values are [${Object.values(CubeTypes).join(', ')}] Value is ${value}`);

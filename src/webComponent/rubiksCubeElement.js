@@ -83,7 +83,7 @@ export class RubiksCubeElement extends HTMLElement {
             case AttributeNames.cubeType:
                 this.settings.setCubeType(newVal);
                 if (this._rubiksCube !== null) {
-                    this.rebuild(/** @type {CubeType} */ (newVal));
+                    this._rebuild();
                 }
                 break;
             case AttributeNames.pieceGap:
@@ -204,18 +204,17 @@ export class RubiksCubeElement extends HTMLElement {
      */
     setType(cubeType) {
         this.setAttribute(AttributeNames.cubeType, cubeType);
-        return this.rebuild(cubeType);
+        return this.getState();
     }
 
     /**
-     * @param {CubeType} cubeType
-     * @returns {string}
-     */
-    rebuild(cubeType) {
+     * @private
+     **/
+    _rebuild() {
         if (this._rubiksCube == null) {
             throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube.setType(cubeType);
+        return this._rubiksCube.setType(this.settings.rubiksCube3DSettings.cubeType);
     }
 
     /** @internal @typedef {{eventId: string, action: PeekAction, options: CameraOptions?}} CameraPeekEventData */

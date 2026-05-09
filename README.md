@@ -270,8 +270,10 @@ cube.setState(scrambledState);
 
 ### SetType
 
-Switches the cube to a different size at runtime. Returns the solved state string for the new cube type, or an empty
-string if the cube type is invalid.
+Switches the cube to a different size at runtime by reflecting the value to the `cube-type` attribute, which
+triggers an internal rebuild. Returns the cube's state string after the call. If the new type matches the
+current type, `setType` is a no-op and returns the current state — call `reset()` if you also want to clear
+the cube to solved.
 
 ```ts
 setType(cubeType: CubeType): string
@@ -283,10 +285,12 @@ import { CubeTypes } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
-const newState = cube.setType(CubeTypes.Five); // Rebuild as a 5x5
+const newState = cube.setType(CubeTypes.Five); // Rebuild as a 5x5; returns the solved 5x5 state
+cube.setType(CubeTypes.Five);                  // No-op; returns whatever the current state is
 ```
 
-`setType` also keeps the `cube-type` attribute in sync, so reflecting it back to the DOM is automatic.
+Setting the `cube-type` attribute directly (`cube.setAttribute('cube-type', 'Five')`) is equivalent to calling
+`setType`, since both go through the same attribute-change path.
 
 ### Peek
 
