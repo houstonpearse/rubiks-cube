@@ -531,6 +531,31 @@ Big Cube Notation. Not all listed for brevity.
 | Nr       | All right layers up to the Nth right‑most layer |
 | X-YRw    | Layers X through Y from the right face          |
 
+Range moves (`X-YRw`) apply to **wide moves**, **single face moves** (`R`, `L`, `U`, `D`, `F`, `B`), and **slice
+moves** (`M`, `E`, `S`). The `Movements.Range` builder validates the inputs at the call site and returns a
+typed string:
+
+```js
+import { Movements } from '@houstonp/rubiks-cube/core';
+
+// Wide moves
+await cube.move(Movements.Range(2, 4, Movements.Wide.Rw));   // → '2-4Rw'
+await cube.move(Movements.Range(3, 5, Movements.Wide.r));    // → '3-5r'
+await cube.move(Movements.Range(2, 4, Movements.Wide.RwP));  // → "2-4Rw'"
+
+// Single face moves
+await cube.move(Movements.Range(2, 4, Movements.Single.R));  // → '2-4R'
+await cube.move(Movements.Range(2, 3, Movements.Single.LP)); // → "2-3L'"
+
+// Slice moves
+await cube.move(Movements.Range(2, 4, Movements.Single.M));  // → '2-4M'
+await cube.move(Movements.Range(2, 3, Movements.Single.SP)); // → "2-3S'"
+```
+
+`Movements.Range` throws if `lower < 1`, `lower >= upper`, `upper > 7`, or the base move has an existing layer
+prefix (e.g. `2R`, `2-4Rw`). It does not check the range against the current cube size — passing
+`Range(2, 6, ...)` to a 4x4 produces a string that the parser will reject at `move()` time.
+
 Rotation Notation
 
 | Notation | Rotation                                         |

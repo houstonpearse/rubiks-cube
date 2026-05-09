@@ -33,7 +33,7 @@ test('translate l -> 6l', () => {
     expect(Movements.Six.u).toBe(translate(Movements.Wide.u, CubeTypes.Seven));
 });
 
-const allMovements = Object.values(Movements).flatMap((group) => Object.values(group));
+const allMovements = Object.values(Movements).flatMap((group) => (typeof group === 'object' ? Object.values(group) : []));
 test.each(allMovements)('IsMovement %s', (movement) => {
     expect(isMovement(movement)).toBe(true);
 });
@@ -41,4 +41,16 @@ test.each(allMovements)('IsMovement %s', (movement) => {
 const allRotations = Object.values(Rotations);
 test.each(allRotations)('IsRotation %s', (rotation) => {
     expect(IsRotation(rotation)).toBe(true);
+});
+
+const rangeableBases = [...Object.values(Movements.Wide), ...Object.values(Movements.Single)];
+const layerRanges = [];
+for (let lower = 1; lower <= 6; lower++) {
+    for (let upper = lower + 1; upper <= 7; upper++) {
+        layerRanges.push([lower, upper]);
+    }
+}
+const allRangeMovements = layerRanges.flatMap(([lower, upper]) => rangeableBases.map((base) => Movements.Range(lower, upper, base)));
+test.each(allRangeMovements)('IsMovement Range %s', (movement) => {
+    expect(isMovement(movement)).toBe(true);
 });

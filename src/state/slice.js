@@ -102,14 +102,22 @@ export function GetMovementSlice(movement, layerCount) {
         case 'F': {
             layerNumber = layerNumber ? layerNumber : 1;
             const layerIndex = layerCount - layerNumber;
-            return { axis, layerIds: [layerIndex], direction: -direction };
+            let sliceLayers = [layerIndex];
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerCount - layerRangeUpper, layerCount - (layerRangeLower - 1));
+            }
+            return { axis, layerIds: sliceLayers, direction: -direction };
         }
         case 'L':
         case 'D':
         case 'B': {
             layerNumber = layerNumber ? layerNumber : 1;
             const layerIndex = layerNumber - 1;
-            return { axis, layerIds: [layerIndex], direction };
+            let sliceLayers = [layerIndex];
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerRangeLower - 1, layerRangeUpper);
+            }
+            return { axis, layerIds: sliceLayers, direction };
         }
         case 'Rw':
         case 'Uw':
@@ -142,25 +150,37 @@ export function GetMovementSlice(movement, layerCount) {
             layerNumber = layerNumber ? layerNumber : 1;
             const lower = Math.max(Math.floor(layerCount / 2) - (layerNumber - 1), 1);
             const upper = Math.min(Math.ceil(layerCount / 2) + (layerNumber - 1), layerCount - 1);
-            const sliceLayers = range(lower, upper);
+            let sliceLayers = range(lower, upper);
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerCount - layerRangeUpper, layerCount - (layerRangeLower - 1));
+            }
             return { axis, layerIds: sliceLayers, direction };
         }
         case 'm':
         case 'e': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const sliceLayers = range(layerNumber, layerCount - layerNumber);
+            let sliceLayers = range(layerNumber, layerCount - layerNumber);
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerCount - layerRangeUpper, layerCount - (layerRangeLower - 1));
+            }
             return { axis, layerIds: sliceLayers, direction };
         }
         case 'S': {
             layerNumber = layerNumber ? layerNumber : 1;
             const lower = Math.max(Math.floor(layerCount / 2) - (layerNumber - 1), 1);
             const upper = Math.min(Math.ceil(layerCount / 2) + (layerNumber - 1), layerCount - 1);
-            const sliceLayers = range(lower, upper);
+            let sliceLayers = range(lower, upper);
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerRangeLower - 1, layerRangeUpper);
+            }
             return { axis, layerIds: sliceLayers, direction: -direction };
         }
         case 's': {
             layerNumber = layerNumber ? layerNumber : 1;
-            const sliceLayers = range(layerNumber, layerCount - layerNumber);
+            let sliceLayers = range(layerNumber, layerCount - layerNumber);
+            if (layerRangeLower != null && layerRangeUpper != null) {
+                sliceLayers = range(layerRangeLower - 1, layerRangeUpper);
+            }
             return { axis, layerIds: sliceLayers, direction: -direction };
         }
         default:

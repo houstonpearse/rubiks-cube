@@ -389,6 +389,27 @@ export const Movements = Object.freeze({
         D2: '6D2',
         DP: "6D'",
     }),
+    /**
+     * Build a layer-range move for big-cube notation. e.g. Movements.Range(2, 4, Movements.Wide.Rw) returns '2-4Rw',
+     * meaning "rotate layers 2 through 4 from the right face." Accepts wide moves (`Movements.Wide.*`), face
+     * moves (`Movements.Single.{R,L,U,D,F,B}` and modifiers), and slice moves (`Movements.Single.{M,E,S}` and
+     * modifiers). Already-prefixed moves (`2R`, `2-4Rw`) are rejected.
+     * @param {number} lower
+     * @param {number} upper
+     * @param {WideMove | SingleMove} baseMove
+     * @returns {Movement}
+     */
+    Range: (lower, upper, baseMove) => {
+        if (!Number.isInteger(lower) || !Number.isInteger(upper) || lower < 1 || lower >= upper || upper > 7) {
+            throw new Error(`Invalid layer range [${lower}-${upper}]: require integers with 1 <= lower < upper <= 7`);
+        }
+        const move = /** @type {Movement} */ (`${lower}-${upper}${baseMove}`);
+        if (!isMovement(move)) {
+            throw new Error(`Invalid range movement: ${move}`);
+        }
+
+        return move;
+    },
 });
 
 /**
