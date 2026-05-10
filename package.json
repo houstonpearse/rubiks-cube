@@ -16,6 +16,10 @@
             "types": "./types/webComponent/index.d.ts",
             "default": "./src/webComponent/index.js"
         },
+        "./player": {
+            "types": "./types/player/index.d.ts",
+            "default": "./src/player/index.js"
+        },
         "./three": {
             "types": "./types/rubiksCube3D/index.d.ts",
             "default": "./src/rubiksCube3D/index.js"

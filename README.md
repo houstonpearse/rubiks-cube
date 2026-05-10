@@ -21,17 +21,18 @@ npm install @houstonp/rubiks-cube
 
 ## Which one do I want?
 
-The package ships four primary classes; each plays a different role.
+The package ships five primary classes; each plays a different role.
 
 | I want to...                                                          | Use                                          |
 | --------------------------------------------------------------------- | -------------------------------------------- |
+| Step through an algorithm with playback controls                      | `RubiksCubePlayer` from `/player`            |
 | Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`             |
 | Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                 |
 | Drive cube state from my own renderer / view                          | `RubiksCubeController` from `/controller`    |
 | Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`              |
 
-`RubiksCubeElement` is built on top of `RubiksCube3D` + `RubiksCubeController` + `RubiksCubeState`, so most users
-only need the first row.
+`RubiksCubePlayer` wraps `RubiksCubeElement` with playback UI; `RubiksCubeElement` is built on top of `RubiksCube3D`
++ `RubiksCubeController` + `RubiksCubeState`, so most users only need the first or second row.
 
 ## Package layout
 
@@ -39,6 +40,7 @@ The package exposes several subpath entry points so you only pull in the parts y
 
 | Subpath                            | Exports                                                                                                          |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `@houstonp/rubiks-cube/player`     | `RubiksCubePlayer`, `RubiksCubePlayerAttributes`                                                                 |
 | `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekActions`, `PeekStates`, `AnimationStyles`                            |
 | `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
 | `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                           |
@@ -387,6 +389,62 @@ const currentState = cube.getState();
 cube.reset();
 cube.setState(currentState);
 ```
+
+## Algorithm player
+
+`RubiksCubePlayer` is a higher-level web component that wraps `RubiksCubeElement` with playback controls for
+stepping through an algorithm. You provide a setup scramble and an algorithm, and the player applies the setup to
+the cube and exposes start / rewind / step-back / stop / step-forward / play / end buttons that walk through the
+algorithm one move at a time.
+
+```js
+import { RubiksCubePlayer } from '@houstonp/rubiks-cube/player';
+
+// Registers <rubiks-cube-player> (you can pass a different tag name if you prefer)
+RubiksCubePlayer.register();
+```
+
+```html
+<!-- Setup scrambles the cube; alg is the algorithm the controls play through -->
+<rubiks-cube-player
+    cubeType="Three"
+    setup="R U R' U R U2 R'"
+    alg="R U R' U' R' F R2 U' R' U' R U R' F'"
+    style="display: block; width: 400px; height: 400px;"
+></rubiks-cube-player>
+```
+
+The host needs an explicit size (or a sized parent), since the inner cube canvas measures itself from the host's
+client dimensions.
+
+### Player attributes
+
+| attribute | accepted values                                            | Description                                                                            |
+| --------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| cubeType  | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                             |
+| setup     | space-separated notation                                   | Scramble applied to the cube before playback. The "jump to start" button returns here. |
+| alg       | space-separated notation                                   | The algorithm the playback controls walk through, one token at a time.                 |
+
+`setup` and `alg` accept any whitespace-separated sequence of `Movement` or `Rotation` tokens. Unrecognised tokens
+and `// line comments` are stripped before parsing.
+
+### Playback methods
+
+The same actions the buttons trigger are available programmatically.
+
+| Method            | Description                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| `stepForward()`   | Apply the next move in `alg`. Stops any in-progress play loop.                             |
+| `stepBackward()`  | Reverse the previous move in `alg`. Stops any in-progress play loop.                       |
+| `playForward()`   | Walk forward through `alg` until it ends or `stop()` is called.                            |
+| `playBackward()`  | Walk backward through `alg` until the start of the algorithm is reached or `stop()` is called. |
+| `stop()`          | Halt any active play loop after the in-flight animation resolves.                          |
+| `jumpToStart()`   | Snap the cube to the post-`setup` state without animation.                                 |
+| `jumpToEnd()`     | Snap the cube to the post-`alg` state without animation.                                   |
+
+`playForward` and `playBackward` are async and resolve once the loop exits. Step methods resolve once the single
+animation completes. The cube's `animation-speed-ms` attribute controls per-move pacing — set it on the inner
+`<rubiks-cube>` (or forward it through the player host) to slow playback down.
 
 ## Headless cube state
 
