@@ -70,7 +70,15 @@ RubiksCubeElement.register();
     </head>
     <body>
         <!-- Create a 3x3 cube with custom settings -->
-        <rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04" camera-speed-ms="100"></rubiks-cube>
+        <rubiks-cube
+            cube-type="Three"
+            animation-speed-ms="1000"
+            animation-style="exponential"
+            piece-gap="1.04"
+            camera-speed-ms="100"
+            max-device-pixel-ratio="2"
+            antialias="true"
+        ></rubiks-cube>
 
         <!-- Or create a 2x2 cube -->
         <rubiks-cube cube-type="Two"></rubiks-cube>
@@ -107,6 +115,8 @@ cube.setAttribute(AttributeNames.cameraRadius, '6');
 cube.setAttribute(AttributeNames.cameraFieldOfView, '80');
 cube.setAttribute(AttributeNames.cameraPeekAngleHorizontal, '0.7');
 cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
+cube.setAttribute(AttributeNames.maxDevicePixelRatio, '1');
+cube.setAttribute(AttributeNames.antialias, 'false');
 ```
 
 | attribute                    | accepted values                                             | Description                                                                                                                                                                                       |
@@ -120,6 +130,8 @@ cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 | camera-peek-angle-horizontal | decimal between 0 and 1                                     | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                                  |
 | camera-peek-angle-vertical   | decimal between 0 and 1                                     | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                    |
 | camera-field-of-view         | integer between 30 and 100                                  | Sets the field of view of the camera. Default is `75`                                                                                                                                             |
+| max-device-pixel-ratio       | number between 0.25 and 4                                   | Caps the renderer pixel ratio. Lower values reduce high-DPI rendering cost. Default is `2`                                                                                                        |
+| antialias                    | `"true"`, `"false"`                                     | Enables or disables WebGL antialiasing. Disabling it can reduce animation cost. Default is `"true"`                                                                                              |
 
 ## Programmatic control
 
@@ -644,6 +656,12 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     bun run test
     ```
 
+- **Run the local playground**
+
+    ```bash
+    bun run playground
+    ```
+
 - **Generate TypeScript declaration files**
 
     ```bash
@@ -651,5 +669,48 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     ```
 
 The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the
-package. There is currently no dedicated demo app in this repository; you can import the component into your own app
-(e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.
+package.
+
+## Playground
+
+The repository includes a Vite playground in `playground/` for local debugging, profiling, and manual testing. It imports
+the source files directly, so changes to the component can be exercised without publishing the package or creating a
+separate app.
+
+Run it with:
+
+```bash
+bun run playground
+```
+
+The playground includes controls for cube size, animation speed/style, piece gap, camera settings, moves, rotations,
+camera peeks, algorithm playback, stress loops, state get/set, and remounting the custom element.
+
+It also includes profiling controls:
+
+| control     | Purpose                                                                                 |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Max DPR     | Sets `max-device-pixel-ratio` to compare high-DPI rendering cost                        |
+| Antialias   | Toggles the `antialias` attribute to compare WebGL antialiasing cost                    |
+| Profile CSS | Removes heavier playground CSS effects such as large shadows, blur, and gradient layers |
+
+For idle render profiling, keep `FPS monitor` off. That control intentionally creates its own `requestAnimationFrame`
+loop, so it should only be enabled when measuring page-level frame rate.
+
+Recommended profiling setup:
+
+```text
+FPS monitor: off
+Stress loop: off
+Max DPR: 1
+Antialias: false
+Profile CSS: on
+```
+
+Expected behavior:
+
+```text
+Cube idle: Renders/sec returns to 0
+Cube moving: renders occur only during animation
+Camera drag: damping continues after release, then renders stop when stable
+```

@@ -62,6 +62,10 @@ export const AttributeNames = {
     cameraPeekAngleHorizontal: 'camera-peek-angle-horizontal',
     /** @type {'camera-peek-angle-vertical'} */
     cameraPeekAngleVertical: 'camera-peek-angle-vertical',
+    /** @type {'max-device-pixel-ratio'} */
+    maxDevicePixelRatio: 'max-device-pixel-ratio',
+    /** @type {'antialias'} */
+    antialias: 'antialias',
     /** @type {'logo'} */
     logo: 'logo',
 };

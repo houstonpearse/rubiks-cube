@@ -25,6 +25,7 @@ const InternalEvents = Object.freeze({
     cameraPeek: 'cameraPeek',
     cameraPeekComplete: 'cameraPeekComplete',
 });
+const renderEventName = 'rubiks-cube-render';
 
 export class RubiksCubeElement extends HTMLElement {
     constructor() {
@@ -40,6 +41,14 @@ export class RubiksCubeElement extends HTMLElement {
         this._rubiksCube3D = null;
         /** @private @type {RubiksCubeController?} */
         this._rubiksCube = null;
+        /** @private @type {(() => void) | null} */
+        this._renderOnce = null;
+        /** @private @type {((updateControls?: boolean) => () => void) | null} */
+        this._startRenderLoop = null;
+        /** @private @type {(() => void) | null} */
+        this._updatePixelRatio = null;
+        /** @private @type {(() => void) | null} */
+        this._cleanup = null;
     }
 
     /**
@@ -60,6 +69,8 @@ export class RubiksCubeElement extends HTMLElement {
             AttributeNames.cameraFieldOfView,
             AttributeNames.cameraPeekAngleHorizontal,
             AttributeNames.cameraPeekAngleVertical,
+            AttributeNames.maxDevicePixelRatio,
+            AttributeNames.antialias,
             AttributeNames.logo,
         ];
     }
@@ -122,6 +133,20 @@ export class RubiksCubeElement extends HTMLElement {
                     this.animateCameraSetting();
                 }
                 break;
+            case AttributeNames.maxDevicePixelRatio:
+                this.settings.setMaxDevicePixelRatio(newVal);
+                this._updatePixelRatio?.();
+                this._renderOnce?.();
+                break;
+            case AttributeNames.antialias: {
+                this.settings.setAntialias(newVal);
+                if (oldVal !== newVal && oldVal !== null && this._rubiksCube !== null) {
+                    const state = this.getState();
+                    this.init();
+                    this.setState(state);
+                }
+                break;
+            }
             case AttributeNames.logo:
                 this.settings.setLogo(newVal);
         }
@@ -152,7 +177,11 @@ export class RubiksCubeElement extends HTMLElement {
         if (this._rubiksCube == null) {
             return Promise.reject(new Error(notInitialisedMessage));
         }
-        return this._rubiksCube.movement(move, options);
+        const stopRendering = this._startRenderLoop?.(false);
+        return this._rubiksCube.movement(move, options).finally(() => {
+            stopRendering?.();
+            this._renderOnce?.();
+        });
     }
 
     /**
@@ -164,7 +193,11 @@ export class RubiksCubeElement extends HTMLElement {
         if (this._rubiksCube == null) {
             return Promise.reject(new Error(notInitialisedMessage));
         }
-        return this._rubiksCube.rotation(rotation, options);
+        const stopRendering = this._startRenderLoop?.(false);
+        return this._rubiksCube.rotation(rotation, options).finally(() => {
+            stopRendering?.();
+            this._renderOnce?.();
+        });
     }
 
     /**
@@ -174,7 +207,9 @@ export class RubiksCubeElement extends HTMLElement {
         if (this._rubiksCube == null) {
             throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube.reset();
+        const state = this._rubiksCube.reset();
+        this._renderOnce?.();
+        return state;
     }
 
     /**
@@ -185,7 +220,9 @@ export class RubiksCubeElement extends HTMLElement {
         if (this._rubiksCube == null) {
             throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube.setState(kociembaState);
+        const updated = this._rubiksCube.setState(kociembaState);
+        this._renderOnce?.();
+        return updated;
     }
 
     /**
@@ -204,6 +241,7 @@ export class RubiksCubeElement extends HTMLElement {
      */
     setType(cubeType) {
         this.setAttribute(AttributeNames.cubeType, cubeType);
+        this._renderOnce?.();
         return this.getState();
     }
 
@@ -214,7 +252,19 @@ export class RubiksCubeElement extends HTMLElement {
         if (this._rubiksCube == null) {
             throw new Error(notInitialisedMessage);
         }
-        return this._rubiksCube.setType(this.settings.rubiksCube3DSettings.cubeType);
+        const state = this._rubiksCube.setType(this.settings.rubiksCube3DSettings.cubeType);
+        this._renderOnce?.();
+        return state;
+    }
+
+    disconnectedCallback() {
+        this._cleanup?.();
+        this._cleanup = null;
+        this._renderOnce = null;
+        this._startRenderLoop = null;
+        this._updatePixelRatio = null;
+        this._rubiksCube = null;
+        this._rubiksCube3D = null;
     }
 
     /** @internal @typedef {{eventId: string, action: PeekAction, options: CameraOptions?}} CameraPeekEventData */
@@ -256,29 +306,26 @@ export class RubiksCubeElement extends HTMLElement {
 
     /** @private */
     init() {
+        this._cleanup?.();
+        const canvas = /** @type {HTMLCanvasElement} */ (this.canvas.cloneNode(false));
+        this.canvas.replaceWith(canvas);
+        this.canvas = canvas;
         this._rubiksCube3D = new RubiksCube3D(this.settings.rubiksCube3DSettings);
         this._rubiksCube = new RubiksCubeController(this.settings.rubiksCube3DSettings.cubeType, this._rubiksCube3D);
 
         // defined core threejs objects
-        const canvas = this.canvas;
         const scene = new Scene();
         const renderer = new WebGLRenderer({
             alpha: true,
             canvas,
-            antialias: true,
+            antialias: this.settings.antialias,
         });
         renderer.setSize(this.clientWidth, this.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-
-        //update renderer and camera when container resizes. debouncing events to reduce frequency
-        new ResizeObserver(
-            debounce((/** @type {{ contentRect: { width: number; height: number; }; }[]} */ entries) => {
-                const { width, height } = entries[0].contentRect;
-                camera.aspect = width / height;
-                camera.updateProjectionMatrix();
-                renderer.setSize(width, height);
-            }, 30),
-        ).observe(this);
+        const updatePixelRatio = () => {
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.settings.maxDevicePixelRatio));
+        };
+        this._updatePixelRatio = updatePixelRatio;
+        updatePixelRatio();
 
         // add camera
         /**
@@ -316,13 +363,125 @@ export class RubiksCubeElement extends HTMLElement {
         const cube = this._rubiksCube3D;
         scene.add(cube);
 
-        // animation loop
-        function animate() {
-            controls.update();
-            renderer.render(scene, camera);
-        }
+        let isDisposed = false;
+        let renderFrameId = 0;
+        let loopFrameId = 0;
+        let activeRenderLoops = 0;
+        let activeControlRenderLoops = 0;
+        let stopControlsRenderLoop = /** @type {(() => void) | null} */ (null);
+        let controlsSettling = false;
+        let stableControlFrames = 0;
+        const stableControlFrameThreshold = 3;
 
-        renderer.setAnimationLoop(animate);
+        const renderScene = () => {
+            renderer.render(scene, camera);
+            if (this.hasAttribute('render-events')) {
+                this.dispatchEvent(new CustomEvent(renderEventName));
+            }
+        };
+
+        const renderWithControls = () => {
+            const controlsChanged = controls.update();
+            renderScene();
+            return controlsChanged;
+        };
+
+        const requestRender = () => {
+            if (isDisposed || renderFrameId !== 0 || loopFrameId !== 0) {
+                return;
+            }
+            renderFrameId = requestAnimationFrame(() => {
+                renderFrameId = 0;
+                renderScene();
+            });
+        };
+
+        const startRenderLoop = (updateControls = false) => {
+            activeRenderLoops++;
+            if (updateControls) {
+                activeControlRenderLoops++;
+            }
+            let stopped = false;
+            const tick = () => {
+                if (isDisposed || activeRenderLoops === 0) {
+                    loopFrameId = 0;
+                    return;
+                }
+                if (activeControlRenderLoops > 0) {
+                    const controlsChanged = renderWithControls();
+                    if (controlsSettling) {
+                        stableControlFrames = controlsChanged ? 0 : stableControlFrames + 1;
+                        if (stableControlFrames >= stableControlFrameThreshold) {
+                            controlsSettling = false;
+                            stopControlsRenderLoop?.();
+                            stopControlsRenderLoop = null;
+                        }
+                    }
+                } else {
+                    renderScene();
+                }
+                if (isDisposed || activeRenderLoops === 0) {
+                    loopFrameId = 0;
+                    return;
+                }
+                loopFrameId = requestAnimationFrame(tick);
+            };
+            if (loopFrameId === 0) {
+                loopFrameId = requestAnimationFrame(tick);
+            }
+            return () => {
+                if (stopped) {
+                    return;
+                }
+                stopped = true;
+                activeRenderLoops = Math.max(0, activeRenderLoops - 1);
+                if (updateControls) {
+                    activeControlRenderLoops = Math.max(0, activeControlRenderLoops - 1);
+                }
+                if (activeRenderLoops === 0 && loopFrameId !== 0) {
+                    cancelAnimationFrame(loopFrameId);
+                    loopFrameId = 0;
+                    requestRender();
+                }
+            };
+        };
+
+        this._renderOnce = requestRender;
+        this._startRenderLoop = startRenderLoop;
+        requestRender();
+
+        const onControlsStart = () => {
+            controlsSettling = false;
+            stableControlFrames = 0;
+            stopControlsRenderLoop ??= startRenderLoop(true);
+        };
+        const onControlsEnd = () => {
+            stableControlFrames = 0;
+            if (controls.enableDamping) {
+                controlsSettling = true;
+                return;
+            }
+            controlsSettling = false;
+            requestAnimationFrame(() => {
+                stopControlsRenderLoop?.();
+                stopControlsRenderLoop = null;
+            });
+        };
+        controls.addEventListener('start', onControlsStart);
+        controls.addEventListener('change', requestRender);
+        controls.addEventListener('end', onControlsEnd);
+
+        //update renderer and camera when container resizes. debouncing events to reduce frequency
+        const resizeObserver = new ResizeObserver(
+            debounce((/** @type {{ contentRect: { width: number; height: number; }; }[]} */ entries) => {
+                const { width, height } = entries[0].contentRect;
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+                requestRender();
+            }, 30),
+        );
+        resizeObserver.observe(this);
 
         // Camera Events
 
@@ -334,6 +493,7 @@ export class RubiksCubeElement extends HTMLElement {
          */
         const updateCameraPosition = (targetSpherical, cameraSpeedMs, ease, completedCallback = undefined) => {
             const startSpherical = new Spherical().setFromVector3(camera.position);
+            const stopRendering = startRenderLoop(false);
             gsap.to(startSpherical, {
                 radius: targetSpherical.radius,
                 theta: targetSpherical.theta,
@@ -346,11 +506,14 @@ export class RubiksCubeElement extends HTMLElement {
                     camera.lookAt(cube.position);
                     controls.update();
                 },
-                onComplete: completedCallback,
+                onComplete: () => {
+                    stopRendering();
+                    completedCallback?.();
+                },
             });
         };
 
-        this.addEventListener(InternalEvents.cameraPeek, (event) => {
+        const onCameraPeek = (event) => {
             const customEvent = /** @type {CustomEvent<CameraPeekEventData>} */ (event);
             cameraState.peekCamera(customEvent.detail.action);
             /** @type {CameraPeekCompleteEventData} */
@@ -358,22 +521,48 @@ export class RubiksCubeElement extends HTMLElement {
             const completedCallback = () => this.dispatchEvent(new CustomEvent(InternalEvents.cameraPeekComplete, { detail: data }));
             const targetSpherical = getTargetCameraSpherical();
             updateCameraPosition(targetSpherical, customEvent.detail.options?.cameraSpeedMs ?? this.settings.cameraSpeedMs, 'none', completedCallback);
-        });
+        };
 
-        this.addEventListener(InternalEvents.cameraSettingsChanged, () => {
+        const onCameraSettingsChanged = () => {
             const targetSpherical = getTargetCameraSpherical();
             updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none');
-        });
+        };
 
-        this.addEventListener(InternalEvents.cameraRadiusChanged, () => {
+        const onCameraRadiusChanged = () => {
             const targetSpherical = new Spherical().setFromVector3(camera.position);
             targetSpherical.radius = this.settings.cameraRadius;
             updateCameraPosition(targetSpherical, this.settings.cameraSpeedMs, 'none');
-        });
+        };
 
-        this.addEventListener(InternalEvents.cameraFieldOfViewChanged, () => {
+        const onCameraFieldOfViewChanged = () => {
             camera.fov = this.settings.cameraFieldOfView;
             camera.updateProjectionMatrix();
-        });
+            requestRender();
+        };
+
+        this.addEventListener(InternalEvents.cameraPeek, onCameraPeek);
+        this.addEventListener(InternalEvents.cameraSettingsChanged, onCameraSettingsChanged);
+        this.addEventListener(InternalEvents.cameraRadiusChanged, onCameraRadiusChanged);
+        this.addEventListener(InternalEvents.cameraFieldOfViewChanged, onCameraFieldOfViewChanged);
+
+        this._cleanup = () => {
+            isDisposed = true;
+            if (renderFrameId !== 0) {
+                cancelAnimationFrame(renderFrameId);
+            }
+            if (loopFrameId !== 0) {
+                cancelAnimationFrame(loopFrameId);
+            }
+            resizeObserver.disconnect();
+            controls.removeEventListener('start', onControlsStart);
+            controls.removeEventListener('change', requestRender);
+            controls.removeEventListener('end', onControlsEnd);
+            this.removeEventListener(InternalEvents.cameraPeek, onCameraPeek);
+            this.removeEventListener(InternalEvents.cameraSettingsChanged, onCameraSettingsChanged);
+            this.removeEventListener(InternalEvents.cameraRadiusChanged, onCameraRadiusChanged);
+            this.removeEventListener(InternalEvents.cameraFieldOfViewChanged, onCameraFieldOfViewChanged);
+            controls.dispose();
+            renderer.dispose();
+        };
     }
 }

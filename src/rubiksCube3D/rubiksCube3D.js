@@ -356,6 +356,11 @@ export default class RubiksCube3D extends Object3D {
             this.fillAnimationGroup(slice);
             const target = { rotation: 0 };
             const animationGroup = this._animationGroup;
+            const rotationAxis = new Vector3(
+                slice.axis === Axi.x ? slice.direction : 0,
+                slice.axis === Axi.y ? slice.direction : 0,
+                slice.axis === Axi.z ? slice.direction : 0,
+            ).normalize();
             let previousRotation = 0;
             this._currentAnimation = gsap.to(target, {
                 rotation: (Math.abs(slice.direction) * Math.PI) / 2,
@@ -367,14 +372,7 @@ export default class RubiksCube3D extends Object3D {
                 },
                 onUpdate: () => {
                     const delta = target.rotation - (previousRotation || 0);
-                    animationGroup.rotateOnWorldAxis(
-                        new Vector3(
-                            slice.axis === Axi.x ? slice.direction : 0,
-                            slice.axis === Axi.y ? slice.direction : 0,
-                            slice.axis === Axi.z ? slice.direction : 0,
-                        ).normalize(),
-                        delta,
-                    );
+                    animationGroup.rotateOnWorldAxis(rotationAxis, delta);
                     previousRotation = target.rotation;
                 },
             });

@@ -18,6 +18,8 @@ const defaultSettings = {
     cameraPeekAngleHorizontal: 0.6,
     cameraPeekAngleVertical: 0.6,
     cameraFieldOfView: 75,
+    maxDevicePixelRatio: 2,
+    antialias: true,
 };
 
 const minGap = 1;
@@ -25,6 +27,8 @@ const maxGap = 1.1;
 const minRadius = 4;
 const minFieldOfView = 30;
 const maxFieldOfView = 100;
+const minDevicePixelRatio = 0.25;
+const maxDevicePixelRatio = 4;
 
 export default class Settings {
     constructor() {
@@ -45,6 +49,10 @@ export default class Settings {
         this.cameraPeekAngleHorizontal = defaultSettings.cameraPeekAngleHorizontal;
         /** @type {number} */
         this.cameraPeekAngleVertical = defaultSettings.cameraPeekAngleVertical;
+        /** @type {number} */
+        this.maxDevicePixelRatio = defaultSettings.maxDevicePixelRatio;
+        /** @type {boolean} */
+        this.antialias = defaultSettings.antialias;
     }
 
     /** @param {any} value */
@@ -142,6 +150,38 @@ export default class Settings {
             console.warn(`Invalid camera FOV value. Min is ${minFieldOfView} Max is ${maxFieldOfView}. Value is ${value}.`);
         }
         this.cameraFieldOfView = fov;
+    }
+
+    /** @param {string | null} value */
+    setMaxDevicePixelRatio(value) {
+        if (value == null || value === '') {
+            this.maxDevicePixelRatio = defaultSettings.maxDevicePixelRatio;
+            return;
+        }
+        const ratio = Number(value);
+        if (ratio >= minDevicePixelRatio && ratio <= maxDevicePixelRatio) {
+            this.maxDevicePixelRatio = ratio;
+            return;
+        }
+        console.warn(`Invalid max device pixel ratio value. Min is ${minDevicePixelRatio}, Max is ${maxDevicePixelRatio}. Value is ${value}`);
+    }
+
+    /** @param {string | null} value */
+    setAntialias(value) {
+        if (value == null) {
+            this.antialias = defaultSettings.antialias;
+            return;
+        }
+        const normalized = String(value).toLowerCase();
+        if (['', 'true', '1', 'yes', 'on'].includes(normalized)) {
+            this.antialias = true;
+            return;
+        }
+        if (['false', '0', 'no', 'off'].includes(normalized)) {
+            this.antialias = false;
+            return;
+        }
+        console.warn(`Invalid antialias value. Accepted values are true/false. Value is ${value}`);
     }
 
     /** @param {string | null} value in ms */

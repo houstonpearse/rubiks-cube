@@ -38,6 +38,7 @@
         }
     },
     "scripts": {
+        "playground": "vite --host 0.0.0.0 ./playground",
         "build:types": "tsc",
         "watch:types": "tsc --watch",
         "test": "bun test"
@@ -59,6 +60,7 @@
         "@types/jsdom": "^27.0.0",
         "@types/three": "^0.182.0",
         "jsdom": "^28.1.0",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "vite": "^7.2.6"
     }
 }
