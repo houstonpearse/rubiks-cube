@@ -31,9 +31,8 @@ The package ships five primary classes; each plays a different role.
 | Drive cube state from my own renderer / view                          | `RubiksCubeController` from `/controller` |
 | Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`           |
 
-`RubiksCubePlayer` wraps `RubiksCubeElement` with playback UI; `RubiksCubeElement` is built on top of `RubiksCube3D`
-
-- `RubiksCubeController` + `RubiksCubeState`, so most users only need the first or second row.
+`RubiksCubePlayer` wraps `RubiksCubeElement` with playback UI; `RubiksCubeElement` is built on top of `RubiksCube3D`,
+`RubiksCubeController` and `RubiksCubeState`, so most users only need the first or second row.
 
 ## Package layout
 
@@ -45,7 +44,7 @@ The package exposes several subpath entry points so you only pull in the parts y
 | `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekActions`, `PeekStates`                                                                                                                 |
 | `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                                                                                             |
 | `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                                                                                             |
-| `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `IsAction`, `ToMovement`, `ToRotation`, `ToAction`, `fromString`, `reverse`, `translate` |
+| `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `IsMovement`, `IsRotation`, `IsAction`, `ToMovement`, `ToRotation`, `ToAction`, `FromString`, `reverse`, `translate` |
 | `@houstonp/rubiks-cube/state`      | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`, `defaultKociemba`                                                                                                |
 
 There is no bare-package root export — every class lives on a subpath that names its layer.
@@ -117,10 +116,10 @@ cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 | animation-style              | any [GSAP ease](https://gsap.com/docs/v3/Eases/) string    | Easing applied to each move / rotation animation, e.g. `"linear"`, `"sine.out"`, `"power2.inOut"`, `"back.out(1.7)"`. Invalid values are ignored with a console warning. Default is `"linear"` |
 | piece-gap                    | number between 1 and 1.1                                   | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                    |
 | camera-speed-ms              | number greater than or equal to 0                          | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                       |
-| camera-radius                | number greater than or equal to 4                          | Sets the camera radius. Default is `5`                                                                                                                                                         |
+| camera-radius                | number greater than or equal to 4                          | Sets the camera radius. Default is `10`                                                                                                                                                        |
 | camera-peek-angle-horizontal | decimal between 0 and 1                                    | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                               |
 | camera-peek-angle-vertical   | decimal between 0 and 1                                    | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                 |
-| camera-field-of-view         | integer between 30 and 100                                 | Sets the field of view of the camera. Default is `75`                                                                                                                                          |
+| camera-field-of-view         | integer between 30 and 100                                 | Sets the field of view of the camera. Default is `40`                                                                                                                                          |
 
 ## Programmatic control
 
@@ -583,18 +582,18 @@ Some notation may not work as intended as there is no known interpretation. e.g.
 
 | Function        | Description                                                                                                                              |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `isMovement(s)` | `true` if `s` is a valid movement.                                                                                                       |
+| `IsMovement(s)` | `true` if `s` is a valid movement.                                                                                                       |
 | `IsRotation(s)` | `true` if `s` is a valid rotation (`x`, `y`, `z` with optional count and prime).                                                         |
 | `IsAction(s)`   | `true` if `s` is a valid movement or rotation.                                                                                           |
 | `ToMovement(s)` | Returns `s` typed as a `Movement`. Throws if it is not a valid movement.                                                                 |
 | `ToRotation(s)` | Returns `s` typed as a `Rotation`. Throws if it is not a valid rotation.                                                                 |
 | `ToAction(s)`   | Returns `s` typed as a `Movement` or `Rotation`. Throws if it is neither.                                                                |
-| `fromString(s)` | Splits a whitespace‑separated sequence into an array of movements and rotations. `// line comments` and unrecognised tokens are dropped. |
+| `FromString(s)` | Splits a whitespace‑separated sequence into an array of movements and rotations. `// line comments` and unrecognised tokens are dropped. |
 
 ```js
-import { fromString, IsRotation, ToAction } from '@houstonp/rubiks-cube/core';
+import { FromString, IsRotation, ToAction } from '@houstonp/rubiks-cube/core';
 
-const alg = fromString(`
+const alg = FromString(`
     R U R' U' // sexy move
     y R' F R F'
 `);
