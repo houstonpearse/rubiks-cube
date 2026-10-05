@@ -1,10 +1,20 @@
+// @ts-check
+export default `
 :host {
+    display: block;
+}
+
+.player {
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 rubiks-cube {
-    flex: 1 1 auto;
+    display: block;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .playback-toggle {
@@ -30,6 +40,10 @@ rubiks-cube {
     background: transparent;
 }
 
+.playback-icon[hidden] {
+    display: none;
+}
+
 .playback-icon:active {
     background-color: #d7d7d7;
 }
@@ -38,3 +52,4 @@ rubiks-cube {
     fill: #2c2c2c;
     display: block;
 }
+`;

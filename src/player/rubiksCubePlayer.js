@@ -1,7 +1,7 @@
-import { CubeTypes, isMovement, IsRotation, reverse } from '../core';
+import { CubeTypes, FromString, IsMovement, reverse } from '../core';
 import { RubiksCubeState } from '../state';
 import { RubiksCubeElement } from '../webComponent/rubiksCubeElement';
-import styles from './styles.css?inline';
+import styles from './styles.js';
 
 const sheet = new CSSStyleSheet();
 sheet.replaceSync(styles);
@@ -9,7 +9,7 @@ sheet.replaceSync(styles);
 /** @import {Movement, Rotation, CubeType} from '../core' */
 
 export const RubiksCubePlayerAttributes = {
-    CubeType: 'cubeType',
+    CubeType: 'cube-type',
     Setup: 'setup',
     Alg: 'alg',
 };
@@ -26,6 +26,7 @@ export class RubiksCubePlayer extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         const root = /** @type {ShadowRoot} */ (this.shadowRoot);
         root.innerHTML = `
+        <div class="player">
         <rubiks-cube camera-radius="10" camera-field-of-view="40"></rubiks-cube>
         <div class="playback-options">
                 <button class="playback-icon" id="playback-start" aria-label="Jump to start">
@@ -49,7 +50,14 @@ export class RubiksCubePlayer extends HTMLElement {
                         />
                     </svg>
                 </button>
-                <button class="playback-icon" id="playback-stop" aria-label="Stop playback">
+                <button class="playback-icon" id="playback-play" aria-label="Play playback">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 640 640">
+                        <path 
+                            d="M187.2 100.9C174.8 94.1 159.8 94.4 147.6 101.6C135.4 108.8 128 121.9 128 136L128 504C128 518.1 135.5 531.2 147.6 538.4C159.7 545.6 174.8 545.9 187.2 539.1L523.2 355.1C536 348.1 544 334.6 544 320C544 305.4 536 291.9 523.2 284.9L187.2 100.9z"
+                        />
+                    </svg>
+                </button>
+                <button class="playback-icon" id="playback-stop" aria-label="Stop playback" hidden>
                     <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 640 640">
                         <path
                             d="M160 96L480 96C515.3 96 544 124.7 544 160L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 160C96 124.7 124.7 96 160 96z"
@@ -77,12 +85,14 @@ export class RubiksCubePlayer extends HTMLElement {
                         />
                     </svg>
                 </button>
+        </div>
         </div>`;
         this.shadowRoot.adoptedStyleSheets = [sheet];
         this.rubiksCubeElement = /** @type {RubiksCubeElement} */ (this.shadowRoot.querySelector('rubiks-cube'));
         this.startButton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-start'));
         this.backwardsStepButton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-backward-step'));
         this.backwardsButton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-backward'));
+        this.playButton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-play'));
         this.stopButton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-stop'));
         this.forwardsStepbutton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-forward-step'));
         this.forwardbutton = /** @type {HTMLButtonElement} */ (this.shadowRoot.querySelector('#playback-forward'));
@@ -98,34 +108,49 @@ export class RubiksCubePlayer extends HTMLElement {
         this.currentMoveIndex = 0;
         /** @type {typeof PlayState[keyof typeof PlayState]} */
         this.playState = PlayState.Idle;
+        /** direction of the last step or play, used to pick which way play() goes
+         * @type {typeof PlayState.Forward | typeof PlayState.Backward} */
+        this.direction = PlayState.Forward;
+        /** incremented whenever playback starts or stops, so a superseded play loop knows to exit */
+        this._playRun = 0;
+        this.ready = false;
+
+        this.startButton.addEventListener('click', () => this.jumpToStart());
+        this.backwardsButton.addEventListener('click', () => this.playBackward());
+        this.backwardsStepButton.addEventListener('click', () => this.stepBackward());
+        this.playButton.addEventListener('click', () => this.play());
+        this.stopButton.addEventListener('click', () => this.stop());
+        this.forwardsStepbutton.addEventListener('click', () => this.stepForward());
+        this.forwardbutton.addEventListener('click', () => this.playForward());
+        this.endButton.addEventListener('click', () => this.jumpToEnd());
     }
 
     /**
      * @param {string} tagName the name of the tag to register the web component under
      */
     static register(tagName = 'rubiks-cube-player') {
-        customElements.define(tagName, this);
+        if (!customElements.get(tagName)) {
+            customElements.define(tagName, this);
+        }
+    }
+
+    static get observedAttributes() {
+        return [...new Set([...Object.values(RubiksCubePlayerAttributes), ...RubiksCubeElement.observedAttributes])];
     }
 
     connectedCallback() {
         RubiksCubeElement.register();
-        for (const attr of RubiksCubeElement.observedAttributes) {
-            if (this.hasAttribute(attr)) {
-                this.rubiksCubeElement.setAttribute(attr, /** @type {string} */ (this.getAttribute(attr)));
-            }
-        }
-        for (const attr of Object.values(RubiksCubePlayerAttributes)) {
-            if (this.hasAttribute(attr)) {
-                this.attributeChangedCallback(attr, null, this.getAttribute(attr));
-            }
-        }
-        this.startButton.addEventListener('click', () => this.jumpToStart());
-        this.backwardsButton.addEventListener('click', () => this.playBackward());
-        this.backwardsStepButton.addEventListener('click', () => this.stepBackward());
-        this.stopButton.addEventListener('click', () => this.stop());
-        this.forwardsStepbutton.addEventListener('click', () => this.stepForward());
-        this.forwardbutton.addEventListener('click', () => this.playForward());
-        this.endButton.addEventListener('click', () => this.jumpToEnd());
+        // The inner <rubiks-cube> initialises in its own connectedCallback, which runs after this one when the player
+        // is inserted into the page, so wait for it before setting the cube state.
+        queueMicrotask(() => {
+            this.ready = true;
+            this.init();
+        });
+    }
+
+    disconnectedCallback() {
+        this.ready = false;
+        this.stop();
     }
 
     /**
@@ -137,7 +162,6 @@ export class RubiksCubePlayer extends HTMLElement {
         switch (name) {
             case RubiksCubePlayerAttributes.CubeType:
                 this.cubeType = /** @type {CubeType} */ (newVal ?? CubeTypes.Three);
-                this.rubiksCubeElement.setType(this.cubeType);
                 break;
             case RubiksCubePlayerAttributes.Setup:
                 this.setup = newVal ?? '';
@@ -146,46 +170,27 @@ export class RubiksCubePlayer extends HTMLElement {
                 this.alg = newVal ?? '';
                 break;
         }
-        this.init();
-    }
-
-    /**
-     *
-     * @param {string} scramble
-     * @returns {string[]}
-     **/
-    cleanScramble(scramble) {
-        if (!scramble) {
-            return [];
+        // forward <rubiks-cube> attributes (including cube-type) to the inner cube
+        if (RubiksCubeElement.observedAttributes.includes(name)) {
+            if (newVal === null) {
+                this.rubiksCubeElement.removeAttribute(name);
+            } else {
+                this.rubiksCubeElement.setAttribute(name, newVal);
+            }
         }
-        return scramble
-            .replace(/\s*\/\/.*$/gm, '')
-            .replace(/\s+/gm, ' ')
-            .trim()
-            .split(' ')
-            .filter((token) => token.length > 0);
+        if (this.ready) {
+            this.init();
+        }
     }
 
     init() {
-        const setupActions = this.cleanScramble(this.setup).filter(
-            /**
-             * @param {any} action
-             * @returns {action is Rotation | Movement}
-             **/
-            (action) => isMovement(action) || IsRotation(action),
-        );
         const setupState = new RubiksCubeState(this.cubeType);
-        setupState.do(setupActions);
+        setupState.do(FromString(this.setup));
         this.setupState = setupState.getKociemba();
-        this.algMoves = this.cleanScramble(this.alg).filter(
-            /**
-             * @param {any} action
-             * @returns {action is Rotation | Movement}
-             **/
-            (action) => isMovement(action) || IsRotation(action),
-        );
+        this.algMoves = FromString(this.alg);
         this.currentMoveIndex = 0;
-        this.playState = PlayState.Idle;
+        this.direction = PlayState.Forward;
+        this.stop();
         this.rubiksCubeElement.setState(this.setupState);
     }
 
@@ -197,14 +202,26 @@ export class RubiksCubePlayer extends HTMLElement {
      */
     _animate(action, reverseAction) {
         const directed = reverseAction ? reverse(action) : action;
-        if (isMovement(action)) {
+        if (IsMovement(action)) {
             return this.rubiksCubeElement.move(/** @type {Movement} */ (directed));
         }
         return this.rubiksCubeElement.rotate(/** @type {Rotation} */ (directed));
     }
 
+    /**
+     * @private
+     * @param {typeof PlayState[keyof typeof PlayState]} playState
+     */
+    _setPlayState(playState) {
+        this.playState = playState;
+        const playing = playState !== PlayState.Idle;
+        this.playButton.hidden = playing;
+        this.stopButton.hidden = !playing;
+    }
+
     async stepForward() {
-        this.playState = PlayState.Idle;
+        this.stop();
+        this.direction = PlayState.Forward;
         if (this.currentMoveIndex >= this.algMoves.length) {
             return;
         }
@@ -214,7 +231,8 @@ export class RubiksCubePlayer extends HTMLElement {
     }
 
     async stepBackward() {
-        this.playState = PlayState.Idle;
+        this.stop();
+        this.direction = PlayState.Backward;
         if (this.currentMoveIndex <= 0) {
             return;
         }
@@ -223,38 +241,54 @@ export class RubiksCubePlayer extends HTMLElement {
         await this._animate(action, true);
     }
 
+    /**
+     * Plays in the direction of the last step or play. If that direction has already reached the end of the
+     * algorithm (or the start, going backward), plays the opposite way instead.
+     */
+    async play() {
+        const atEnd = this.direction === PlayState.Forward ? this.currentMoveIndex >= this.algMoves.length : this.currentMoveIndex <= 0;
+        const forward = (this.direction === PlayState.Forward) !== atEnd;
+        await (forward ? this.playForward() : this.playBackward());
+    }
+
     async playForward() {
-        if (this.playState === PlayState.Forward) {
-            return;
-        }
-        this.playState = PlayState.Forward;
-        while (this.playState === PlayState.Forward && this.currentMoveIndex < this.algMoves.length) {
-            const action = this.algMoves[this.currentMoveIndex];
-            this.currentMoveIndex++;
-            await this._animate(action, false);
-        }
-        if (this.playState === PlayState.Forward) {
-            this.playState = PlayState.Idle;
-        }
+        await this._play(PlayState.Forward);
     }
 
     async playBackward() {
-        if (this.playState === PlayState.Backward) {
+        await this._play(PlayState.Backward);
+    }
+
+    /**
+     * @private
+     * @param {typeof PlayState.Forward | typeof PlayState.Backward} direction
+     */
+    async _play(direction) {
+        if (this.playState === direction) {
             return;
         }
-        this.playState = PlayState.Backward;
-        while (this.playState === PlayState.Backward && this.currentMoveIndex > 0) {
-            this.currentMoveIndex--;
+        const run = ++this._playRun;
+        this.direction = direction;
+        this._setPlayState(direction);
+        const forward = direction === PlayState.Forward;
+        while (this._playRun === run && (forward ? this.currentMoveIndex < this.algMoves.length : this.currentMoveIndex > 0)) {
+            if (!forward) {
+                this.currentMoveIndex--;
+            }
             const action = this.algMoves[this.currentMoveIndex];
-            await this._animate(action, true);
+            if (forward) {
+                this.currentMoveIndex++;
+            }
+            await this._animate(action, !forward);
         }
-        if (this.playState === PlayState.Backward) {
-            this.playState = PlayState.Idle;
+        if (this._playRun === run) {
+            this._setPlayState(PlayState.Idle);
         }
     }
 
     stop() {
-        this.playState = PlayState.Idle;
+        this._playRun++;
+        this._setPlayState(PlayState.Idle);
     }
 
     jumpToStart() {

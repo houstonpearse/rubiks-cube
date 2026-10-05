@@ -404,7 +404,7 @@ export const Movements = Object.freeze({
             throw new Error(`Invalid layer range [${lower}-${upper}]: require integers with 1 <= lower < upper <= 7`);
         }
         const move = /** @type {Movement} */ (`${lower}-${upper}${baseMove}`);
-        if (!isMovement(move)) {
+        if (!IsMovement(move)) {
             throw new Error(`Invalid range movement: ${move}`);
         }
 
@@ -483,7 +483,7 @@ export function ToRotation(rotation) {
  * @param {string} movement
  * @return {boolean}
  */
-export function isMovement(movement) {
+export function IsMovement(movement) {
     return /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/.test(movement);
 }
 
@@ -492,7 +492,7 @@ export function isMovement(movement) {
  * @return {Movement}
  */
 export function ToMovement(movement) {
-    if (!isMovement(movement)) {
+    if (!IsMovement(movement)) {
         throw new Error(`Invalid movement: ${movement}`);
     }
     return /** @type {Movement} */ (movement);
@@ -503,7 +503,7 @@ export function ToMovement(movement) {
  * @return {boolean}
  */
 export function IsAction(action) {
-    return isMovement(action) || IsRotation(action);
+    return IsMovement(action) || IsRotation(action);
 }
 
 /**
@@ -511,7 +511,7 @@ export function IsAction(action) {
  * @return {Movement | Rotation}
  */
 export function ToAction(action) {
-    if (isMovement(action)) {
+    if (IsMovement(action)) {
         return ToMovement(action);
     }
     if (IsRotation(action)) {
@@ -524,7 +524,7 @@ export function ToAction(action) {
  * @param {string} movementString
  * @returns {(Movement | Rotation)[]}
  */
-export function fromString(movementString) {
+export function FromString(movementString) {
     const actionsExcludingComments = movementString
         .replace(/\/\/.*/g, '')
         .trim()

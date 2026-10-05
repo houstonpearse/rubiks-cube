@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Rubiks Cube Player Demo</title>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                margin: 24px;
+            }
+            main {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 24px;
+                align-items: flex-start;
+            }
+            rubiks-cube-player {
+                width: 400px;
+                height: 450px;
+                max-width: 100%;
+            }
+            form {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                width: 360px;
+                max-width: 100%;
+            }
+            label {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                font-weight: 600;
+            }
+            textarea,
+            select {
+                font: 14px ui-monospace, monospace;
+                padding: 6px;
+            }
+            .hint {
+                color: #666;
+                font-size: 13px;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>RubiksCubePlayer</h1>
+        <main>
+            <rubiks-cube-player
+                id="player"
+                cube-type="Three"
+                animation-speed-ms="300"
+                setup="R U R' U' R' F R2 U' R' U' R U R' F'"
+                alg="R U R' U' R' F R2 U' R' U' R U R' F'"
+            ></rubiks-cube-player>
+
+            <form id="controls">
+                <label>
+                    Cube type
+                    <select id="cube-type">
+                        <option value="Two">2x2</option>
+                        <option value="Three" selected>3x3</option>
+                        <option value="Four">4x4</option>
+                        <option value="Five">5x5</option>
+                        <option value="Six">6x6</option>
+                        <option value="Seven">7x7</option>
+                    </select>
+                </label>
+                <label>
+                    Setup
+                    <textarea id="setup" rows="4" spellcheck="false"></textarea>
+                </label>
+                <label>
+                    Algorithm
+                    <textarea id="alg" rows="6" spellcheck="false"></textarea>
+                </label>
+                <p class="hint">
+                    Moves and rotations separated by whitespace. <code>// comments</code> and unrecognised tokens are
+                    ignored. Changes apply as you type and reset playback to the start.
+                </p>
+            </form>
+        </main>
+
+        <script type="module" src="./main.js"></script>
+    </body>
+</html>

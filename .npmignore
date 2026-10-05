@@ -6,3 +6,5 @@ node_modules
 bun.lock
 cube.png
 tsconfig.json
+demo
+

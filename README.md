@@ -38,14 +38,14 @@ The package ships five primary classes; each plays a different role.
 
 The package exposes several subpath entry points so you only pull in the parts you need.
 
-| Subpath                            | Exports                                                                                                          |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@houstonp/rubiks-cube/player`     | `RubiksCubePlayer`, `RubiksCubePlayerAttributes`                                                                 |
-| `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekActions`, `PeekStates`, `AnimationStyles`                            |
-| `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                           |
-| `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                           |
-| `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `reverse`, `translate` |
-| `@houstonp/rubiks-cube/state`      | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`                                                 |
+| Subpath                            | Exports                                                                                                                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@houstonp/rubiks-cube/player`     | `RubiksCubePlayer`, `RubiksCubePlayerAttributes`                                                                                                                                   |
+| `@houstonp/rubiks-cube/view`       | `RubiksCubeElement`, `AttributeNames`, `PeekActions`, `PeekStates`                                                                                                                 |
+| `@houstonp/rubiks-cube/three`      | `RubiksCube3D`, `RubiksCube3DSettings`                                                                                                                                             |
+| `@houstonp/rubiks-cube/controller` | `RubiksCubeController`                                                                                                                                                             |
+| `@houstonp/rubiks-cube/core`       | `Movements`, `Rotations`, `Faces`, `CubeTypes`, `LayerCount`, `isMovement`, `IsRotation`, `IsAction`, `ToMovement`, `ToRotation`, `ToAction`, `fromString`, `reverse`, `translate` |
+| `@houstonp/rubiks-cube/state`      | `RubiksCubeState`, `Axi`, `GetMovementSlice`, `GetRotationSlice`, `defaultKociemba`                                                                                                |
 
 There is no bare-package root export — every class lives on a subpath that names its layer.
 
@@ -70,7 +70,7 @@ RubiksCubeElement.register();
     </head>
     <body>
         <!-- Create a 3x3 cube with custom settings -->
-        <rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="exponential" piece-gap="1.04" camera-speed-ms="100"></rubiks-cube>
+        <rubiks-cube cube-type="Three" animation-speed-ms="1000" animation-style="power2.out" piece-gap="1.04" camera-speed-ms="100"></rubiks-cube>
 
         <!-- Or create a 2x2 cube -->
         <rubiks-cube cube-type="Two"></rubiks-cube>
@@ -90,7 +90,7 @@ so that they can be get and set easily.
 
 ```js
 import { RubiksCubeElement, AttributeNames } from '@houstonp/rubiks-cube/view';
-import { CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+import { CubeTypes } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
@@ -101,7 +101,7 @@ console.log('Current animation speed:', animationSpeed);
 // Set an attribute value
 cube.setAttribute(AttributeNames.animationSpeed, '500');
 cube.setAttribute(AttributeNames.cubeType, CubeTypes.Four); // Change to 4x4 cube
-cube.setAttribute(AttributeNames.animationStyle, AnimationStyles.Exponential);
+cube.setAttribute(AttributeNames.animationStyle, 'power2.out');
 cube.setAttribute(AttributeNames.pieceGap, '1.05');
 cube.setAttribute(AttributeNames.cameraRadius, '6');
 cube.setAttribute(AttributeNames.cameraFieldOfView, '80');
@@ -109,17 +109,17 @@ cube.setAttribute(AttributeNames.cameraPeekAngleHorizontal, '0.7');
 cube.setAttribute(AttributeNames.cameraPeekAngleVertical, '0.7');
 ```
 
-| attribute                    | accepted values                                             | Description                                                                                                                                                                                       |
-| ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"`  | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                                                        |
-| animation-speed-ms           | number greater than or equal to 0                           | Sets the duration of cube animations in milliseconds. Default is `100`                                                                                                                            |
-| animation-style              | `"exponential"`, `"linear"`, `"next"`, `"fixed"`, `"match"` | `fixed`: fixed animation lengths, `next`: skips to next animation, `linear`: ramps speed linearly with backlog, `exponential`: speeds up successive animations, `match`: matches event frequency. |
-| piece-gap                    | number between 1 and 1.1                                    | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                       |
-| camera-speed-ms              | number greater than or equal to 0                           | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                          |
-| camera-radius                | number greater than or equal to 4                           | Sets the camera radius. Default is `5`                                                                                                                                                            |
-| camera-peek-angle-horizontal | decimal between 0 and 1                                     | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                                  |
-| camera-peek-angle-vertical   | decimal between 0 and 1                                     | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                    |
-| camera-field-of-view         | integer between 30 and 100                                  | Sets the field of view of the camera. Default is `75`                                                                                                                                             |
+| attribute                    | accepted values                                            | Description                                                                                                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cube-type                    | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                                                                                                                                     |
+| animation-speed-ms           | number greater than or equal to 0                          | Sets the duration of cube animations in milliseconds. Default is `100`                                                                                                                         |
+| animation-style              | any [GSAP ease](https://gsap.com/docs/v3/Eases/) string    | Easing applied to each move / rotation animation, e.g. `"linear"`, `"sine.out"`, `"power2.inOut"`, `"back.out(1.7)"`. Invalid values are ignored with a console warning. Default is `"linear"` |
+| piece-gap                    | number between 1 and 1.1                                   | Sets the gap between Rubik's Cube pieces. Default is `1.04`                                                                                                                                    |
+| camera-speed-ms              | number greater than or equal to 0                          | Sets the duration of camera animations in milliseconds. Default is `100`                                                                                                                       |
+| camera-radius                | number greater than or equal to 4                          | Sets the camera radius. Default is `5`                                                                                                                                                         |
+| camera-peek-angle-horizontal | decimal between 0 and 1                                    | Sets the horizontal peek angle. Default is `0.6`                                                                                                                                               |
+| camera-peek-angle-vertical   | decimal between 0 and 1                                    | Sets the vertical peek angle. Default is `0.6`                                                                                                                                                 |
+| camera-field-of-view         | integer between 30 and 100                                 | Sets the field of view of the camera. Default is `75`                                                                                                                                          |
 
 ## Programmatic control
 
@@ -361,7 +361,7 @@ corresponding element attributes.
 
 ```js
 import { RubiksCubeElement, AttributeNames, PeekActions } from '@houstonp/rubiks-cube/view';
-import { Movements, Rotations, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+import { Movements, Rotations, CubeTypes } from '@houstonp/rubiks-cube/core';
 
 RubiksCubeElement.register();
 
@@ -370,7 +370,7 @@ const cube = document.querySelector('rubiks-cube');
 // Configure cube settings
 cube.setAttribute(AttributeNames.cubeType, CubeTypes.Four); // Use 4x4 cube
 cube.setAttribute(AttributeNames.animationSpeed, '800');
-cube.setAttribute(AttributeNames.animationStyle, AnimationStyles.Exponential);
+cube.setAttribute(AttributeNames.animationStyle, 'sine.out');
 
 // Perform a sequence of moves
 await cube.move(Movements.Single.R);
@@ -394,7 +394,7 @@ cube.setState(currentState);
 
 `RubiksCubePlayer` is a higher-level web component that wraps `RubiksCubeElement` with playback controls for
 stepping through an algorithm. You provide a setup scramble and an algorithm, and the player applies the setup to
-the cube and exposes start / rewind / step-back / stop / step-forward / play / end buttons that walk through the
+the cube and exposes start / rewind / step-back / play-stop / step-forward / play-forward / end buttons that walk through the
 algorithm one move at a time.
 
 ```js
@@ -407,7 +407,7 @@ RubiksCubePlayer.register();
 ```html
 <!-- Setup scrambles the cube; alg is the algorithm the controls play through -->
 <rubiks-cube-player
-    cubeType="Three"
+    cube-type="Three"
     setup="R U R' U R U2 R'"
     alg="R U R' U' R' F R2 U' R' U' R U R' F'"
     style="display: block; width: 400px; height: 400px;"
@@ -421,7 +421,7 @@ client dimensions.
 
 | attribute | accepted values                                            | Description                                                                            |
 | --------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| cubeType  | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                             |
+| cube-type | `"Two"`, `"Three"`, `"Four"`, `"Five"`, `"Six"`, `"Seven"` | Sets the cube size (2x2 through 7x7). Default is `"Three"`                             |
 | setup     | space-separated notation                                   | Scramble applied to the cube before playback. The "jump to start" button returns here. |
 | alg       | space-separated notation                                   | The algorithm the playback controls walk through, one token at a time.                 |
 
@@ -432,19 +432,25 @@ and `// line comments` are stripped before parsing.
 
 The same actions the buttons trigger are available programmatically.
 
-| Method            | Description                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `stepForward()`   | Apply the next move in `alg`. Stops any in-progress play loop.                             |
-| `stepBackward()`  | Reverse the previous move in `alg`. Stops any in-progress play loop.                       |
-| `playForward()`   | Walk forward through `alg` until it ends or `stop()` is called.                            |
-| `playBackward()`  | Walk backward through `alg` until the start of the algorithm is reached or `stop()` is called. |
-| `stop()`          | Halt any active play loop after the in-flight animation resolves.                          |
-| `jumpToStart()`   | Snap the cube to the post-`setup` state without animation.                                 |
-| `jumpToEnd()`     | Snap the cube to the post-`alg` state without animation.                                   |
+| Method           | Description                                                                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stepForward()`  | Apply the next move in `alg`. Stops any in-progress play loop.                                                                                                   |
+| `stepBackward()` | Reverse the previous move in `alg`. Stops any in-progress play loop.                                                                                             |
+| `play()`         | Play in the direction of the last step or play (forward initially). If that direction is already at the end (or the start, going backward), play the other way. |
+| `playForward()`  | Walk forward through `alg` until it ends or `stop()` is called.                                                                                                  |
+| `playBackward()` | Walk backward through `alg` until the start of the algorithm is reached or `stop()` is called.                                                                   |
+| `stop()`         | Halt any active play loop after the in-flight animation resolves.                                                                                                |
+| `jumpToStart()`  | Snap the cube to the post-`setup` state without animation.                                                                                                       |
+| `jumpToEnd()`    | Snap the cube to the post-`alg` state without animation.                                                                                                         |
+
+The play button and the stop button share a slot: play is shown while the player is stopped and runs `play()`; stop is
+shown while any play loop is running.
 
 `playForward` and `playBackward` are async and resolve once the loop exits. Step methods resolve once the single
-animation completes. The cube's `animation-speed-ms` attribute controls per-move pacing — set it on the inner
-`<rubiks-cube>` (or forward it through the player host) to slow playback down.
+animation completes. Any [`<rubiks-cube>` attribute](#component-attributes) set on the player (e.g.
+`animation-speed-ms`, `animation-style`, `piece-gap`) is forwarded to the inner cube, so use `animation-speed-ms` to
+control per-move pacing. All attributes can be changed after the player is on the page; changing `cube-type`, `setup`
+or `alg` resets playback to the start of the algorithm.
 
 ## Headless cube state
 
@@ -475,6 +481,15 @@ const ok = restored.setKociemba(kociemba); // false if the string is not valid f
 `getState()` / `setState()` round‑trip the raw sticker array if you want to skip the Kociemba encoding. For
 lower‑level access to slices, the same subpath also exports `GetMovementSlice`, `GetRotationSlice`, and the `Axi`
 enum.
+
+`defaultKociemba(cubeType)` returns the Kociemba string of a solved cube of the given size, which is handy for
+checking whether a cube is solved:
+
+```js
+import { RubiksCubeState, defaultKociemba } from '@houstonp/rubiks-cube/state';
+
+const isSolved = cube.getKociemba() === defaultKociemba(CubeTypes.Three);
+```
 
 ## Standalone 3D object
 
@@ -533,7 +548,7 @@ only `R'` is provided in the export.
 
 ```js
 import { RubiksCubeElement, AttributeNames, PeekActions } from '@houstonp/rubiks-cube/view';
-import { Rotations, Movements, CubeTypes, AnimationStyles } from '@houstonp/rubiks-cube/core';
+import { Rotations, Movements, CubeTypes } from '@houstonp/rubiks-cube/core';
 
 const cube = document.querySelector('rubiks-cube');
 
@@ -553,9 +568,6 @@ cube.peek(PeekActions.RightUp);
 
 // Use constants for cube types
 cube.setAttribute(AttributeNames.cubeType, CubeTypes.Four);
-
-// Use constants for animation styles
-cube.setAttribute(AttributeNames.animationStyle, AnimationStyles.Exponential);
 ```
 
 Notation must match the following Regex
@@ -563,6 +575,37 @@ Notation must match the following Regex
 `/([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/`
 
 Some notation may not work as intended as there is no known interpretation. e.g. `2M`.
+
+### Parsing notation
+
+`core` also exports helpers for validating and parsing notation from strings, e.g. user input or stored algorithms.
+
+| Function        | Description                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `isMovement(s)` | `true` if `s` is a valid movement.                                                                                                       |
+| `IsRotation(s)` | `true` if `s` is a valid rotation (`x`, `y`, `z` with optional count and prime).                                                         |
+| `IsAction(s)`   | `true` if `s` is a valid movement or rotation.                                                                                           |
+| `ToMovement(s)` | Returns `s` typed as a `Movement`. Throws if it is not a valid movement.                                                                 |
+| `ToRotation(s)` | Returns `s` typed as a `Rotation`. Throws if it is not a valid rotation.                                                                 |
+| `ToAction(s)`   | Returns `s` typed as a `Movement` or `Rotation`. Throws if it is neither.                                                                |
+| `fromString(s)` | Splits a whitespace‑separated sequence into an array of movements and rotations. `// line comments` and unrecognised tokens are dropped. |
+
+```js
+import { fromString, IsRotation, ToAction } from '@houstonp/rubiks-cube/core';
+
+const alg = fromString(`
+    R U R' U' // sexy move
+    y R' F R F'
+`);
+// ["R", "U", "R'", "U'", "y", "R'", "F", "R", "F'"]
+
+for (const action of alg) {
+    await (IsRotation(action) ? cube.rotate(action) : cube.move(action));
+}
+
+ToAction('Rw2'); // "Rw2"
+ToAction('Q'); // throws Error: Invalid action: Q
+```
 
 Standard Notation
 
@@ -650,6 +693,14 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     bun run build:types
     ```
 
+- **Run the demo**
+
+    ```bash
+    bun run dev
+    ```
+
+    Serves `demo/index.html` with Bun's dev server (http://localhost:3000 by default), which renders a
+    `<rubiks-cube-player>` straight from `src/` with hot reload.
+
 The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the
-package. There is currently no dedicated demo app in this repository; you can import the component into your own app
-(e.g., Vite, Next.js, or any ES‑module‑aware bundler) to experiment locally.
+package.
