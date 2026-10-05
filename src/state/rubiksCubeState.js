@@ -382,86 +382,87 @@ export const centers = (layers) => {
 export const edges = (layers) => {
     const lastLayer = layers[layers.length - 1];
     const firstLayer = layers[0];
+    const edgeLayers = layers.slice(1, -1);
     return [
         // RU
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: lastLayer, y: lastLayer, z: layer },
                 rotation: { x: 0, y: Math.PI / 2, z: 0 },
             };
         }),
         // RF
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: lastLayer, y: layer, z: lastLayer },
                 rotation: { x: 0, y: 0, z: -Math.PI / 2 },
             };
         }),
         // RB
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: lastLayer, y: layer, z: firstLayer },
                 rotation: { x: 0, y: Math.PI / 2, z: -Math.PI / 2 },
             };
         }),
         // RD
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: lastLayer, y: firstLayer, z: layer },
                 rotation: { x: Math.PI, y: Math.PI / 2, z: 0 },
             };
         }),
         // UF
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: layer, y: lastLayer, z: lastLayer },
                 rotation: { x: 0, y: 0, z: 0 },
             };
         }),
         // UB
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: layer, y: lastLayer, z: firstLayer },
                 rotation: { x: -Math.PI / 2, y: 0, z: 0 },
             };
         }),
         // DF
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: layer, y: firstLayer, z: lastLayer },
                 rotation: { x: Math.PI / 2, y: 0, z: 0 },
             };
         }),
         // DB
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: layer, y: firstLayer, z: firstLayer },
                 rotation: { x: Math.PI, y: 0, z: 0 },
             };
         }),
         // LU
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: firstLayer, y: lastLayer, z: layer },
                 rotation: { x: 0, y: -Math.PI / 2, z: 0 },
             };
         }),
         // LF
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: firstLayer, y: layer, z: lastLayer },
                 rotation: { x: 0, y: 0, z: Math.PI / 2 },
             };
         }),
         // LB
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: firstLayer, y: layer, z: firstLayer },
                 rotation: { x: 0, y: -Math.PI / 2, z: Math.PI / 2 },
             };
         }),
         // LD
-        ...layers.map((layer) => {
+        ...edgeLayers.map((layer) => {
             return {
                 position: { x: firstLayer, y: firstLayer, z: layer },
                 rotation: { x: 0, y: -Math.PI / 2, z: Math.PI },
