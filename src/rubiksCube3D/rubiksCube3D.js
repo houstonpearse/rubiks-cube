@@ -363,6 +363,7 @@ export default class RubiksCube3D extends Object3D {
                 ease: options?.ease ?? this._cubeSettings.animationStyle ?? 'sine.out',
                 onComplete: () => {
                     this.clearAnimationGroup();
+                    this._currentAnimation = undefined;
                     resolve();
                 },
                 onUpdate: () => {

@@ -1,7 +1,7 @@
 // @ts-check
+import { gsap } from 'gsap';
 import { CubeTypes } from '../core';
 import RubiksCube3DSettings from '../rubiksCube3D/cubeSettings';
-import { AnimationStyles } from './constants';
 /** @import {CubeType} from '../core' */
 /** @import {AnimationStyle} from './constants' */
 
@@ -79,12 +79,12 @@ export default class Settings {
 
     /** @param {any} value */
     setAnimationStyle(value) {
-        if (value && Object.values(AnimationStyles).includes(value)) {
+        if (value && gsap.parseEase(value) !== undefined) {
             const validStyle = /** @type {AnimationStyle} */ (value);
             this.rubiksCube3DSettings.animationStyle = validStyle;
             return;
         }
-        console.warn(`Invalid animation style value. Accepted Values are [${Object.values(AnimationStyles).join(', ')}] Value is ${value}`);
+        console.warn(`Invalid animation style value.`);
     }
 
     /** @param {string | null} value in ms */

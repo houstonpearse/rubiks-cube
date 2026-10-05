@@ -117,6 +117,15 @@ export function toKociemba(stickerState) {
 }
 
 /**
+ *
+ * @param {import('../core').CubeType} cubeType
+ * @returns {string}
+ */
+export function defaultKociemba(cubeType) {
+    return toKociemba(defaultStickerState(cubeType));
+}
+
+/**
  * @param {string} kociembaString
  * @returns {StickerState | undefined} stickerState
  */

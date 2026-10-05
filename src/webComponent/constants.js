@@ -4,15 +4,8 @@
  */
 
 /**
- * @typedef {typeof AnimationStyles[keyof typeof AnimationStyles]} AnimationStyle
+ * @typedef {gsap.EaseString | gsap.EaseFunction} AnimationStyle
  */
-export const AnimationStyles = Object.freeze({
-    Exponential: 'exponential',
-    Linear: 'linear',
-    Next: 'next',
-    Fixed: 'fixed',
-    Match: 'match',
-});
 
 /**
  * @typedef {typeof PeekStates [keyof typeof PeekStates]} PeekState

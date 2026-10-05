@@ -1,6 +1,6 @@
 /// @ts-check
 import { Euler, Quaternion, Vector3 } from 'three';
-import { CubeTypes, Faces, isMovement, IsRotation, Movements, reverse, translate } from '../core';
+import { CubeTypes, Faces, IsMovement, IsRotation, Movements, reverse, translate } from '../core';
 import { Axi, GetMovementSlice, GetRotationSlice } from './slice';
 import { defaultStickerState, fromKociemba, getEmptyStickerState, getStickerFaceIndex, toKociemba } from './stickerState';
 /** @import {StickerState} from './stickerState' */
@@ -202,14 +202,14 @@ export class RubiksCubeState {
     move(movement, options) {
         let action = movement;
         if (options?.reverse) {
-            action = reverse(movement);
+            action = reverse(action);
         }
         if (options?.translate) {
-            action = translate(movement, this.cubeType);
+            action = translate(action, this.cubeType);
         }
-        const slice = GetMovementSlice(movement, this.layers.length);
+        const slice = GetMovementSlice(action, this.layers.length);
         if (slice == null) {
-            console.error(`Failed to get movement slice. Invalid movement: [${movement}]`);
+            console.error(`Failed to get movement slice. Invalid movement: [${action}]`);
             return null;
         }
         this.slice(slice);
@@ -241,7 +241,7 @@ export class RubiksCubeState {
      */
     do(actions, options) {
         actions.forEach((action) => {
-            if (isMovement(action)) {
+            if (IsMovement(action)) {
                 this.move(/** @type {Movement} */ (action), options);
             } else if (IsRotation(action)) {
                 this.rotate(/** @type  {Rotation} */ (action), options);

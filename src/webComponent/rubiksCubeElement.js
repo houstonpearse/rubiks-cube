@@ -46,7 +46,9 @@ export class RubiksCubeElement extends HTMLElement {
      * @param {string} tagName the name of the tag to register the web component under
      */
     static register(tagName = 'rubiks-cube') {
-        customElements.define(tagName, this);
+        if (!customElements.get(tagName)) {
+            customElements.define(tagName, this);
+        }
     }
 
     static get observedAttributes() {
