@@ -231,7 +231,6 @@ export default class RubiksCube3D extends Object3D {
 
     /**
      * Updates the gap of the pieces. To be used when the cube is not rotating
-     * @private
      * @param {number} pieceGap
      * @returns {void}
      */

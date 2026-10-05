@@ -47,7 +47,7 @@ const animationStyle = document.getElementById('animation-style');
 const logo = document.getElementById('logo');
 
 fillCubeTypes(cubeCubeType, cube.getAttribute(AttributeNames.cubeType) ?? CubeTypes.Three);
-cubeCubeType.addEventListener('change', () => cube.setAttribute(AttributeNames.cubeType, cubeCubeType.value));
+cubeCubeType.addEventListener('change', () => showState(cube.setType(cubeCubeType.value)));
 animationStyle.addEventListener('change', () => cube.setAttribute(AttributeNames.animationStyle, animationStyle.value));
 logo.addEventListener('change', () => (logo.value ? cube.setAttribute(AttributeNames.logo, logo.value) : cube.removeAttribute(AttributeNames.logo)));
 
@@ -56,8 +56,8 @@ const sliders = [
     { label: 'Piece gap', attr: AttributeNames.pieceGap, min: 1, max: 1.1, step: 0.005, value: 1.04 },
     { label: 'Animation speed (ms)', attr: AttributeNames.animationSpeed, min: 0, max: 1000, step: 10, value: 100 },
     { label: 'Camera speed (ms)', attr: AttributeNames.cameraSpeed, min: 0, max: 1000, step: 10, value: 100 },
-    { label: 'Camera radius', attr: AttributeNames.cameraRadius, min: 4, max: 15, step: 0.1, value: 5 },
-    { label: 'Camera field of view', attr: AttributeNames.cameraFieldOfView, min: 30, max: 100, step: 1, value: 75 },
+    { label: 'Camera radius', attr: AttributeNames.cameraRadius, min: 4, max: 15, step: 0.1, value: 10 },
+    { label: 'Camera field of view', attr: AttributeNames.cameraFieldOfView, min: 30, max: 100, step: 1, value: 40 },
     { label: 'Peek angle horizontal', attr: AttributeNames.cameraPeekAngleHorizontal, min: 0, max: 1, step: 0.05, value: 0.6 },
     { label: 'Peek angle vertical', attr: AttributeNames.cameraPeekAngleVertical, min: 0, max: 1, step: 0.05, value: 0.6 },
 ];
@@ -92,18 +92,41 @@ function addButtons(containerId, labels, action) {
     }
 }
 
-addButtons('moves', Object.values(Movements.Single), (move) => cube.move(move));
-addButtons('rotations', Object.values(Rotations), (rotation) => cube.rotate(rotation));
+const state = document.getElementById('state');
+const stateHint = document.getElementById('state-hint');
+const setState = document.getElementById('set-state');
+
+/** @param {string} kociembaState */
+function showState(kociembaState) {
+    state.value = kociembaState;
+    validateState();
+}
+
+// move and rotate resolve with the kociemba state once the animation completes
+addButtons('moves', Object.values(Movements.Single), (move) => cube.move(move).then(showState));
+addButtons('rotations', Object.values(Rotations), (rotation) => cube.rotate(rotation).then(showState));
 addButtons('peeks', Object.values(PeekActions), (action) => cube.peek(action));
 
-const state = document.getElementById('state');
-document.getElementById('reset').addEventListener('click', () => (state.value = cube.reset()));
-document.getElementById('get-state').addEventListener('click', () => (state.value = cube.getState()));
-document.getElementById('set-state').addEventListener('click', () => {
-    if (!cube.setState(state.value.trim())) {
-        console.warn('Invalid kociemba state');
+// a kociemba state has one facelet per sticker: 6 faces of n x n
+function validateState() {
+    const n = LayerCount[cubeCubeType.value];
+    const expected = 6 * n * n;
+    state.maxLength = expected;
+    const valid = state.value.length === expected;
+    setState.disabled = !valid;
+    stateHint.textContent = `${state.value.length} / ${expected} characters for a ${n}x${n}`;
+    return valid;
+}
+
+state.addEventListener('input', validateState);
+document.getElementById('reset').addEventListener('click', () => showState(cube.reset()));
+document.getElementById('get-state').addEventListener('click', () => showState(cube.getState()));
+setState.addEventListener('click', () => {
+    if (validateState() && !cube.setState(state.value)) {
+        stateHint.textContent = 'Invalid kociemba state';
     }
 });
+validateState();
 
 RubiksCubePlayer.register();
 RubiksCubeElement.register();

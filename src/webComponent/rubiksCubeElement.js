@@ -90,6 +90,9 @@ export class RubiksCubeElement extends HTMLElement {
                 break;
             case AttributeNames.pieceGap:
                 this.settings.setPieceGap(newVal);
+                if (this._rubiksCube3D !== null) {
+                    this._updateGap();
+                }
                 break;
             case AttributeNames.animationSpeed:
                 this.settings.setAnimationSpeed(newVal);
@@ -103,25 +106,25 @@ export class RubiksCubeElement extends HTMLElement {
             case AttributeNames.cameraRadius:
                 this.settings.setCameraRadius(newVal);
                 if (oldVal !== newVal && oldVal !== null) {
-                    this.animateCameraRadius();
+                    this._animateCameraRadius();
                 }
                 break;
             case AttributeNames.cameraFieldOfView:
                 this.settings.setCameraFieldOfView(newVal);
                 if (oldVal !== newVal && oldVal !== null) {
-                    this.updateCameraFOV();
+                    this._updateCameraFOV();
                 }
                 break;
             case AttributeNames.cameraPeekAngleHorizontal:
                 this.settings.setCameraPeekAngleHorizontal(newVal);
                 if (oldVal !== newVal && oldVal !== null) {
-                    this.animateCameraSetting();
+                    this._animateCameraSetting();
                 }
                 break;
             case AttributeNames.cameraPeekAngleVertical:
                 this.settings.setCameraPeekAngleVertical(newVal);
                 if (oldVal !== newVal && oldVal !== null) {
-                    this.animateCameraSetting();
+                    this._animateCameraSetting();
                 }
                 break;
             case AttributeNames.logo:
@@ -130,21 +133,20 @@ export class RubiksCubeElement extends HTMLElement {
     }
 
     /** @private */
-    animateCameraSetting() {
+    _animateCameraSetting() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraSettingsChanged));
     }
 
     /** @private */
-    animateCameraRadius() {
+    _animateCameraRadius() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraRadiusChanged));
     }
 
     /** @private */
-    updateCameraFOV() {
+    _updateCameraFOV() {
         this.dispatchEvent(new CustomEvent(InternalEvents.cameraFieldOfViewChanged));
     }
 
-    /** @internal @typedef {{eventId: string, move: Movement, reason: string}} MovementFailedEventData */
     /**
      * @param {Movement} move
      * @param {AnimationOptions} [options]
@@ -207,6 +209,14 @@ export class RubiksCubeElement extends HTMLElement {
     setType(cubeType) {
         this.setAttribute(AttributeNames.cubeType, cubeType);
         return this.getState();
+    }
+
+    /** @private */
+    _updateGap() {
+        if (this._rubiksCube3D == null) {
+            throw new Error(notInitialisedMessage);
+        }
+        this._rubiksCube3D?.updateGap(this.settings.rubiksCube3DSettings.pieceGap);
     }
 
     /**

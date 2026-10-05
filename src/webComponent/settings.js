@@ -14,10 +14,10 @@ const defaultCubeSettings = {
 
 const defaultSettings = {
     cameraSpeedMs: 100,
-    cameraRadius: 5,
+    cameraRadius: 10,
     cameraPeekAngleHorizontal: 0.6,
     cameraPeekAngleVertical: 0.6,
-    cameraFieldOfView: 75,
+    cameraFieldOfView: 40,
 };
 
 const minGap = 1;
