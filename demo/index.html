@@ -3,11 +3,31 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Rubiks Cube Player Demo</title>
+        <title>Rubiks Cube Demo</title>
         <style>
             body {
                 font-family: system-ui, sans-serif;
                 margin: 24px;
+            }
+            nav {
+                display: flex;
+                gap: 4px;
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 24px;
+            }
+            nav button {
+                font: inherit;
+                padding: 8px 16px;
+                border: 1px solid transparent;
+                border-bottom: none;
+                background: none;
+                cursor: pointer;
+                margin-bottom: -1px;
+            }
+            nav button[aria-selected='true'] {
+                border-color: #ccc;
+                background: white;
+                font-weight: 600;
             }
             main {
                 display: flex;
@@ -15,9 +35,17 @@
                 gap: 24px;
                 align-items: flex-start;
             }
+            main[hidden] {
+                display: none;
+            }
             rubiks-cube-player {
                 width: 400px;
                 height: 450px;
+                max-width: 100%;
+            }
+            rubiks-cube {
+                width: 400px;
+                height: 400px;
                 max-width: 100%;
             }
             form {
@@ -33,9 +61,54 @@
                 gap: 4px;
                 font-weight: 600;
             }
+            label output {
+                font-weight: normal;
+                color: #666;
+            }
             textarea,
-            select {
-                font: 14px ui-monospace, monospace;
+            select,
+            input[type='text'] {
+                font:
+                    14px ui-monospace,
+                    monospace;
+                padding: 6px;
+            }
+            #cube-controls {
+                flex: 1 1 640px;
+                flex-direction: row;
+                align-items: flex-start;
+                width: auto;
+            }
+            #cube-controls .column {
+                display: flex;
+                flex: 1 1 0;
+                flex-direction: column;
+                gap: 12px;
+                min-width: 0;
+            }
+            @media (max-width: 700px) {
+                #cube-controls {
+                    flex-direction: column;
+                }
+                #cube-controls .column {
+                    width: 100%;
+                }
+            }
+            fieldset {
+                border: 1px solid #ccc;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .buttons {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+            .buttons button {
+                font:
+                    14px ui-monospace,
+                    monospace;
                 padding: 6px;
             }
             .hint {
@@ -46,8 +119,13 @@
         </style>
     </head>
     <body>
-        <h1>RubiksCubePlayer</h1>
-        <main>
+        <h1>Rubiks Cube Demo</h1>
+        <nav role="tablist">
+            <button role="tab" aria-selected="true" aria-controls="player-tab">RubiksCubePlayer</button>
+            <button role="tab" aria-selected="false" aria-controls="cube-tab">RubiksCubeElement</button>
+        </nav>
+
+        <main id="player-tab" role="tabpanel">
             <rubiks-cube-player
                 id="player"
                 cube-type="Three"
@@ -56,17 +134,10 @@
                 alg="R U R' U' R' F R2 U' R' U' R U R' F'"
             ></rubiks-cube-player>
 
-            <form id="controls">
+            <form id="player-controls">
                 <label>
                     Cube type
-                    <select id="cube-type">
-                        <option value="Two">2x2</option>
-                        <option value="Three" selected>3x3</option>
-                        <option value="Four">4x4</option>
-                        <option value="Five">5x5</option>
-                        <option value="Six">6x6</option>
-                        <option value="Seven">7x7</option>
-                    </select>
+                    <select id="player-cube-type"></select>
                 </label>
                 <label>
                     Setup
@@ -77,9 +148,77 @@
                     <textarea id="alg" rows="6" spellcheck="false"></textarea>
                 </label>
                 <p class="hint">
-                    Moves and rotations separated by whitespace. <code>// comments</code> and unrecognised tokens are
-                    ignored. Changes apply as you type and reset playback to the start.
+                    Moves and rotations separated by whitespace. <code>// comments</code> and unrecognised tokens are ignored. Changes apply as you type and
+                    reset playback to the start.
                 </p>
+            </form>
+        </main>
+
+        <main id="cube-tab" role="tabpanel" hidden>
+            <rubiks-cube id="cube" cube-type="Three"></rubiks-cube>
+
+            <form id="cube-controls">
+                <div class="column">
+                    <fieldset>
+                        <legend>Properties</legend>
+                        <label>
+                            Cube type
+                            <select id="cube-cube-type"></select>
+                        </label>
+                        <label>
+                            Animation style
+                            <select id="animation-style">
+                                <option>linear</option>
+                                <option>sine</option>
+                                <option>sine.out</option>
+                                <option>power2.inOut</option>
+                                <option>power4.out</option>
+                                <option>back.out(1.7)</option>
+                                <option>elastic.out(1, 0.5)</option>
+                                <option>bounce.out</option>
+                            </select>
+                        </label>
+                        <div id="sliders"></div>
+                        <label>
+                            Logo URL
+                            <input type="text" id="logo" placeholder="https://…/logo.png" spellcheck="false" />
+                        </label>
+                    </fieldset>
+                </div>
+
+                <div class="column">
+                    <fieldset>
+                        <legend>Moves</legend>
+                        <div class="buttons" id="moves"></div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Rotations</legend>
+                        <div class="buttons" id="rotations"></div>
+                    </fieldset>
+                </div>
+
+                <div class="column">
+                    <fieldset>
+                        <legend>Camera peek</legend>
+                        <div class="buttons" id="peeks"></div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>State</legend>
+                        <div class="buttons">
+                            <button type="button" id="reset">Reset</button>
+                        </div>
+                        <label>
+                            Kociemba state
+                            <textarea id="state" rows="3" spellcheck="false"></textarea>
+                        </label>
+                        <div class="buttons">
+                            <button type="button" id="get-state">Get state</button>
+                            <button type="button" id="set-state">Set state</button>
+                        </div>
+                    </fieldset>
+                </div>
             </form>
         </main>
 

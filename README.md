@@ -23,16 +23,17 @@ npm install @houstonp/rubiks-cube
 
 The package ships five primary classes; each plays a different role.
 
-| I want to...                                                          | Use                                          |
-| --------------------------------------------------------------------- | -------------------------------------------- |
-| Step through an algorithm with playback controls                      | `RubiksCubePlayer` from `/player`            |
-| Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`             |
-| Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`                 |
-| Drive cube state from my own renderer / view                          | `RubiksCubeController` from `/controller`    |
-| Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`              |
+| I want to...                                                          | Use                                       |
+| --------------------------------------------------------------------- | ----------------------------------------- |
+| Step through an algorithm with playback controls                      | `RubiksCubePlayer` from `/player`         |
+| Drop a cube into my page with no setup                                | `RubiksCubeElement` from `/view`          |
+| Add a cube to my own three.js scene                                   | `RubiksCube3D` from `/three`              |
+| Drive cube state from my own renderer / view                          | `RubiksCubeController` from `/controller` |
+| Track cube state with no rendering (solver, scrambler, headless test) | `RubiksCubeState` from `/state`           |
 
 `RubiksCubePlayer` wraps `RubiksCubeElement` with playback UI; `RubiksCubeElement` is built on top of `RubiksCube3D`
-+ `RubiksCubeController` + `RubiksCubeState`, so most users only need the first or second row.
+
+- `RubiksCubeController` + `RubiksCubeState`, so most users only need the first or second row.
 
 ## Package layout
 
@@ -288,7 +289,7 @@ import { CubeTypes } from '@houstonp/rubiks-cube/core';
 const cube = document.querySelector('rubiks-cube');
 
 const newState = cube.setType(CubeTypes.Five); // Rebuild as a 5x5; returns the solved 5x5 state
-cube.setType(CubeTypes.Five);                  // No-op; returns whatever the current state is
+cube.setType(CubeTypes.Five); // No-op; returns whatever the current state is
 ```
 
 Setting the `cube-type` attribute directly (`cube.setAttribute('cube-type', 'Five')`) is equivalent to calling
@@ -306,11 +307,11 @@ The camera tracks **two independent boolean axes** — horizontal (Right / Left)
 **four reachable positions** (the `PeekState`s: `RightUp`, `RightDown`, `LeftUp`, `LeftDown`). The 10 `PeekAction`
 values are inputs that operate on this state machine, in three categories:
 
-| Category               | Actions                                        | Effect                                                       |
-| ---------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
-| Set both axes          | `RightUp`, `RightDown`, `LeftUp`, `LeftDown`   | Move directly to that position                               |
-| Set one axis           | `Right`, `Left`, `Up`, `Down`                  | Set that axis only; the other axis keeps its current value   |
-| Toggle one axis        | `Horizontal`, `Vertical`                       | Flip that axis relative to its current value                 |
+| Category        | Actions                                      | Effect                                                     |
+| --------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| Set both axes   | `RightUp`, `RightDown`, `LeftUp`, `LeftDown` | Move directly to that position                             |
+| Set one axis    | `Right`, `Left`, `Up`, `Down`                | Set that axis only; the other axis keeps its current value |
+| Toggle one axis | `Horizontal`, `Vertical`                     | Flip that axis relative to its current value               |
 
 Because the second and third categories only affect one axis, the result of e.g. `peek(Up)` depends on the prior
 peek state. The promise always resolves with the new full `PeekState`.
@@ -326,11 +327,11 @@ await cube.peek(PeekActions.LeftDown); // → PeekStates.LeftDown
 
 // Set one axis, leave the other untouched
 await cube.peek(PeekActions.Right); // sets horizontal to Right; vertical unchanged
-await cube.peek(PeekActions.Up);    // sets vertical to Up; horizontal unchanged
+await cube.peek(PeekActions.Up); // sets vertical to Up; horizontal unchanged
 
 // Toggle one axis relative to its current value
 await cube.peek(PeekActions.Horizontal); // flips horizontal
-await cube.peek(PeekActions.Vertical);   // flips vertical
+await cube.peek(PeekActions.Vertical); // flips vertical
 
 // The promise resolves with the new full peek state
 const peekState = await cube.peek(PeekActions.RightUp);
@@ -432,16 +433,16 @@ and `// line comments` are stripped before parsing.
 
 The same actions the buttons trigger are available programmatically.
 
-| Method           | Description                                                                                                                                                      |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stepForward()`  | Apply the next move in `alg`. Stops any in-progress play loop.                                                                                                   |
-| `stepBackward()` | Reverse the previous move in `alg`. Stops any in-progress play loop.                                                                                             |
+| Method           | Description                                                                                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stepForward()`  | Apply the next move in `alg`. Stops any in-progress play loop.                                                                                                  |
+| `stepBackward()` | Reverse the previous move in `alg`. Stops any in-progress play loop.                                                                                            |
 | `play()`         | Play in the direction of the last step or play (forward initially). If that direction is already at the end (or the start, going backward), play the other way. |
-| `playForward()`  | Walk forward through `alg` until it ends or `stop()` is called.                                                                                                  |
-| `playBackward()` | Walk backward through `alg` until the start of the algorithm is reached or `stop()` is called.                                                                   |
-| `stop()`         | Halt any active play loop after the in-flight animation resolves.                                                                                                |
-| `jumpToStart()`  | Snap the cube to the post-`setup` state without animation.                                                                                                       |
-| `jumpToEnd()`    | Snap the cube to the post-`alg` state without animation.                                                                                                         |
+| `playForward()`  | Walk forward through `alg` until it ends or `stop()` is called.                                                                                                 |
+| `playBackward()` | Walk backward through `alg` until the start of the algorithm is reached or `stop()` is called.                                                                  |
+| `stop()`         | Halt any active play loop after the in-flight animation resolves.                                                                                               |
+| `jumpToStart()`  | Snap the cube to the post-`setup` state without animation.                                                                                                      |
+| `jumpToEnd()`    | Snap the cube to the post-`alg` state without animation.                                                                                                        |
 
 The play button and the stop button share a slot: play is shown while the player is stopped and runs `play()`; stop is
 shown while any play loop is running.
@@ -644,16 +645,16 @@ typed string:
 import { Movements } from '@houstonp/rubiks-cube/core';
 
 // Wide moves
-await cube.move(Movements.Range(2, 4, Movements.Wide.Rw));   // → '2-4Rw'
-await cube.move(Movements.Range(3, 5, Movements.Wide.r));    // → '3-5r'
-await cube.move(Movements.Range(2, 4, Movements.Wide.RwP));  // → "2-4Rw'"
+await cube.move(Movements.Range(2, 4, Movements.Wide.Rw)); // → '2-4Rw'
+await cube.move(Movements.Range(3, 5, Movements.Wide.r)); // → '3-5r'
+await cube.move(Movements.Range(2, 4, Movements.Wide.RwP)); // → "2-4Rw'"
 
 // Single face moves
-await cube.move(Movements.Range(2, 4, Movements.Single.R));  // → '2-4R'
+await cube.move(Movements.Range(2, 4, Movements.Single.R)); // → '2-4R'
 await cube.move(Movements.Range(2, 3, Movements.Single.LP)); // → "2-3L'"
 
 // Slice moves
-await cube.move(Movements.Range(2, 4, Movements.Single.M));  // → '2-4M'
+await cube.move(Movements.Range(2, 4, Movements.Single.M)); // → '2-4M'
 await cube.move(Movements.Range(2, 3, Movements.Single.SP)); // → "2-3S'"
 ```
 
@@ -693,14 +694,32 @@ This repository is set up as an npm package and uses **Bun** for scripts and typ
     bun run build:types
     ```
 
-- **Run the demo**
-
-    ```bash
-    bun run dev
-    ```
-
-    Serves `demo/index.html` with Bun's dev server (http://localhost:3000 by default), which renders a
-    `<rubiks-cube-player>` straight from `src/` with hot reload.
-
 The generated `.d.ts` files are emitted into the `types/` directory (ignored in git) and are used for consumers of the
 package.
+
+## Demo
+
+![demo](demo.png)
+
+The repository includes a demo page for trying out the components without setting up a project of your own. Run it
+from a clone of the repo:
+
+```bash
+bun install
+bun run dev
+```
+
+This serves `demo/index.html` with Bun's dev server (http://localhost:3000 by default), loading the components
+straight from `src/` with hot reload. The page has two tabs:
+
+- **RubiksCubePlayer:** a `<rubiks-cube-player>` with inputs for the cube type, setup and algorithm. Changes apply as
+  you type and reset playback to the start.
+- **RubiksCubeElement:** a `<rubiks-cube>` with three columns of controls:
+    - **Properties:** cube type, animation style, logo URL, and sliders for every numeric
+      [component attribute](#component-attributes) (piece gap, animation speed, camera speed, camera radius, field of
+      view and peek angles).
+    - **Moves and rotations:** a button for every move in `Movements.Single` and every value in `Rotations`.
+    - **Camera and state:** a button for every `PeekAction`, plus reset and get / set for the Kociemba state.
+
+The elements are also exposed as `window.player` and `window.cube`, so you can call their methods from the devtools
+console.
