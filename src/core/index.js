@@ -461,11 +461,21 @@ export const LayerCount = Object.freeze({
 });
 
 /**
- *
  * @param {string} rotation
  */
 export function IsRotation(rotation) {
     return /^([xyz])(\d)?(\')?$/.test(rotation);
+}
+
+/**
+ * @param {string} rotation
+ * @returns {Rotation}
+ */
+export function ToRotation(rotation) {
+    if (!IsRotation(rotation)) {
+        throw new Error(`Invalid rotation: ${rotation}`);
+    }
+    return /** @type {Rotation} */ (rotation);
 }
 
 /**
@@ -475,4 +485,50 @@ export function IsRotation(rotation) {
  */
 export function isMovement(movement) {
     return /^([1234567]|[123456]-[1234567])?([RLUDFB]w|[RLUDFBMES]|[rludfbmes])([123])?(\')?$/.test(movement);
+}
+
+/**
+ * @param {string} movement
+ * @return {Movement}
+ */
+export function ToMovement(movement) {
+    if (!isMovement(movement)) {
+        throw new Error(`Invalid movement: ${movement}`);
+    }
+    return /** @type {Movement} */ (movement);
+}
+
+/**
+ * @param {string} action
+ * @return {boolean}
+ */
+export function IsAction(action) {
+    return isMovement(action) || IsRotation(action);
+}
+
+/**
+ * @param {string} action
+ * @return {Movement | Rotation}
+ */
+export function ToAction(action) {
+    if (isMovement(action)) {
+        return ToMovement(action);
+    }
+    if (IsRotation(action)) {
+        return ToRotation(action);
+    }
+    throw new Error(`Invalid action: ${action}`);
+}
+
+/**
+ * @param {string} movementString
+ * @returns {(Movement | Rotation)[]}
+ */
+export function fromString(movementString) {
+    const actionsExcludingComments = movementString
+        .replace(/\/\/.*/g, '')
+        .trim()
+        .split(/\s+/);
+
+    return actionsExcludingComments.filter((action) => IsAction(action)).map((action) => ToAction(action));
 }
