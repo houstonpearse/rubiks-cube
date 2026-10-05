@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { CubeTypes, isMovement, IsRotation, Movements, reverse, Rotations, translate } from '../src/core';
+import { CubeTypes, IsMovement, IsRotation, Movements, reverse, Rotations, translate } from '../src/core';
 
 test("reverse 5B -> 5B'", () => {
     expect(Movements.Five.B).toBe(reverse(Movements.Five.BP));
@@ -35,7 +35,7 @@ test('translate l -> 6l', () => {
 
 const allMovements = Object.values(Movements).flatMap((group) => (typeof group === 'object' ? Object.values(group) : []));
 test.each(allMovements)('IsMovement %s', (movement) => {
-    expect(isMovement(movement)).toBe(true);
+    expect(IsMovement(movement)).toBe(true);
 });
 
 const allRotations = Object.values(Rotations);
@@ -52,5 +52,5 @@ for (let lower = 1; lower <= 6; lower++) {
 }
 const allRangeMovements = layerRanges.flatMap(([lower, upper]) => rangeableBases.map((base) => Movements.Range(lower, upper, base)));
 test.each(allRangeMovements)('IsMovement Range %s', (movement) => {
-    expect(isMovement(movement)).toBe(true);
+    expect(IsMovement(movement)).toBe(true);
 });
