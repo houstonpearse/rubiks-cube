@@ -65,7 +65,7 @@ export default class RubiksCube3D extends Object3D {
         );
         group.add(core);
         for (const piece of corners(this._cubeConfig.layers)) {
-            const corner = new CornerPiece();
+            const corner = new CornerPiece(this._cubeConfig.cornerStickerType);
             corner.scale.set(cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier, cubeInfo.pieceSize * outerLayerMultiplier);
             corner.position.set(
                 piece.position.x * (pieceGap + outerLayerOffset),

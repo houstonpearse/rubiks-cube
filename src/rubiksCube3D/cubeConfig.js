@@ -9,6 +9,7 @@ import { CubeTypes, Faces } from '../core';
  * @property {number} pieceSize
  * @property {number} coreSize
  * @property {number} outerLayerMultiplier
+ * @property {'corner' | 'corner-round'} [cornerStickerType]
  */
 
 /**
@@ -23,6 +24,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 2,
                 coreSize: 1.7,
                 outerLayerMultiplier: 1,
+                cornerStickerType: 'corner-round',
             };
             break;
         case CubeTypes.Three:
@@ -31,6 +33,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 1,
                 coreSize: 1.32,
                 outerLayerMultiplier: 1,
+                cornerStickerType: 'corner',
             };
         case CubeTypes.Four:
             return {
@@ -38,6 +41,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 2 / 3,
                 coreSize: 1.25,
                 outerLayerMultiplier: 1.1,
+                cornerStickerType: 'corner',
             };
         case CubeTypes.Five:
             return {
@@ -45,6 +49,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 1 / 2,
                 coreSize: 1.2,
                 outerLayerMultiplier: 1.2,
+                cornerStickerType: 'corner',
             };
         case CubeTypes.Six:
             return {
@@ -52,6 +57,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 2 / 5,
                 coreSize: 1.18,
                 outerLayerMultiplier: 1.3,
+                cornerStickerType: 'corner-round',
             };
         case CubeTypes.Seven:
             return {
@@ -59,6 +65,7 @@ export function getCubeConfig(cubeType) {
                 pieceSize: 1 / 3,
                 coreSize: 1.16,
                 outerLayerMultiplier: 1.35,
+                cornerStickerType: 'corner-round',
             };
         default:
             throw new Error(`Unsupported cube type: ${cubeType}`);
